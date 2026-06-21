@@ -331,7 +331,7 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
           <h2 className="text-3xl font-bold leading-tight">This Week's<br />Plan</h2>
           <p className="mt-2 text-sm text-muted-foreground">Week 8 of 16 · Base Building Phase</p>
         </div>
-        <button className="flex items-center gap-2 rounded-2xl bg-gradient-brand px-4 py-3 text-xs font-semibold text-white shadow-brand">
+        <button onClick={() => openDetail({ kind: "ai-notes" })} className="flex items-center gap-2 rounded-2xl bg-gradient-brand px-4 py-3 text-xs font-semibold text-white shadow-brand">
           <Sparkles size={16} /> AI Coach<br />Notes
         </button>
       </div>
