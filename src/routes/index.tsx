@@ -58,7 +58,7 @@ function Index() {
           )}
         </div>
       </div>
-      <PitchSection />
+      </div>
     </div>
   );
 }
