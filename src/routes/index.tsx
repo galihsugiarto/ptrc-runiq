@@ -505,7 +505,7 @@ function BookSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ActivityScreen({ tab, setTab }: { tab: "week" | "record"; setTab: (t: any) => void }) {
+function ActivityScreen({ tab, setTab, openDetail }: { tab: "week" | "record"; setTab: (t: any) => void; openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
       <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
@@ -514,12 +514,12 @@ function ActivityScreen({ tab, setTab }: { tab: "week" | "record"; setTab: (t: a
           <button onClick={() => setTab("record")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "record" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Record</button>
         </div>
       </div>
-      {tab === "week" ? <WeekActivity /> : <RecordView />}
+      {tab === "week" ? <WeekActivity openDetail={openDetail} /> : <RecordView />}
     </div>
   );
 }
 
-function WeekActivity() {
+function WeekActivity({ openDetail }: { openDetail: (d: Detail) => void }) {
   return (
     <>
       <div className="flex items-center justify-between">
@@ -531,8 +531,12 @@ function WeekActivity() {
         <SummaryCard icon={<Zap size={14} />} label="Avg Pace" value="8:02/mi" />
         <SummaryCard icon={<Heart size={14} />} label="Avg HR" value="152 bpm" />
       </div>
-      <RunCard title="Morning Easy Run" date="Mon, May 5" tag="Strava" badge="Great" badgeColor="emerald" stats={["4.2 mi","37:42","8:58/mi","142 bpm"]} routeColor="#f97316" />
-      <RunCard title="Interval Workout" date="Tue, May 6" tag="Garmin" badge="Hard" badgeColor="orange" stats={["6.1 mi","45:18","7:25/mi","168 bpm"]} routeColor="#3b82f6" />
+      <button onClick={() => openDetail({ kind: "run", title: "Morning Easy Run", date: "Mon, May 5", stats: ["4.2 mi","37:42","8:58/mi","142 bpm"] })} className="block w-full text-left">
+        <RunCard title="Morning Easy Run" date="Mon, May 5" tag="Strava" badge="Great" badgeColor="emerald" stats={["4.2 mi","37:42","8:58/mi","142 bpm"]} routeColor="#f97316" />
+      </button>
+      <button onClick={() => openDetail({ kind: "run", title: "Interval Workout", date: "Tue, May 6", stats: ["6.1 mi","45:18","7:25/mi","168 bpm"] })} className="block w-full text-left">
+        <RunCard title="Interval Workout" date="Tue, May 6" tag="Garmin" badge="Hard" badgeColor="orange" stats={["6.1 mi","45:18","7:25/mi","168 bpm"]} routeColor="#3b82f6" />
+      </button>
     </>
   );
 }
