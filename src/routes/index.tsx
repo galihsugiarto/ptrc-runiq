@@ -230,8 +230,8 @@ function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
       </Card>
       <section>
         <h3 className="mb-3 text-xl font-bold">Friends Activity</h3>
-        <Card className="p-4 cursor-pointer" >
-          <button onClick={() => openDetail({ kind: "run", title: "Trail Morning Run — Marcus", date: "Today, 6:14 AM", stats: ["8.3 mi", "1:04:20", "7:45/mi", "158 bpm"] })} className="w-full text-left">
+        <button onClick={() => openDetail({ kind: "run", title: "Trail Morning Run — Marcus", date: "Today, 6:14 AM", stats: ["8.3 mi", "1:04:20", "7:45/mi", "158 bpm"] })} className="w-full text-left">
+        <Card className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AvatarC initials="ML" color="from-orange-400 to-amber-500" />
@@ -255,6 +255,7 @@ function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
             <Stat label="Avg HR" value="158 bpm" />
           </div>
         </Card>
+        </button>
       </section>
     </div>
   );
