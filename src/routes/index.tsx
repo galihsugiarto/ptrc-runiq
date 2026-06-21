@@ -412,9 +412,10 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
   );
 }
 
-function CoachCard({ onBook }: { onBook: () => void }) {
+function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
   return (
     <Card className="p-5">
+      <button onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "$149" })} className="w-full text-left">
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-brand font-bold text-white shadow-brand">SM</div>
         <div className="flex-1">
