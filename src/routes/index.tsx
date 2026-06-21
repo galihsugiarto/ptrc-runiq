@@ -796,11 +796,208 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
 
 function Row({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
-    <button className="flex w-full items-center gap-4 rounded-xl py-3 text-left">
+    <button onClick={onClick} className="flex w-full items-center gap-4 rounded-xl py-3 text-left">
       <span className="text-muted-foreground">{icon}</span>
       <span className="flex-1 font-semibold">{label}</span>
       <ChevronRight size={18} className="text-muted-foreground" />
     </button>
   );
+}
+
+function DetailOverlay({ detail, onBack }: { detail: Detail; onBack: () => void }) {
+  return (
+    <div className="absolute inset-0 z-[60] flex flex-col bg-[#0a0f24]">
+      <header className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
+        <button onClick={onBack} className="rounded-full p-1"><ArrowLeft size={22} /></button>
+        <h2 className="text-lg font-bold">{detailTitle(detail)}</h2>
+      </header>
+      <div className="flex-1 overflow-y-auto px-5 py-6">
+        <DetailBody detail={detail} />
+      </div>
+    </div>
+  );
+}
+
+function detailTitle(d: Detail): string {
+  switch (d.kind) {
+    case "chat": return d.name;
+    case "coach": return d.name;
+    case "workout": return `${d.day} · ${d.type}`;
+    case "run": return d.title;
+    case "profile-item": return d.title;
+    case "settings-item": return d.label;
+    case "find-friend": return "Find a Friend";
+    case "find-community": return "Find a Community";
+    case "ai-notes": return "AI Coach Notes";
+    case "upgrade": return "Upgrade to Pro";
+  }
+}
+
+function DetailBody({ detail }: { detail: Detail }) {
+  if (detail.kind === "chat") {
+    const msgs = [
+      { me: false, t: "Great job on today's tempo run! Keep the effort dialed in." },
+      { me: true, t: "Thanks coach — legs felt strong today." },
+      { me: false, t: "Recovery jog tomorrow. Keep HR under 140." },
+    ];
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex-1 space-y-3">
+          {msgs.map((m, i) => (
+            <div key={i} className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${m.me ? "ml-auto bg-[#3b82f6] text-white" : "bg-white/5"}`}>{m.t}</div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3">
+          <input placeholder="Type a message…" className="w-full bg-transparent text-sm outline-none" />
+          <button className="rounded-full bg-gradient-brand px-4 py-1.5 text-sm font-semibold text-white">Send</button>
+        </div>
+      </div>
+    );
+  }
+  if (detail.kind === "coach") {
+    return (
+      <div className="space-y-5">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-brand text-xl font-bold text-white shadow-brand">{detail.initials}</div>
+          <div>
+            <div className="text-xl font-bold">{detail.name}</div>
+            <div className="text-sm text-muted-foreground">{detail.specialty}</div>
+          </div>
+        </div>
+        <Card className="p-5">
+          <div className="text-sm text-muted-foreground">Monthly subscription</div>
+          <div className="text-3xl font-black">{detail.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+        </Card>
+        <div>
+          <h3 className="mb-2 font-bold">About</h3>
+          <p className="text-sm text-muted-foreground">10+ years coaching elite runners. Personalized plans validated against your HRV, sleep and recent training load.</p>
+        </div>
+        <div>
+          <h3 className="mb-2 font-bold">Certifications</h3>
+          <div className="flex gap-2"><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L2</span><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">RRCA</span></div>
+        </div>
+        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Book {detail.name.split(" ")[0]}</button>
+      </div>
+    );
+  }
+  if (detail.kind === "workout") {
+    return (
+      <div className="space-y-5">
+        <Card className="p-5">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{detail.date}</div>
+          <div className="mt-1 text-2xl font-bold text-[#3b82f6]">{detail.type}</div>
+          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <div><div className="text-muted-foreground">Distance</div><div className="text-lg font-bold">{detail.miles}</div></div>
+            <div><div className="text-muted-foreground">Target</div><div className="text-lg font-bold">{detail.pace}</div></div>
+          </div>
+        </Card>
+        <div>
+          <h3 className="mb-2 font-bold">Coach Notes</h3>
+          <p className="text-sm text-muted-foreground">Keep effort conversational. Focus on cadence around 175 spm. Hydrate well before and after.</p>
+        </div>
+        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Start Workout</button>
+      </div>
+    );
+  }
+  if (detail.kind === "run") {
+    return (
+      <div className="space-y-5">
+        <div className="text-sm text-muted-foreground">{detail.date}</div>
+        <Card className="grid grid-cols-2 gap-4 p-5 text-sm">
+          {["Distance","Duration","Pace","Avg HR"].map((l,i)=>(
+            <div key={l}><div className="text-muted-foreground">{l}</div><div className="text-lg font-bold">{detail.stats[i]}</div></div>
+          ))}
+        </Card>
+        <Card className="h-44 p-0">
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Route map</div>
+        </Card>
+        <button className="w-full rounded-2xl border border-white/10 py-3.5 text-sm font-semibold">Share Activity</button>
+      </div>
+    );
+  }
+  if (detail.kind === "ai-notes") {
+    return (
+      <div className="space-y-4">
+        <Card className="p-5">
+          <div className="flex items-center gap-2 text-[#3b82f6]"><Sparkles size={18} /><span className="font-bold">This Week</span></div>
+          <p className="mt-3 text-sm text-muted-foreground">Your HRV is trending up. We've increased Thursday's tempo by 0.5 mi. Coach Sarah reviewed and approved on May 6.</p>
+        </Card>
+        <Card className="p-5">
+          <div className="font-bold">Why this week</div>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground list-disc pl-5">
+            <li>Readiness 72 (up from 65)</li>
+            <li>Sleep avg 7.2 hrs</li>
+            <li>Load below CTL target</li>
+          </ul>
+        </Card>
+      </div>
+    );
+  }
+  if (detail.kind === "find-friend") {
+    return (
+      <div className="space-y-3">
+        {["Aldi P.","Rina S.","Budi H.","Citra M."].map((n,i) => (
+          <Card key={n} className="flex items-center gap-3 p-4">
+            <AvatarC initials={n.split(" ").map(s=>s[0]).join("")} color={["from-orange-400 to-amber-500","from-indigo-500 to-purple-500","from-emerald-400 to-teal-500","from-pink-500 to-fuchsia-500"][i]} />
+            <div className="flex-1"><div className="font-bold">{n}</div><div className="text-xs text-muted-foreground">Jakarta · 5x/wk</div></div>
+            <button className="rounded-full bg-[#3b82f6] px-4 py-2 text-xs font-semibold text-white">Add</button>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+  if (detail.kind === "find-community") {
+    return (
+      <div className="space-y-3">
+        {[
+          { name: "Morning Runners Club", members: 128 },
+          { name: "Jakarta Trail Pack", members: 64 },
+          { name: "Sub-4 Marathon Squad", members: 42 },
+        ].map((g) => (
+          <Card key={g.name} className="p-4">
+            <div className="font-bold">{g.name}</div>
+            <div className="text-xs text-muted-foreground">{g.members} runners</div>
+            <button className="mt-3 w-full rounded-xl bg-gradient-brand py-2.5 text-sm font-semibold text-white shadow-brand">Join</button>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+  if (detail.kind === "upgrade") {
+    return (
+      <div className="space-y-4">
+        <Card className="p-5 text-center">
+          <div className="text-3xl font-black">Pro</div>
+          <div className="text-2xl font-bold">Rp 149k<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+        </Card>
+        <ul className="space-y-3">
+          {["Unlimited AI plan rewrites","Coach-validated workouts","Advanced HRV insights","Priority messaging"].map(f => (
+            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="text-emerald-400" /> {f}</li>
+          ))}
+        </ul>
+        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Upgrade</button>
+      </div>
+    );
+  }
+  if (detail.kind === "settings-item" || detail.kind === "profile-item") {
+    const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
+    return (
+      <div className="space-y-4">
+        <Card className="p-5">
+          <div className="font-bold">{(detail as any).title ?? (detail as any).label}</div>
+          <div className="mt-1 text-sm text-muted-foreground">{sub}</div>
+        </Card>
+        <Card className="divide-y divide-white/5">
+          {["Option A","Option B","Option C"].map(o => (
+            <div key={o} className="flex items-center justify-between p-4">
+              <span className="text-sm">{o}</span>
+              <span className="h-5 w-9 rounded-full bg-white/10 p-0.5"><span className="block h-4 w-4 rounded-full bg-white" /></span>
+            </div>
+          ))}
+        </Card>
+      </div>
+    );
+  }
+  return null;
 }
 
