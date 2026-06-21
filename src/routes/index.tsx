@@ -7,7 +7,7 @@ import {
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
 } from "lucide-react";
-import heroImg from "../assets/runiq-hero.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
