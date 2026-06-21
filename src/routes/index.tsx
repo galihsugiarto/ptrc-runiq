@@ -23,6 +23,18 @@ export const Route = createFileRoute("/")({
 
 type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
 
+export type Detail =
+  | { kind: "chat"; name: string; initials?: string; color: string; icon?: boolean }
+  | { kind: "coach"; name: string; specialty: string; initials: string; price: string }
+  | { kind: "workout"; day: string; date: string; type: string; miles: string; pace: string }
+  | { kind: "run"; title: string; date: string; stats: string[] }
+  | { kind: "profile-item"; title: string; sub: string }
+  | { kind: "settings-item"; label: string }
+  | { kind: "find-friend" }
+  | { kind: "find-community" }
+  | { kind: "ai-notes" }
+  | { kind: "upgrade" };
+
 function Index() {
   const [authed, setAuthed] = useState(false);
   const [screen, setScreen] = useState<Screen>("dashboard");
@@ -30,6 +42,8 @@ function Index() {
   const [coachTab, setCoachTab] = useState<"plan" | "find">("plan");
   const [bookOpen, setBookOpen] = useState(false);
   const [activityTab, setActivityTab] = useState<"week" | "record">("week");
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const openDetail = (d: Detail) => setDetail(d);
 
   return (
     <div className="min-h-screen w-full bg-[#050816] text-foreground">
@@ -41,19 +55,20 @@ function Index() {
             <>
               <TopBar onSettings={() => setSettingsOpen(true)} />
               <main className="pb-28">
-                {screen === "dashboard" && <DashboardScreen />}
+                {screen === "dashboard" && <DashboardScreen openDetail={openDetail} />}
                 {screen === "plan" && (
-                  <PlanScreen tab={coachTab} setTab={setCoachTab} onBook={() => setBookOpen(true)} />
+                  <PlanScreen tab={coachTab} setTab={setCoachTab} onBook={() => setBookOpen(true)} openDetail={openDetail} />
                 )}
-                {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} />}
-                {screen === "messages" && <MessagesScreen />}
-                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} />}
+                {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} openDetail={openDetail} />}
+                {screen === "messages" && <MessagesScreen openDetail={openDetail} />}
+                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} />}
               </main>
               <TabBar screen={screen} setScreen={setScreen} />
               {settingsOpen && (
-                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} />
+                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
               )}
               {bookOpen && <BookSheet onClose={() => setBookOpen(false)} />}
+              {detail && <DetailOverlay detail={detail} onBack={() => setDetail(null)} />}
             </>
           )}
         </div>
@@ -166,7 +181,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-function DashboardScreen() {
+function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
       <section>
@@ -215,6 +230,7 @@ function DashboardScreen() {
       </Card>
       <section>
         <h3 className="mb-3 text-xl font-bold">Friends Activity</h3>
+        <button onClick={() => openDetail({ kind: "run", title: "Trail Morning Run — Marcus", date: "Today, 6:14 AM", stats: ["8.3 mi", "1:04:20", "7:45/mi", "158 bpm"] })} className="w-full text-left">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -239,6 +255,7 @@ function DashboardScreen() {
             <Stat label="Avg HR" value="158 bpm" />
           </div>
         </Card>
+        </button>
       </section>
     </div>
   );
@@ -286,7 +303,7 @@ function Sparkline() {
   );
 }
 
-function PlanScreen({ tab, setTab, onBook }: { tab: "plan" | "find"; setTab: (t: any) => void; onBook: () => void }) {
+function PlanScreen({ tab, setTab, onBook, openDetail }: { tab: "plan" | "find"; setTab: (t: any) => void; onBook: () => void; openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
       <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
@@ -295,12 +312,12 @@ function PlanScreen({ tab, setTab, onBook }: { tab: "plan" | "find"; setTab: (t:
           <button onClick={() => setTab("find")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "find" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Find Coach</button>
         </div>
       </div>
-      {tab === "plan" ? <MyPlan /> : <FindCoach onBook={onBook} />}
+      {tab === "plan" ? <MyPlan openDetail={openDetail} /> : <FindCoach onBook={onBook} openDetail={openDetail} />}
     </div>
   );
 }
 
-function MyPlan() {
+function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
   const days = [
     { day: "Monday", date: "May 5", type: "Easy Run", miles: "5 miles", pace: "8:30/mi", done: true },
     { day: "Tuesday", date: "May 6", type: "Intervals", miles: "6 miles", pace: "6x800m @ 6:45", done: true },
@@ -314,7 +331,7 @@ function MyPlan() {
           <h2 className="text-3xl font-bold leading-tight">This Week's<br />Plan</h2>
           <p className="mt-2 text-sm text-muted-foreground">Week 8 of 16 · Base Building Phase</p>
         </div>
-        <button className="flex items-center gap-2 rounded-2xl bg-gradient-brand px-4 py-3 text-xs font-semibold text-white shadow-brand">
+        <button onClick={() => openDetail({ kind: "ai-notes" })} className="flex items-center gap-2 rounded-2xl bg-gradient-brand px-4 py-3 text-xs font-semibold text-white shadow-brand">
           <Sparkles size={16} /> AI Coach<br />Notes
         </button>
       </div>
@@ -329,7 +346,7 @@ function MyPlan() {
       </Card>
       <div className="space-y-3">
         {days.map((d) => (
-          <div key={d.day} className={`flex items-center gap-4 rounded-2xl border p-4 ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
+          <button key={d.day} onClick={() => openDetail({ kind: "workout", day: d.day, date: d.date, type: d.type, miles: d.miles, pace: d.pace })} className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
             <div className={`flex h-8 w-8 items-center justify-center rounded-full ${d.done ? "bg-emerald-500" : "border border-white/15"}`}>
               {d.done && <Check size={16} className="text-white" />}
             </div>
@@ -343,14 +360,15 @@ function MyPlan() {
                 <span className="text-muted-foreground">{d.pace}</span>
               </div>
             </div>
-          </div>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </button>
         ))}
       </div>
     </>
   );
 }
 
-function FindCoach({ onBook }: { onBook: () => void }) {
+function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
   const filters = ["All", "Marathon", "Speed", "Beginner", "Ultra"];
   const [active, setActive] = useState("All");
   return (
@@ -369,7 +387,8 @@ function FindCoach({ onBook }: { onBook: () => void }) {
         ))}
       </div>
       <p className="text-sm text-muted-foreground">4 coaches found</p>
-      <CoachCard onBook={onBook} />
+      <CoachCard onBook={onBook} openDetail={openDetail} />
+      <button onClick={() => openDetail({ kind: "coach", name: "Marcus Chen", specialty: "Speed & Track", initials: "MC", price: "$199" })} className="w-full text-left">
       <Card className="p-5">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 font-bold text-white">MC</div>
@@ -388,13 +407,15 @@ function FindCoach({ onBook }: { onBook: () => void }) {
           </div>
         </div>
       </Card>
+      </button>
     </>
   );
 }
 
-function CoachCard({ onBook }: { onBook: () => void }) {
+function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
   return (
     <Card className="p-5">
+      <button onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "$149" })} className="w-full text-left">
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-brand font-bold text-white shadow-brand">SM</div>
         <div className="flex-1">
@@ -429,6 +450,7 @@ function CoachCard({ onBook }: { onBook: () => void }) {
           <span key={t} className="rounded-full bg-white/5 px-3 py-1 text-xs text-muted-foreground">{t}</span>
         ))}
       </div>
+      </button>
       <button onClick={onBook} className="mt-5 w-full rounded-2xl bg-gradient-brand py-3.5 font-semibold text-white shadow-brand">Book Sarah</button>
     </Card>
   );
@@ -483,7 +505,7 @@ function BookSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ActivityScreen({ tab, setTab }: { tab: "week" | "record"; setTab: (t: any) => void }) {
+function ActivityScreen({ tab, setTab, openDetail }: { tab: "week" | "record"; setTab: (t: any) => void; openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
       <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
@@ -492,12 +514,12 @@ function ActivityScreen({ tab, setTab }: { tab: "week" | "record"; setTab: (t: a
           <button onClick={() => setTab("record")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "record" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Record</button>
         </div>
       </div>
-      {tab === "week" ? <WeekActivity /> : <RecordView />}
+      {tab === "week" ? <WeekActivity openDetail={openDetail} /> : <RecordView />}
     </div>
   );
 }
 
-function WeekActivity() {
+function WeekActivity({ openDetail }: { openDetail: (d: Detail) => void }) {
   return (
     <>
       <div className="flex items-center justify-between">
@@ -509,8 +531,12 @@ function WeekActivity() {
         <SummaryCard icon={<Zap size={14} />} label="Avg Pace" value="8:02/mi" />
         <SummaryCard icon={<Heart size={14} />} label="Avg HR" value="152 bpm" />
       </div>
-      <RunCard title="Morning Easy Run" date="Mon, May 5" tag="Strava" badge="Great" badgeColor="emerald" stats={["4.2 mi","37:42","8:58/mi","142 bpm"]} routeColor="#f97316" />
-      <RunCard title="Interval Workout" date="Tue, May 6" tag="Garmin" badge="Hard" badgeColor="orange" stats={["6.1 mi","45:18","7:25/mi","168 bpm"]} routeColor="#3b82f6" />
+      <button onClick={() => openDetail({ kind: "run", title: "Morning Easy Run", date: "Mon, May 5", stats: ["4.2 mi","37:42","8:58/mi","142 bpm"] })} className="block w-full text-left">
+        <RunCard title="Morning Easy Run" date="Mon, May 5" tag="Strava" badge="Great" badgeColor="emerald" stats={["4.2 mi","37:42","8:58/mi","142 bpm"]} routeColor="#f97316" />
+      </button>
+      <button onClick={() => openDetail({ kind: "run", title: "Interval Workout", date: "Tue, May 6", stats: ["6.1 mi","45:18","7:25/mi","168 bpm"] })} className="block w-full text-left">
+        <RunCard title="Interval Workout" date="Tue, May 6" tag="Garmin" badge="Hard" badgeColor="orange" stats={["6.1 mi","45:18","7:25/mi","168 bpm"]} routeColor="#3b82f6" />
+      </button>
     </>
   );
 }
@@ -602,7 +628,7 @@ function RecordView() {
   );
 }
 
-function MessagesScreen() {
+function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   const convos = [
     { name: "Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", time: "2m", timeBlue: true, preview: "Great job on today's tempo run! Keep the effor…", unread: 2, online: true },
     { name: "Alex Thompson", initials: "AT", color: "from-orange-500 to-red-500", time: "1h", preview: "Thanks for the plan adjustments, feeling much bett…" },
@@ -610,7 +636,7 @@ function MessagesScreen() {
     { name: "Morning Runners Club", icon: true, color: "from-pink-500 to-fuchsia-500", time: "Yesterday", timeBlue: true, preview: "Ryan: See you all at 6am Saturday!", unread: 5 },
     { name: "Marcus Lee", initials: "ML", color: "from-orange-400 to-amber-500", time: "Yesterday", preview: "That trail route you shared looks epic" },
     { name: "RUNIQ Coaches", icon: true, color: "from-cyan-400 to-blue-500", time: "Mon", preview: "Coach Dana: New HRV protocols drop Monday" },
-  ];
+  ] as const;
   return (
     <div className="space-y-4 px-5 pt-6">
       <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
@@ -619,40 +645,44 @@ function MessagesScreen() {
       </div>
       <div className="space-y-4">
         {convos.map((c) => (
-          <div key={c.name} className="flex items-center gap-3">
+          <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: (c as any).initials, color: c.color, icon: (c as any).icon })} className="flex w-full items-center gap-3 text-left">
             <div className="relative">
               <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>
-                {c.icon ? <Users size={20} /> : c.initials}
+                {(c as any).icon ? <Users size={20} /> : (c as any).initials}
               </div>
-              {c.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+              {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <div className="truncate font-bold">{c.name}</div>
-                <div className={`text-xs ${c.timeBlue ? "text-[#3b82f6] font-semibold" : "text-muted-foreground"}`}>{c.time}</div>
+                <div className={`text-xs ${(c as any).timeBlue ? "text-[#3b82f6] font-semibold" : "text-muted-foreground"}`}>{c.time}</div>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
-                {c.unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{c.unread}</span>}
+                {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
       <div className="my-4 border-t border-white/5" />
-      <Card className="flex items-center gap-3 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
-        <div><div className="font-bold">Find a Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
-      </Card>
-      <Card className="flex items-center gap-3 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/15 text-purple-400"><Users size={18} /></div>
-        <div><div className="font-bold">Find a Community</div><div className="text-sm text-muted-foreground">Join running groups near you</div></div>
-      </Card>
+      <button onClick={() => openDetail({ kind: "find-friend" })} className="w-full text-left">
+        <Card className="flex items-center gap-3 p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
+          <div><div className="font-bold">Find a Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
+        </Card>
+      </button>
+      <button onClick={() => openDetail({ kind: "find-community" })} className="w-full text-left">
+        <Card className="flex items-center gap-3 p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/15 text-purple-400"><Users size={18} /></div>
+          <div><div className="font-bold">Find a Community</div><div className="text-sm text-muted-foreground">Join running groups near you</div></div>
+        </Card>
+      </button>
     </div>
   );
 }
 
-function ProfileScreen({ onSettings }: { onSettings: () => void }) {
+function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
   const items = [
     { icon: User, title: "Edit Profile", sub: "Name, bio, personal info" },
     { icon: Bell, title: "Notifications", sub: "Alerts & reminders" },
@@ -711,7 +741,7 @@ function ProfileScreen({ onSettings }: { onSettings: () => void }) {
         <h3 className="mb-3 font-bold">Account</h3>
         <Card className="divide-y divide-white/5">
           {items.map((it) => (
-            <button key={it.title} className="flex w-full items-center gap-4 p-4 text-left">
+            <button key={it.title} onClick={() => openDetail({ kind: "profile-item", title: it.title, sub: it.sub })} className="flex w-full items-center gap-4 p-4 text-left">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground"><it.icon size={18} /></div>
               <div className="flex-1">
                 <div className="font-semibold">{it.title}</div>
@@ -726,7 +756,7 @@ function ProfileScreen({ onSettings }: { onSettings: () => void }) {
   );
 }
 
-function SettingsSheet({ onClose, onLogout }: { onClose: () => void; onLogout: () => void }) {
+function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
   const items = [
     { icon: LinkIcon, label: "Connect Apps" },
     { icon: Shield, label: "Privacy Settings" },
@@ -749,11 +779,11 @@ function SettingsSheet({ onClose, onLogout }: { onClose: () => void; onLogout: (
           <div><div className="font-bold">A</div><div className="text-sm text-muted-foreground">Athlete</div></div>
         </div>
         <div className="mt-6 space-y-1">
-          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} />)}
+          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
         </div>
         <div className="my-5 h-px bg-white/5" />
         <div className="space-y-1">
-          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} />)}
+          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
         </div>
         <div className="my-5 h-px bg-white/5" />
         <button onClick={onLogout} className="flex w-full items-center gap-4 rounded-xl py-3 text-left text-rose-400">
@@ -764,13 +794,210 @@ function SettingsSheet({ onClose, onLogout }: { onClose: () => void; onLogout: (
   );
 }
 
-function Row({ icon, label }: { icon: React.ReactNode; label: string }) {
+function Row({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
-    <button className="flex w-full items-center gap-4 rounded-xl py-3 text-left">
+    <button onClick={onClick} className="flex w-full items-center gap-4 rounded-xl py-3 text-left">
       <span className="text-muted-foreground">{icon}</span>
       <span className="flex-1 font-semibold">{label}</span>
       <ChevronRight size={18} className="text-muted-foreground" />
     </button>
   );
+}
+
+function DetailOverlay({ detail, onBack }: { detail: Detail; onBack: () => void }) {
+  return (
+    <div className="absolute inset-0 z-[60] flex flex-col bg-[#0a0f24]">
+      <header className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
+        <button onClick={onBack} className="rounded-full p-1"><ArrowLeft size={22} /></button>
+        <h2 className="text-lg font-bold">{detailTitle(detail)}</h2>
+      </header>
+      <div className="flex-1 overflow-y-auto px-5 py-6">
+        <DetailBody detail={detail} />
+      </div>
+    </div>
+  );
+}
+
+function detailTitle(d: Detail): string {
+  switch (d.kind) {
+    case "chat": return d.name;
+    case "coach": return d.name;
+    case "workout": return `${d.day} · ${d.type}`;
+    case "run": return d.title;
+    case "profile-item": return d.title;
+    case "settings-item": return d.label;
+    case "find-friend": return "Find a Friend";
+    case "find-community": return "Find a Community";
+    case "ai-notes": return "AI Coach Notes";
+    case "upgrade": return "Upgrade to Pro";
+  }
+}
+
+function DetailBody({ detail }: { detail: Detail }) {
+  if (detail.kind === "chat") {
+    const msgs = [
+      { me: false, t: "Great job on today's tempo run! Keep the effort dialed in." },
+      { me: true, t: "Thanks coach — legs felt strong today." },
+      { me: false, t: "Recovery jog tomorrow. Keep HR under 140." },
+    ];
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex-1 space-y-3">
+          {msgs.map((m, i) => (
+            <div key={i} className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${m.me ? "ml-auto bg-[#3b82f6] text-white" : "bg-white/5"}`}>{m.t}</div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3">
+          <input placeholder="Type a message…" className="w-full bg-transparent text-sm outline-none" />
+          <button className="rounded-full bg-gradient-brand px-4 py-1.5 text-sm font-semibold text-white">Send</button>
+        </div>
+      </div>
+    );
+  }
+  if (detail.kind === "coach") {
+    return (
+      <div className="space-y-5">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-brand text-xl font-bold text-white shadow-brand">{detail.initials}</div>
+          <div>
+            <div className="text-xl font-bold">{detail.name}</div>
+            <div className="text-sm text-muted-foreground">{detail.specialty}</div>
+          </div>
+        </div>
+        <Card className="p-5">
+          <div className="text-sm text-muted-foreground">Monthly subscription</div>
+          <div className="text-3xl font-black">{detail.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+        </Card>
+        <div>
+          <h3 className="mb-2 font-bold">About</h3>
+          <p className="text-sm text-muted-foreground">10+ years coaching elite runners. Personalized plans validated against your HRV, sleep and recent training load.</p>
+        </div>
+        <div>
+          <h3 className="mb-2 font-bold">Certifications</h3>
+          <div className="flex gap-2"><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L2</span><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">RRCA</span></div>
+        </div>
+        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Book {detail.name.split(" ")[0]}</button>
+      </div>
+    );
+  }
+  if (detail.kind === "workout") {
+    return (
+      <div className="space-y-5">
+        <Card className="p-5">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{detail.date}</div>
+          <div className="mt-1 text-2xl font-bold text-[#3b82f6]">{detail.type}</div>
+          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <div><div className="text-muted-foreground">Distance</div><div className="text-lg font-bold">{detail.miles}</div></div>
+            <div><div className="text-muted-foreground">Target</div><div className="text-lg font-bold">{detail.pace}</div></div>
+          </div>
+        </Card>
+        <div>
+          <h3 className="mb-2 font-bold">Coach Notes</h3>
+          <p className="text-sm text-muted-foreground">Keep effort conversational. Focus on cadence around 175 spm. Hydrate well before and after.</p>
+        </div>
+        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Start Workout</button>
+      </div>
+    );
+  }
+  if (detail.kind === "run") {
+    return (
+      <div className="space-y-5">
+        <div className="text-sm text-muted-foreground">{detail.date}</div>
+        <Card className="grid grid-cols-2 gap-4 p-5 text-sm">
+          {["Distance","Duration","Pace","Avg HR"].map((l,i)=>(
+            <div key={l}><div className="text-muted-foreground">{l}</div><div className="text-lg font-bold">{detail.stats[i]}</div></div>
+          ))}
+        </Card>
+        <Card className="h-44 p-0">
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Route map</div>
+        </Card>
+        <button className="w-full rounded-2xl border border-white/10 py-3.5 text-sm font-semibold">Share Activity</button>
+      </div>
+    );
+  }
+  if (detail.kind === "ai-notes") {
+    return (
+      <div className="space-y-4">
+        <Card className="p-5">
+          <div className="flex items-center gap-2 text-[#3b82f6]"><Sparkles size={18} /><span className="font-bold">This Week</span></div>
+          <p className="mt-3 text-sm text-muted-foreground">Your HRV is trending up. We've increased Thursday's tempo by 0.5 mi. Coach Sarah reviewed and approved on May 6.</p>
+        </Card>
+        <Card className="p-5">
+          <div className="font-bold">Why this week</div>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground list-disc pl-5">
+            <li>Readiness 72 (up from 65)</li>
+            <li>Sleep avg 7.2 hrs</li>
+            <li>Load below CTL target</li>
+          </ul>
+        </Card>
+      </div>
+    );
+  }
+  if (detail.kind === "find-friend") {
+    return (
+      <div className="space-y-3">
+        {["Aldi P.","Rina S.","Budi H.","Citra M."].map((n,i) => (
+          <Card key={n} className="flex items-center gap-3 p-4">
+            <AvatarC initials={n.split(" ").map(s=>s[0]).join("")} color={["from-orange-400 to-amber-500","from-indigo-500 to-purple-500","from-emerald-400 to-teal-500","from-pink-500 to-fuchsia-500"][i]} />
+            <div className="flex-1"><div className="font-bold">{n}</div><div className="text-xs text-muted-foreground">Jakarta · 5x/wk</div></div>
+            <button className="rounded-full bg-[#3b82f6] px-4 py-2 text-xs font-semibold text-white">Add</button>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+  if (detail.kind === "find-community") {
+    return (
+      <div className="space-y-3">
+        {[
+          { name: "Morning Runners Club", members: 128 },
+          { name: "Jakarta Trail Pack", members: 64 },
+          { name: "Sub-4 Marathon Squad", members: 42 },
+        ].map((g) => (
+          <Card key={g.name} className="p-4">
+            <div className="font-bold">{g.name}</div>
+            <div className="text-xs text-muted-foreground">{g.members} runners</div>
+            <button className="mt-3 w-full rounded-xl bg-gradient-brand py-2.5 text-sm font-semibold text-white shadow-brand">Join</button>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+  if (detail.kind === "upgrade") {
+    return (
+      <div className="space-y-4">
+        <Card className="p-5 text-center">
+          <div className="text-3xl font-black">Pro</div>
+          <div className="text-2xl font-bold">Rp 149k<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+        </Card>
+        <ul className="space-y-3">
+          {["Unlimited AI plan rewrites","Coach-validated workouts","Advanced HRV insights","Priority messaging"].map(f => (
+            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="text-emerald-400" /> {f}</li>
+          ))}
+        </ul>
+        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Upgrade</button>
+      </div>
+    );
+  }
+  if (detail.kind === "settings-item" || detail.kind === "profile-item") {
+    const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
+    return (
+      <div className="space-y-4">
+        <Card className="p-5">
+          <div className="font-bold">{(detail as any).title ?? (detail as any).label}</div>
+          <div className="mt-1 text-sm text-muted-foreground">{sub}</div>
+        </Card>
+        <Card className="divide-y divide-white/5">
+          {["Option A","Option B","Option C"].map(o => (
+            <div key={o} className="flex items-center justify-between p-4">
+              <span className="text-sm">{o}</span>
+              <span className="h-5 w-9 rounded-full bg-white/10 p-0.5"><span className="block h-4 w-4 rounded-full bg-white" /></span>
+            </div>
+          ))}
+        </Card>
+      </div>
+    );
+  }
+  return null;
 }
 
