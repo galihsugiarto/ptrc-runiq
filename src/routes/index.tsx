@@ -23,6 +23,18 @@ export const Route = createFileRoute("/")({
 
 type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
 
+export type Detail =
+  | { kind: "chat"; name: string; initials?: string; color: string; icon?: boolean }
+  | { kind: "coach"; name: string; specialty: string; initials: string; price: string }
+  | { kind: "workout"; day: string; date: string; type: string; miles: string; pace: string }
+  | { kind: "run"; title: string; date: string; stats: string[] }
+  | { kind: "profile-item"; title: string; sub: string }
+  | { kind: "settings-item"; label: string }
+  | { kind: "find-friend" }
+  | { kind: "find-community" }
+  | { kind: "ai-notes" }
+  | { kind: "upgrade" };
+
 function Index() {
   const [authed, setAuthed] = useState(false);
   const [screen, setScreen] = useState<Screen>("dashboard");
@@ -30,6 +42,8 @@ function Index() {
   const [coachTab, setCoachTab] = useState<"plan" | "find">("plan");
   const [bookOpen, setBookOpen] = useState(false);
   const [activityTab, setActivityTab] = useState<"week" | "record">("week");
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const openDetail = (d: Detail) => setDetail(d);
 
   return (
     <div className="min-h-screen w-full bg-[#050816] text-foreground">
@@ -41,19 +55,20 @@ function Index() {
             <>
               <TopBar onSettings={() => setSettingsOpen(true)} />
               <main className="pb-28">
-                {screen === "dashboard" && <DashboardScreen />}
+                {screen === "dashboard" && <DashboardScreen openDetail={openDetail} />}
                 {screen === "plan" && (
-                  <PlanScreen tab={coachTab} setTab={setCoachTab} onBook={() => setBookOpen(true)} />
+                  <PlanScreen tab={coachTab} setTab={setCoachTab} onBook={() => setBookOpen(true)} openDetail={openDetail} />
                 )}
-                {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} />}
-                {screen === "messages" && <MessagesScreen />}
-                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} />}
+                {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} openDetail={openDetail} />}
+                {screen === "messages" && <MessagesScreen openDetail={openDetail} />}
+                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} />}
               </main>
               <TabBar screen={screen} setScreen={setScreen} />
               {settingsOpen && (
-                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} />
+                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
               )}
               {bookOpen && <BookSheet onClose={() => setBookOpen(false)} />}
+              {detail && <DetailOverlay detail={detail} onBack={() => setDetail(null)} />}
             </>
           )}
         </div>
