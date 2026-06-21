@@ -794,7 +794,7 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
   );
 }
 
-function Row({ icon, label }: { icon: React.ReactNode; label: string }) {
+function Row({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
     <button className="flex w-full items-center gap-4 rounded-xl py-3 text-left">
       <span className="text-muted-foreground">{icon}</span>
