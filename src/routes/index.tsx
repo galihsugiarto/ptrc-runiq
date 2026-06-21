@@ -741,7 +741,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
         <h3 className="mb-3 font-bold">Account</h3>
         <Card className="divide-y divide-white/5">
           {items.map((it) => (
-            <button key={it.title} className="flex w-full items-center gap-4 p-4 text-left">
+            <button key={it.title} onClick={() => openDetail({ kind: "profile-item", title: it.title, sub: it.sub })} className="flex w-full items-center gap-4 p-4 text-left">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground"><it.icon size={18} /></div>
               <div className="flex-1">
                 <div className="font-semibold">{it.title}</div>
