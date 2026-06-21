@@ -303,7 +303,7 @@ function Sparkline() {
   );
 }
 
-function PlanScreen({ tab, setTab, onBook }: { tab: "plan" | "find"; setTab: (t: any) => void; onBook: () => void }) {
+function PlanScreen({ tab, setTab, onBook, openDetail }: { tab: "plan" | "find"; setTab: (t: any) => void; onBook: () => void; openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
       <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
@@ -312,7 +312,7 @@ function PlanScreen({ tab, setTab, onBook }: { tab: "plan" | "find"; setTab: (t:
           <button onClick={() => setTab("find")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "find" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Find Coach</button>
         </div>
       </div>
-      {tab === "plan" ? <MyPlan /> : <FindCoach onBook={onBook} />}
+      {tab === "plan" ? <MyPlan openDetail={openDetail} /> : <FindCoach onBook={onBook} openDetail={openDetail} />}
     </div>
   );
 }
