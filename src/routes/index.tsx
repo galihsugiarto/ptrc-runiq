@@ -756,7 +756,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
   );
 }
 
-function SettingsSheet({ onClose, onLogout }: { onClose: () => void; onLogout: () => void }) {
+function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
   const items = [
     { icon: LinkIcon, label: "Connect Apps" },
     { icon: Shield, label: "Privacy Settings" },
