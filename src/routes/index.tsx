@@ -628,7 +628,7 @@ function RecordView() {
   );
 }
 
-function MessagesScreen() {
+function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   const convos = [
     { name: "Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", time: "2m", timeBlue: true, preview: "Great job on today's tempo run! Keep the effor…", unread: 2, online: true },
     { name: "Alex Thompson", initials: "AT", color: "from-orange-500 to-red-500", time: "1h", preview: "Thanks for the plan adjustments, feeling much bett…" },
@@ -636,7 +636,7 @@ function MessagesScreen() {
     { name: "Morning Runners Club", icon: true, color: "from-pink-500 to-fuchsia-500", time: "Yesterday", timeBlue: true, preview: "Ryan: See you all at 6am Saturday!", unread: 5 },
     { name: "Marcus Lee", initials: "ML", color: "from-orange-400 to-amber-500", time: "Yesterday", preview: "That trail route you shared looks epic" },
     { name: "RUNIQ Coaches", icon: true, color: "from-cyan-400 to-blue-500", time: "Mon", preview: "Coach Dana: New HRV protocols drop Monday" },
-  ];
+  ] as const;
   return (
     <div className="space-y-4 px-5 pt-6">
       <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
@@ -645,35 +645,39 @@ function MessagesScreen() {
       </div>
       <div className="space-y-4">
         {convos.map((c) => (
-          <div key={c.name} className="flex items-center gap-3">
+          <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: (c as any).initials, color: c.color, icon: (c as any).icon })} className="flex w-full items-center gap-3 text-left">
             <div className="relative">
               <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>
-                {c.icon ? <Users size={20} /> : c.initials}
+                {(c as any).icon ? <Users size={20} /> : (c as any).initials}
               </div>
-              {c.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+              {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <div className="truncate font-bold">{c.name}</div>
-                <div className={`text-xs ${c.timeBlue ? "text-[#3b82f6] font-semibold" : "text-muted-foreground"}`}>{c.time}</div>
+                <div className={`text-xs ${(c as any).timeBlue ? "text-[#3b82f6] font-semibold" : "text-muted-foreground"}`}>{c.time}</div>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
-                {c.unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{c.unread}</span>}
+                {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
       <div className="my-4 border-t border-white/5" />
-      <Card className="flex items-center gap-3 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
-        <div><div className="font-bold">Find a Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
-      </Card>
-      <Card className="flex items-center gap-3 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/15 text-purple-400"><Users size={18} /></div>
-        <div><div className="font-bold">Find a Community</div><div className="text-sm text-muted-foreground">Join running groups near you</div></div>
-      </Card>
+      <button onClick={() => openDetail({ kind: "find-friend" })} className="w-full text-left">
+        <Card className="flex items-center gap-3 p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
+          <div><div className="font-bold">Find a Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
+        </Card>
+      </button>
+      <button onClick={() => openDetail({ kind: "find-community" })} className="w-full text-left">
+        <Card className="flex items-center gap-3 p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/15 text-purple-400"><Users size={18} /></div>
+          <div><div className="font-bold">Find a Community</div><div className="text-sm text-muted-foreground">Join running groups near you</div></div>
+        </Card>
+      </button>
     </div>
   );
 }
