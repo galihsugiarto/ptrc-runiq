@@ -7,7 +7,7 @@ import {
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
 } from "lucide-react";
-import heroImg from "../assets/runiq-hero.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -58,7 +58,6 @@ function Index() {
           )}
         </div>
       </div>
-      <PitchSection />
     </div>
   );
 }
@@ -775,116 +774,3 @@ function Row({ icon, label }: { icon: React.ReactNode; label: string }) {
   );
 }
 
-function PitchSection() {
-  return (
-    <section className="mx-auto mt-16 max-w-5xl px-6 pb-24">
-      <div className="overflow-hidden rounded-3xl border border-white/10">
-        <img src={heroImg} alt="Indonesian runners at sunrise with biometric overlay" className="h-[320px] w-full object-cover sm:h-[420px]" width={1536} height={1024} />
-      </div>
-      <div className="mt-10 space-y-10">
-        <header>
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#3b82f6]">Accelerator Brief</p>
-          <h2 className="mt-3 text-4xl font-black sm:text-5xl">
-            <span className="text-gradient-brand">RUNIQ</span> — AI plans. Human-approved.
-          </h2>
-          <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
-            Indonesia's first Telefitness marketplace that connects runners with certified coaches — where AI generates your training plan and a human expert approves it before you ever see it.
-          </p>
-        </header>
-
-        <Block title="The Problem">
-          Running is booming across Indonesia — but safe infrastructure for the masses doesn't exist. 80% of runners train without structured coaching; 70% face annual injuries from poor training loads. Professional sports science remains elite, expensive, and inaccessible. No integrated platform bridges AI coaching, certified human expertise, and community — until now.
-        </Block>
-
-        <Block title="The Solution">
-          <ul className="space-y-3">
-            <Bullet><b>AI Plan Engine</b> — plans built from HRV, sleep, training load, nutrition, and acute-to-chronic workload ratio. Adapts daily, not weekly.</Bullet>
-            <Bullet><b>Human Approval Layer</b> — every AI plan is reviewed, edited, and approved by a certified coach before the runner sees it. This is our moat.</Bullet>
-            <Bullet><b>Community Foundation</b> — built atop Running Keliling, a real grassroots Jakarta running community. We start with trust, not zero.</Bullet>
-          </ul>
-        </Block>
-
-        <div className="grid gap-6 sm:grid-cols-3">
-          <Stat2 label="TAM by 2028" value="$18B" sub="Global running app market" />
-          <Stat2 label="SOM (3yr)" value="$180M" sub="ID · SG · MY" />
-          <Stat2 label="Seed Ask" value="$500K" sub="18 months runway" />
-        </div>
-
-        <Block title="Business Model">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Mini title="Runner Subscription" body="$19/mo (localized IDR) — AI plans, metrics, marketplace access." />
-            <Mini title="Coach Commission" body="20% platform fee on every booking. Coaches set their own rates." />
-            <Mini title="B2B Partnerships" body="Race organizers, corporate wellness, apparel — Bogor City Half Marathon is proof point #1." />
-          </div>
-        </Block>
-
-        <Block title="Why Now, Why Us">
-          The founder brings 6+ years in People Development across banking — building coaching systems and structured learning at scale. RUNIQ is literally a coaching platform. We've shipped a working two-sided prototype with live Claude AI integration, a coach marketplace, plan approval workflow, and real-time messaging — without a technical co-founder, engineering team, or external funding.
-        </Block>
-
-        <Block title="Competitive Edge">
-          <ul className="space-y-3">
-            <Bullet><b>vs Strava & Nike Run Club</b> — they record the past. We prescribe the future.</Bullet>
-            <Bullet><b>vs WhatsApp coaches</b> — expensive, fragmented, unscalable. We digitize and democratize.</Bullet>
-            <Bullet><b>vs Generic AI fitness apps</b> — no human oversight or community. RUNIQ has both.</Bullet>
-          </ul>
-        </Block>
-
-        <Block title="The Ask — $500K Seed">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Allocation pct="40%" label="Product & engineering" desc="Strava/Garmin OAuth, mobile apps, injury prevention engine" />
-            <Allocation pct="30%" label="Coach acquisition" desc="Recruit & vet Indonesia's top certified running coaches" />
-            <Allocation pct="20%" label="Marketing & community" desc="Komunitas lari partnerships, micro-influencers, race sponsorships" />
-            <Allocation pct="10%" label="Operations & legal" desc="Compliance, finance, infrastructure" />
-          </div>
-        </Block>
-
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#3b82f6]/10 to-[#a855f7]/10 p-8 sm:p-12">
-          <p className="text-2xl font-semibold leading-snug sm:text-3xl">
-            Every recreational runner in Southeast Asia deserves access to elite coaching — not just the ones who can afford Rp 5 juta a month.
-          </p>
-          <p className="mt-6 text-lg text-muted-foreground">
-            The future of running is coached by AI, validated by humans. Let's build it together.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h3 className="mb-4 text-2xl font-bold">{title}</h3>
-      <div className="text-base leading-relaxed text-muted-foreground">{children}</div>
-    </div>
-  );
-}
-function Bullet({ children }: { children: React.ReactNode }) {
-  return <li className="flex gap-3"><Check size={20} className="mt-1 shrink-0 text-emerald-400" /><span className="text-foreground/90">{children}</span></li>;
-}
-function Stat2({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-2 text-4xl font-black text-gradient-brand">{value}</div>
-      <div className="mt-1 text-sm text-muted-foreground">{sub}</div>
-    </div>
-  );
-}
-function Mini({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
-      <div className="font-bold">{title}</div>
-      <p className="mt-2 text-sm text-muted-foreground">{body}</p>
-    </div>
-  );
-}
-function Allocation({ pct, label, desc }: { pct: string; label: string; desc: string }) {
-  return (
-    <div className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
-      <div className="text-3xl font-black text-gradient-brand">{pct}</div>
-      <div><div className="font-semibold">{label}</div><div className="text-sm text-muted-foreground">{desc}</div></div>
-    </div>
-  );
-}
