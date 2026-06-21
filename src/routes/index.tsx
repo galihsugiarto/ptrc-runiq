@@ -387,7 +387,8 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
         ))}
       </div>
       <p className="text-sm text-muted-foreground">4 coaches found</p>
-      <CoachCard onBook={onBook} />
+      <CoachCard onBook={onBook} openDetail={openDetail} />
+      <button onClick={() => openDetail({ kind: "coach", name: "Marcus Chen", specialty: "Speed & Track", initials: "MC", price: "$199" })} className="w-full text-left">
       <Card className="p-5">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 font-bold text-white">MC</div>
@@ -406,6 +407,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
           </div>
         </div>
       </Card>
+      </button>
     </>
   );
 }
