@@ -450,6 +450,7 @@ function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
           <span key={t} className="rounded-full bg-white/5 px-3 py-1 text-xs text-muted-foreground">{t}</span>
         ))}
       </div>
+      </button>
       <button onClick={onBook} className="mt-5 w-full rounded-2xl bg-gradient-brand py-3.5 font-semibold text-white shadow-brand">Book Sarah</button>
     </Card>
   );
