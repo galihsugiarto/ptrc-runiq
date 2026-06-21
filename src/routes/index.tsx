@@ -682,7 +682,7 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   );
 }
 
-function ProfileScreen({ onSettings }: { onSettings: () => void }) {
+function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
   const items = [
     { icon: User, title: "Edit Profile", sub: "Name, bio, personal info" },
     { icon: Bell, title: "Notifications", sub: "Alerts & reminders" },
