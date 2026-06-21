@@ -368,7 +368,7 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
   );
 }
 
-function FindCoach({ onBook }: { onBook: () => void }) {
+function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
   const filters = ["All", "Marathon", "Speed", "Beginner", "Ultra"];
   const [active, setActive] = useState("All");
   return (
