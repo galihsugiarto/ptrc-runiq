@@ -346,7 +346,7 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
       </Card>
       <div className="space-y-3">
         {days.map((d) => (
-          <div key={d.day} className={`flex items-center gap-4 rounded-2xl border p-4 ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
+          <button key={d.day} onClick={() => openDetail({ kind: "workout", day: d.day, date: d.date, type: d.type, miles: d.miles, pace: d.pace })} className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
             <div className={`flex h-8 w-8 items-center justify-center rounded-full ${d.done ? "bg-emerald-500" : "border border-white/15"}`}>
               {d.done && <Check size={16} className="text-white" />}
             </div>
@@ -360,7 +360,8 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
                 <span className="text-muted-foreground">{d.pace}</span>
               </div>
             </div>
-          </div>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </button>
         ))}
       </div>
     </>
