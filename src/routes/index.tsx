@@ -60,7 +60,6 @@ function Index() {
       </div>
     </div>
   );
-  );
 }
 
 function Logo({ size = 40 }: { size?: number }) {
