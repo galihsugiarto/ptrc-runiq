@@ -317,7 +317,7 @@ function PlanScreen({ tab, setTab, onBook, openDetail }: { tab: "plan" | "find";
   );
 }
 
-function MyPlan() {
+function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
   const days = [
     { day: "Monday", date: "May 5", type: "Easy Run", miles: "5 miles", pace: "8:30/mi", done: true },
     { day: "Tuesday", date: "May 6", type: "Intervals", miles: "6 miles", pace: "6x800m @ 6:45", done: true },
