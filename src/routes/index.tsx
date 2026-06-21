@@ -181,7 +181,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-function DashboardScreen() {
+function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
       <section>
