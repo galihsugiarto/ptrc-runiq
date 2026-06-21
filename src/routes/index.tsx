@@ -779,11 +779,11 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
           <div><div className="font-bold">A</div><div className="text-sm text-muted-foreground">Athlete</div></div>
         </div>
         <div className="mt-6 space-y-1">
-          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} />)}
+          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
         </div>
         <div className="my-5 h-px bg-white/5" />
         <div className="space-y-1">
-          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} />)}
+          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
         </div>
         <div className="my-5 h-px bg-white/5" />
         <button onClick={onLogout} className="flex w-full items-center gap-4 rounded-xl py-3 text-left text-rose-400">
