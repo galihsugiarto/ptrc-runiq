@@ -227,8 +227,8 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
 
         <div>
           <label className="text-sm font-medium">Gender</label>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {(["male", "female", "other"] as const).map((g) => (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {(["male", "female"] as const).map((g) => (
               <button
                 key={g}
                 type="button"
