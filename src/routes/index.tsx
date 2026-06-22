@@ -6,6 +6,7 @@ import {
   Shield, Mail, Bell, HelpCircle, FileText, LogOut, X, Pencil,
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
+  Footprints, Award,
 } from "lucide-react";
 
 
