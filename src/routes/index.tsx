@@ -180,7 +180,8 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
         </button>
       </div>
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Don't have an account? <span className="font-semibold text-[#3b82f6]">Sign up</span>
+        Don't have an account?{" "}
+        <button type="button" onClick={onSignup} className="font-semibold text-[#3b82f6]">Sign up</button>
       </p>
     </div>
   );
