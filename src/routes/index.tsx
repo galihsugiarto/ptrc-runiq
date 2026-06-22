@@ -1,1003 +1,1059 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import {
-  Activity, Settings, LayoutGrid, Calendar, MessageCircle, User,
-  Heart, Moon, Dumbbell, TrendingUp, ChevronRight, Link as LinkIcon,
-  Shield, Mail, Bell, HelpCircle, FileText, LogOut, X, Pencil,
-  MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
-  Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
-} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
+const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');`;
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "RUNIQ — AI-Powered Telefitness for Runners" },
-      { name: "description", content: "Indonesia's first Telefitness marketplace: AI training plans validated by certified coaches." },
-      { property: "og:title", content: "RUNIQ — AI-Powered Telefitness for Runners" },
-      { property: "og:description", content: "AI plans. Human-approved. Built for Indonesian runners." },
-    ],
-  }),
-  component: Index,
-});
+// ── DESIGN TOKENS (matching Figma v1 + upgraded) ─────────────────
+const T = {
+  bg:        "#0d0e14",
+  surface:   "#13151f",
+  card:      "#181b27",
+  cardHover: "#1e2133",
+  border:    "#252838",
+  borderSoft:"#1e2133",
+  // gradients
+  grad:      "linear-gradient(135deg, #6c47ff, #a855f7, #ec4899)",
+  gradBlue:  "linear-gradient(135deg, #3b5bdb, #7c3aed)",
+  gradGreen: "linear-gradient(135deg, #10b981, #059669)",
+  // accents
+  purple:    "#7c3aed",
+  purpleLight:"#a855f7",
+  blue:      "#3b82f6",
+  green:     "#10b981",
+  orange:    "#f97316",
+  red:       "#ef4444",
+  yellow:    "#eab308",
+  cyan:      "#06b6d4",
+  // text
+  ink:       "#f0f0f8",
+  muted:     "#6b7099",
+  dim:       "#3d4060",
+};
 
-type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
+// ── MOCK DATA ─────────────────────────────────────────────────────
+const COACHES = [
+  { id:1, init:"SM", name:"Sarah Mitchell", title:"Marathon Specialist", cert:"USATF L2", rating:4.9, reviews:127, runners:42, price:149, response:"< 1 hour", color:"#7c3aed", available:true, tags:["Sub-3hr","VO2max","Injury Prevention"], bio:"Former Boston qualifier (2:58) with 10+ years coaching. Specialising in sub-3hr marathon training through biomechanics analysis.", highlights:["Boston Marathon qualifier 2:58","200+ athletes PR'd","USATF certified coach"] },
+  { id:2, init:"MC", name:"Marcus Chen", title:"Speed & Track", cert:"USATF L3", rating:4.8, reviews:89, runners:31, price:199, response:"< 3 hours", color:"#f97316", available:false, tags:["Intervals","5K–10K","Track"], bio:"National 800m champion. Builds speed foundation for distance runners using periodized interval training.", highlights:["National 800m champion","Track & field specialist","Evidence-based programming"] },
+  { id:3, init:"JL", name:"Jamie Lee", title:"Beginner & HM Specialist", cert:"RRCA", rating:4.7, reviews:203, runners:58, price:99, response:"< 2 hours", color:"#10b981", available:true, tags:["First marathon","Run-walk","Injury prevention"], bio:"Helped 500+ runners cross their first finish line. Patient, encouraging, science-backed approach.", highlights:["500+ first-time finishers","Run-walk method expert","Injury-free approach"] },
+];
 
-export type Detail =
-  | { kind: "chat"; name: string; initials?: string; color: string; icon?: boolean }
-  | { kind: "coach"; name: string; specialty: string; initials: string; price: string }
-  | { kind: "workout"; day: string; date: string; type: string; miles: string; pace: string }
-  | { kind: "run"; title: string; date: string; stats: string[] }
-  | { kind: "profile-item"; title: string; sub: string }
-  | { kind: "settings-item"; label: string }
-  | { kind: "find-friend" }
-  | { kind: "find-community" }
-  | { kind: "ai-notes" }
-  | { kind: "upgrade" };
+const WEEK_PLAN = [
+  { day:"Mon", date:"May 5",  type:"Easy Run",   km:8,  zone:"Z2",   detail:"Conversational pace · HR < 140bpm", done:true,  color:T.blue },
+  { day:"Tue", date:"May 6",  type:"Intervals",  km:10, zone:"Z4",   detail:"6×800m @ 6:45/km · 90s rest", done:true,  color:T.purple },
+  { day:"Wed", date:"May 7",  type:"Recovery",   km:6,  zone:"Z1",   detail:"Very easy · Focus on form", done:true,  color:T.green },
+  { day:"Thu", date:"May 8",  type:"Tempo",      km:12, zone:"Z3–4", detail:"2km WU · 8km threshold · 2km CD", done:false, color:T.orange },
+  { day:"Fri", date:"May 9",  type:"Rest",       km:null,zone:null,  detail:"Full recovery · Stretch & mobility", done:false, color:T.muted },
+  { day:"Sat", date:"May 10", type:"Long Run",   km:22, zone:"Z2",   detail:"Easy aerobic · Fuel every 45min", done:false, color:T.red },
+  { day:"Sun", date:"May 11", type:"Easy Run",   km:8,  zone:"Z2",   detail:"Recovery jog · Keep it easy", done:false, color:T.blue },
+];
 
-function Index() {
-  const [authed, setAuthed] = useState(false);
-  const [screen, setScreen] = useState<Screen>("dashboard");
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [coachTab, setCoachTab] = useState<"plan" | "find">("plan");
-  const [bookOpen, setBookOpen] = useState(false);
-  const [activityTab, setActivityTab] = useState<"week" | "record">("week");
-  const [detail, setDetail] = useState<Detail | null>(null);
-  const openDetail = (d: Detail) => setDetail(d);
+const ACTIVITIES = [
+  { id:1, name:"Morning Easy Run",  date:"Mon, May 5",  source:"Strava", feel:"Great",  feelColor:T.green,  km:6.8,  dur:"37:42", pace:"5:33", hr:142 },
+  { id:2, name:"Interval Workout",  date:"Tue, May 6",  source:"Garmin", feel:"Hard",   feelColor:T.orange, km:9.8,  dur:"45:18", pace:"4:37", hr:168 },
+  { id:3, name:"Recovery Run",      date:"Wed, May 7",  source:"Strava", feel:"Great",  feelColor:T.green,  km:6.4,  dur:"41:05", pace:"6:24", hr:128 },
+];
+
+const MESSAGES = [
+  { id:1, from:"coach", text:"Great job on today's tempo run! Your HR stayed controlled through the threshold segment — exactly what we need at this stage of base building.", time:"9:14 AM" },
+  { id:2, from:"runner", text:"Thanks Sarah! I noticed my HRV has been a bit low this week. Should I modify Thursday's session?", time:"10:02 AM" },
+  { id:3, from:"coach", text:"Good instinct checking in. Your HRV dipped 8% below baseline — I've updated Thursday's tempo. Reduce the threshold to 6km instead of 8km. Your body is telling us something, let's listen.", time:"10:31 AM" },
+  { id:4, from:"runner", text:"Got it! Really appreciate how you combine the data with real coaching judgment.", time:"10:45 AM" },
+];
+
+const COACH_RUNNERS = [
+  { id:1, init:"AT", name:"Alex Thompson", goal:"Sub-4hr Marathon", readiness:72, hrv:58, load:6.4, status:"needs_review", color:T.blue,   lastActive:"2h ago" },
+  { id:2, init:"JC", name:"Jamie Chen",    goal:"First Half Marathon", readiness:88, hrv:67, load:4.1, status:"approved",     color:T.green,  lastActive:"1d ago" },
+  { id:3, init:"ML", name:"Marcus Lee",    goal:"5K PR < 22min",   readiness:61, hrv:49, load:8.3, status:"needs_review", color:T.orange, lastActive:"3h ago" },
+  { id:4, init:"PR", name:"Priya Rajan",   goal:"Sub-3:30 Marathon",readiness:94, hrv:71, load:5.8, status:"approved",     color:T.purple, lastActive:"5h ago" },
+];
+
+// ── COMPONENTS ────────────────────────────────────────────────────
+function Grad({ children, style }) {
+  return <span style={{ background: T.grad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", ...style }}>{children}</span>;
+}
+
+function Av({ init, color, size=36 }) {
+  return <div style={{ width:size, height:size, borderRadius:"50%", background:`linear-gradient(135deg, ${color}40, ${color}20)`, border:`1.5px solid ${color}60`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter'", fontWeight:700, fontSize:size*0.33, color, flexShrink:0 }}>{init}</div>;
+}
+
+function Chip({ label, color }) {
+  return <span style={{ fontFamily:"'Inter'", fontSize:10, fontWeight:600, color, background:color+"22", border:`1px solid ${color}40`, padding:"2px 8px", borderRadius:999 }}>{label}</span>;
+}
+
+function Ring({ value, size=72 }) {
+  const col = value>=80 ? T.green : value>=60 ? T.yellow : T.red;
+  const r=(size-8)/2, circ=2*Math.PI*r;
+  return (
+    <div style={{ position:"relative", width:size, height:size, flexShrink:0 }}>
+      <svg width={size} height={size} style={{ transform:"rotate(-90deg)", position:"absolute" }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={T.border} strokeWidth={5}/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={col} strokeWidth={5} strokeLinecap="round"
+          strokeDasharray={`${circ*value/100} ${circ}`} style={{ transition:"stroke-dasharray 1s ease" }}/>
+      </svg>
+      <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+        <div style={{ fontFamily:"'DM Mono'", fontSize:size*0.25, color:col, fontWeight:500, lineHeight:1 }}>{value}</div>
+        <div style={{ fontFamily:"'Inter'", fontSize:8, color:T.muted, letterSpacing:0.5, marginTop:1 }}>READY</div>
+      </div>
+    </div>
+  );
+}
+
+function Bar({ pct, gradient=T.grad, height=5 }) {
+  return <div style={{ background:T.border, borderRadius:999, height }}>
+    <div style={{ background:gradient, height:"100%", borderRadius:999, width:`${Math.min(pct,100)}%`, transition:"width 1s ease" }}/>
+  </div>;
+}
+
+function MiniMetric({ label, value, unit, color, barPct }) {
+  return (
+    <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"12px 14px" }}>
+      <div style={{ fontSize:10, color:T.muted, marginBottom:6, fontWeight:500 }}>{label}</div>
+      <div style={{ fontFamily:"'DM Mono'", fontSize:22, color, fontWeight:500, lineHeight:1, marginBottom:8 }}>{value}<span style={{ fontSize:10, color:T.muted, marginLeft:2 }}>{unit}</span></div>
+      <div style={{ background:T.border, borderRadius:999, height:3 }}>
+        <div style={{ background:color, height:"100%", borderRadius:999, width:`${barPct}%` }}/>
+      </div>
+    </div>
+  );
+}
+
+// ── RUNNER APP ────────────────────────────────────────────────────
+function RunnerApp({ coach, setCoach, planApproved, setPlanApproved }) {
+  const [tab, setTab] = useState("home");
+  const [plan, setPlan] = useState(WEEK_PLAN);
+  const [msgs, setMsgs] = useState(MESSAGES);
+  const [draft, setDraft] = useState("");
+  const [aiNote, setAiNote] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [streaming, setStreaming] = useState(false);
+  const [bookingCoach, setBookingCoach] = useState(null);
+  const [showBooking, setShowBooking] = useState(false);
+  const endRef = useRef(null);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs]);
+
+  const getAI = async () => {
+    setAiLoading(true); setAiNote(""); setStreaming(true);
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, messages:[{ role:"user", content:`You are RUNIQ, an expert AI running coach. Write a warm personal coaching note (2 short paragraphs, max 100 words) for runner Alex Thompson. Goal: Sub-4hr Marathon, October 2026. HRV: 58ms (baseline 62, slightly low). Sleep: 7.2hrs, 78% quality. Load: 6.4/10. Week 8 of 24, base building phase. This week: Easy 8km, Intervals 10km, Recovery 6km done. Still ahead: Tempo 12km Thu, Rest Fri, Long 22km Sat, Easy 8km Sun. Coach Sarah has approved this plan. Be specific, warm, mention HRV. Sound like a real coach not a robot.` }] }) });
+      const d = await r.json(); const text = d.content?.[0]?.text || "Training note unavailable.";
+      let i=0; const iv = setInterval(() => { i+=4; setAiNote(text.slice(0,i)); if(i>=text.length){clearInterval(iv);setStreaming(false);} }, 14);
+    } catch { setAiNote("⚠️ Connect to Claude API to see live coaching notes."); setStreaming(false); }
+    setAiLoading(false);
+  };
+
+  const sendMsg = () => { if(!draft.trim()) return; setMsgs(m=>[...m,{id:Date.now(),from:"runner",text:draft,time:"Now"}]); setDraft(""); };
+
+  const navItems = [
+    {id:"home",   icon:"⊞", label:"Home"},
+    {id:"plan",   icon:"◷", label:"Plan"},
+    {id:"record", icon:"◎", label:"Record"},
+    {id:"chat",   icon:"✉", label:"Chat"},
+    {id:"profile",icon:"◉", label:"Profile"},
+  ];
 
   return (
-    <div className="min-h-screen w-full bg-[#050816] text-foreground">
-      <div className="mx-auto flex max-w-[420px] flex-col">
-        <div className="relative min-h-screen overflow-hidden bg-[#0a0f24]">
-          {!authed ? (
-            <LoginScreen onLogin={() => setAuthed(true)} />
-          ) : (
-            <>
-              <TopBar onSettings={() => setSettingsOpen(true)} />
-              <main className="pb-28">
-                {screen === "dashboard" && <DashboardScreen openDetail={openDetail} />}
-                {screen === "plan" && (
-                  <PlanScreen tab={coachTab} setTab={setCoachTab} onBook={() => setBookOpen(true)} openDetail={openDetail} />
+    <div style={{ height:"100%", display:"flex", flexDirection:"column", background:T.bg, fontFamily:"'Inter',sans-serif", color:T.ink, overflow:"hidden" }}>
+
+      {/* Header */}
+      <div style={{ background:T.surface, borderBottom:`1px solid ${T.border}`, padding:"12px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <div style={{ width:28, height:28, borderRadius:8, background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13 }}>〜</div>
+          <span style={{ fontWeight:800, fontSize:15, letterSpacing:-0.3 }}>RUNIQ</span>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          {coach && <Chip label={`Coach: ${coach.name.split(" ")[0]}`} color={T.purple}/>}
+          <div style={{ width:8, height:8, borderRadius:"50%", background:T.green }}/>
+          <Av init="AT" color={T.blue} size={28}/>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
+
+        {/* HOME */}
+        {tab==="home" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            {/* Readiness */}
+            <div style={{ marginBottom:16 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                <div>
+                  <div style={{ fontSize:22, fontWeight:800, lineHeight:1.1 }}>Your Readiness</div>
+                  <div style={{ fontSize:12, color:T.muted, marginTop:2 }}>Ready to train</div>
+                </div>
+                <div style={{ textAlign:"right" }}>
+                  <div style={{ fontFamily:"'DM Mono'", fontSize:42, fontWeight:500, color:T.cyan, lineHeight:1 }}>72</div>
+                  <div style={{ fontSize:10, color:T.muted }}>/ 100</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Metric cards */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:14 }}>
+              <MiniMetric label="❤ HRV" value="68" unit="ms" color={T.red} barPct={68}/>
+              <MiniMetric label="🌙 Sleep" value="7.2" unit="hrs" color={T.purple} barPct={72}/>
+              <MiniMetric label="⚡ Load" value="45" unit="" color={T.yellow} barPct={45}/>
+            </div>
+
+            {/* 7-Day trend placeholder */}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:16, marginBottom:14 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                <div style={{ fontWeight:700, fontSize:13 }}>7-Day Trend</div>
+                <div style={{ fontSize:11, color:T.green }}>↗ Improving</div>
+              </div>
+              <div style={{ display:"flex", gap:6, alignItems:"flex-end", height:52 }}>
+                {[40,55,48,62,58,70,65].map((h,i) => (
+                  <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+                    <div style={{ width:"100%", borderRadius:4, background:i===6?T.cyan:T.purple+"60", height:`${h}%`, minHeight:4, transition:"height .5s" }}/>
+                    <div style={{ fontSize:8, color:T.muted }}>{"MTWTFSS"[i]}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Goal card */}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:16, marginBottom:14 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                <div style={{ fontWeight:700, fontSize:13 }}>Marathon Goal</div>
+                <div style={{ fontFamily:"'DM Mono'", fontSize:13, color:T.cyan }}>65%</div>
+              </div>
+              <div style={{ fontSize:11, color:T.muted, marginBottom:10 }}>Sub 3:30 · October 2026</div>
+              <Bar pct={65}/>
+              <div style={{ display:"flex", justifyContent:"space-around", marginTop:14 }}>
+                {[["142","Total KM"],["12","Long Runs"],["7:45","Avg Pace"]].map(([v,l])=>(
+                  <div key={l} style={{ textAlign:"center" }}>
+                    <div style={{ fontFamily:"'DM Mono'", fontSize:18, fontWeight:500 }}>{v}</div>
+                    <div style={{ fontSize:9, color:T.muted, marginTop:2 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Friends activity */}
+            <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>Friends Activity</div>
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:14 }}>
+              <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:10 }}>
+                <Av init="ML" color={T.orange} size={36}/>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontWeight:600, fontSize:13 }}>Marcus Lee <span style={{ fontFamily:"'DM Mono'", fontSize:10, color:T.muted }}>Today 6:14 AM</span></div>
+                </div>
+                <Chip label="Strong" color={T.purple}/>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                <div style={{ width:24, height:24, borderRadius:6, background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11 }}>〜</div>
+                <div style={{ fontWeight:600, fontSize:13 }}>Trail Morning Run</div>
+              </div>
+              <div style={{ display:"flex", gap:16 }}>
+                {[["8.3 km","Distance"],["1:04:20","Duration"],["7:45/km","Pace"],["158","Avg HR"]].map(([v,l])=>(
+                  <div key={l}>
+                    <div style={{ fontFamily:"'DM Mono'", fontSize:13, fontWeight:500 }}>{v}</div>
+                    <div style={{ fontSize:9, color:T.muted }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PLAN */}
+        {tab==="plan" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            {/* Toggle */}
+            <div style={{ display:"flex", background:T.card, borderRadius:12, padding:4, marginBottom:18 }}>
+              {["My Plan","Find Coach"].map((l,i)=>(
+                <button key={l} onClick={()=>{ if(i===1) setTab("coach"); }} style={{ flex:1, background:i===0?T.grad:"none", border:"none", borderRadius:10, padding:"9px", fontFamily:"'Inter'", fontSize:13, fontWeight:700, color:i===0?"#fff":T.muted, cursor:"pointer" }}>{l}</button>
+              ))}
+            </div>
+
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+              <div>
+                <div style={{ fontWeight:800, fontSize:20, lineHeight:1.2 }}>This Week's<br/>Plan</div>
+                <div style={{ fontSize:11, color:T.muted, marginTop:4 }}>Week 8 of 16 · Base Building Phase</div>
+              </div>
+              <button onClick={getAI} disabled={aiLoading} style={{ background:aiLoading?T.card:T.grad, border:`1px solid ${T.border}`, borderRadius:12, padding:"10px 14px", fontFamily:"'Inter'", fontSize:11, fontWeight:700, color:"#fff", cursor:aiLoading?"wait":"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, minWidth:80 }}>
+                <span style={{ fontSize:14 }}>✦</span>
+                <span>AI Coach<br/>Notes</span>
+              </button>
+            </div>
+
+            {aiNote && (
+              <div style={{ background:`${T.purple}15`, border:`1px solid ${T.purple}40`, borderRadius:12, padding:14, marginBottom:14, animation:"su .3s ease" }}>
+                <div style={{ fontSize:9, fontWeight:700, color:T.purple, letterSpacing:1.5, marginBottom:6 }}>✦ AI COACH · RUNIQ</div>
+                <div style={{ fontSize:12, lineHeight:1.7, color:T.ink }}>{aiNote}{streaming&&<span style={{ opacity:.4 }}>▋</span>}</div>
+              </div>
+            )}
+
+            {/* Coach approval banner */}
+            {coach && (
+              <div style={{ background:T.card, border:`1px solid ${planApproved?T.green+"50":T.yellow+"50"}`, borderRadius:12, padding:"10px 14px", marginBottom:14, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <Av init={coach.init} color={coach.color} size={28}/>
+                  <div style={{ fontSize:11, color:T.muted }}>Coach {coach.name.split(" ")[0]}</div>
+                </div>
+                <Chip label={planApproved?"✓ Approved":"⏳ Awaiting Review"} color={planApproved?T.green:T.yellow}/>
+              </div>
+            )}
+
+            {/* Progress */}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"12px 14px", marginBottom:14 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                <div style={{ fontSize:11, color:T.muted }}>Weekly Progress</div>
+                <div style={{ fontFamily:"'DM Mono'", fontSize:11, color:T.ink }}>3/7 sessions</div>
+              </div>
+              <Bar pct={43} gradient={T.gradGreen}/>
+            </div>
+
+            {/* Sessions */}
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              {plan.map((s,i)=>(
+                <div key={i} onClick={()=>setPlan(p=>p.map((x,j)=>j===i?{...x,done:!x.done}:x))}
+                  style={{ background:s.done?`${s.color}12`:T.card, border:`1px solid ${s.done?s.color+"40":T.border}`, borderRadius:12, padding:"13px 14px", display:"flex", gap:12, alignItems:"center", cursor:"pointer", transition:"all .2s" }}>
+                  <div style={{ textAlign:"center", minWidth:32 }}>
+                    <div style={{ fontFamily:"'DM Mono'", fontSize:9, color:T.muted }}>{s.day}</div>
+                    <div style={{ fontFamily:"'DM Mono'", fontSize:8, color:T.dim }}>{s.date.split(" ")[1]}</div>
+                  </div>
+                  <div style={{ width:3, height:36, borderRadius:2, background:s.color, flexShrink:0 }}/>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:3 }}>
+                      <span style={{ fontWeight:600, fontSize:13, color:s.done?T.muted:T.ink, textDecoration:s.done?"line-through":"none" }}>{s.type}</span>
+                      {s.zone && <Chip label={s.zone} color={s.color}/>}
+                    </div>
+                    <div style={{ fontSize:10, color:T.muted }}>{s.detail}</div>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    {s.km && <div style={{ fontFamily:"'DM Mono'", fontSize:15, color:s.color, fontWeight:500 }}>{s.km}<span style={{ fontSize:9, color:T.muted }}>km</span></div>}
+                    <div style={{ fontSize:15, color:s.done?T.green:T.dim, marginTop:2 }}>{s.done?"✓":"○"}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* FIND COACH */}
+        {tab==="coach" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            <div style={{ display:"flex", background:T.card, borderRadius:12, padding:4, marginBottom:18 }}>
+              {["My Plan","Find Coach"].map((l,i)=>(
+                <button key={l} onClick={()=>{ if(i===0) setTab("plan"); }} style={{ flex:1, background:i===1?T.grad:"none", border:"none", borderRadius:10, padding:"9px", fontFamily:"'Inter'", fontSize:13, fontWeight:700, color:i===1?"#fff":T.muted, cursor:"pointer" }}>{l}</button>
+              ))}
+            </div>
+
+            <div style={{ fontWeight:800, fontSize:20, marginBottom:4 }}>Find Your Coach</div>
+            <div style={{ fontSize:12, color:T.muted, marginBottom:16 }}>Expert guidance for your running goals</div>
+
+            {/* Search */}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"10px 14px", display:"flex", gap:8, alignItems:"center", marginBottom:14 }}>
+              <span style={{ fontSize:14, opacity:.4 }}>🔍</span>
+              <span style={{ fontSize:12, color:T.dim }}>Search coaches...</span>
+            </div>
+
+            {/* Filter chips */}
+            <div style={{ display:"flex", gap:8, marginBottom:16, overflowX:"auto" }}>
+              {["All","Marathon","Speed","Beginner","Ultra"].map((f,i)=>(
+                <button key={f} style={{ background:i===0?T.grad:T.card, border:`1px solid ${i===0?"transparent":T.border}`, borderRadius:999, padding:"6px 14px", fontFamily:"'Inter'", fontSize:11, fontWeight:600, color:i===0?"#fff":T.muted, cursor:"pointer", whiteSpace:"nowrap" }}>{f}</button>
+              ))}
+            </div>
+
+            <div style={{ fontSize:11, color:T.muted, marginBottom:12 }}>4 coaches found</div>
+
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              {COACHES.map(c=>(
+                <div key={c.id} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:16, padding:16 }}>
+                  <div style={{ display:"flex", gap:12, alignItems:"flex-start", marginBottom:10 }}>
+                    <Av init={c.init} color={c.color} size={48}/>
+                    <div style={{ flex:1 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between" }}>
+                        <div style={{ fontWeight:700, fontSize:15 }}>{c.name}</div>
+                        <div style={{ fontFamily:"'DM Mono'", fontSize:15, fontWeight:500 }}>${c.price}<span style={{ fontSize:9, color:T.muted }}>/mo</span></div>
+                      </div>
+                      <div style={{ fontSize:11, color:T.muted, marginBottom:6 }}>{c.title}</div>
+                      <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                        <Chip label={c.cert} color={c.color}/>
+                        {c.available ? <Chip label="Available" color={T.green}/> : <Chip label="Waitlist" color={T.orange}/>}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:12, fontSize:11, color:T.muted, marginBottom:10 }}>
+                    <span>⭐ {c.rating} ({c.reviews})</span>
+                    <span>· {c.runners} runners</span>
+                    <span>· ⚡ {c.response}</span>
+                  </div>
+                  <div style={{ fontSize:11, color:T.muted, lineHeight:1.6, marginBottom:10 }}>{c.bio}</div>
+                  <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+                    {c.tags.map(t=><Chip key={t} label={t} color={T.dim}/>)}
+                  </div>
+                  <button onClick={()=>{ if(c.available){setBookingCoach(c);setShowBooking(true);} }}
+                    style={{ width:"100%", background:c.available?T.grad:T.card, border:`1px solid ${c.available?"transparent":T.border}`, borderRadius:10, padding:"11px", fontFamily:"'Inter'", fontSize:13, fontWeight:700, color:c.available?"#fff":T.muted, cursor:c.available?"pointer":"not-allowed" }}>
+                    {c.available?`Book ${c.name.split(" ")[0]}`:"Join Waitlist"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* RECORD */}
+        {tab==="record" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            <div style={{ display:"flex", background:T.card, borderRadius:12, padding:4, marginBottom:24 }}>
+              {["This Week","Record"].map((l,i)=>(
+                <button key={l} style={{ flex:1, background:i===1?T.grad:"none", border:"none", borderRadius:10, padding:"9px", fontFamily:"'Inter'", fontSize:13, fontWeight:700, color:i===1?"#fff":T.muted, cursor:"pointer" }}>{l}</button>
+              ))}
+            </div>
+
+            {/* Timer */}
+            <div style={{ textAlign:"center", padding:"40px 0 32px" }}>
+              <div style={{ fontSize:9, color:T.muted, letterSpacing:1.5, marginBottom:8 }}>DURATION</div>
+              <div style={{ fontFamily:"'DM Mono'", fontSize:64, color:T.green, fontWeight:500, lineHeight:1 }}>00:00</div>
+            </div>
+
+            {/* Stats row */}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:16, marginBottom:24, display:"flex", justifyContent:"space-around" }}>
+              {[["0.00","KM"],["--:--","PACE /KM"],["--","BPM"]].map(([v,l])=>(
+                <div key={l} style={{ textAlign:"center" }}>
+                  <div style={{ fontFamily:"'DM Mono'", fontSize:20, fontWeight:500 }}>{v}</div>
+                  <div style={{ fontSize:9, color:T.muted, marginTop:2 }}>{l}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* GPS status */}
+            <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
+              <Chip label="⬛ GPS locked" color={T.green}/>
+            </div>
+
+            {/* Play button */}
+            <div style={{ display:"flex", justifyContent:"center", marginBottom:20 }}>
+              <button style={{ width:72, height:72, borderRadius:"50%", background:T.gradGreen, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, boxShadow:`0 0 30px ${T.green}40` }}>▶</button>
+            </div>
+
+            {/* Manual input */}
+            <button style={{ width:"100%", background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"13px", fontFamily:"'Inter'", fontSize:13, fontWeight:600, color:T.muted, cursor:"pointer" }}>✏ Manual Input</button>
+
+            {/* Recent activities */}
+            <div style={{ fontWeight:700, fontSize:13, margin:"20px 0 10px" }}>Recent Activities</div>
+            {ACTIVITIES.map(a=>(
+              <div key={a.id} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:14, marginBottom:10 }}>
+                <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
+                  <div style={{ width:36, height:36, borderRadius:10, background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, flexShrink:0 }}>〜</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:13 }}>{a.name}</div>
+                    <div style={{ fontSize:10, color:T.muted }}>{a.date} · via {a.source}</div>
+                  </div>
+                  <Chip label={a.feel} color={a.feelColor}/>
+                </div>
+                <div style={{ display:"flex", gap:14 }}>
+                  {[[a.km+"km","Dist"],[a.dur,"Time"],[a.pace+"/km","Pace"],[a.hr+"bpm","HR"]].map(([v,l])=>(
+                    <div key={l}>
+                      <div style={{ fontFamily:"'DM Mono'", fontSize:13, fontWeight:500 }}>{v}</div>
+                      <div style={{ fontSize:9, color:T.muted }}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* CHAT */}
+        {tab==="chat" && (
+          <div style={{ padding:18, animation:"su .3s ease", height:"calc(100% - 80px)", display:"flex", flexDirection:"column" }}>
+            {/* Search */}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"10px 14px", display:"flex", gap:8, alignItems:"center", marginBottom:16 }}>
+              <span style={{ fontSize:14, opacity:.4 }}>🔍</span>
+              <span style={{ fontSize:12, color:T.dim }}>Search messages...</span>
+            </div>
+
+            {coach ? (
+              <>
+                {/* Active coach chat */}
+                <div style={{ background:`${T.purple}15`, border:`1px solid ${T.purple}30`, borderRadius:12, padding:"10px 14px", marginBottom:14, display:"flex", gap:10, alignItems:"center" }}>
+                  <Av init={coach.init} color={coach.color} size={32}/>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:13 }}>{coach.name}</div>
+                    <div style={{ fontSize:10, color:T.muted }}>{coach.title} · Your Coach</div>
+                  </div>
+                  <div style={{ width:8, height:8, borderRadius:"50%", background:T.green }}/>
+                </div>
+                <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:10, marginBottom:12 }}>
+                  {msgs.map(m=>(
+                    <div key={m.id} style={{ display:"flex", flexDirection:m.from==="runner"?"row-reverse":"row", gap:8, alignItems:"flex-end" }}>
+                      {m.from==="coach" && <Av init={coach.init} color={coach.color} size={26}/>}
+                      <div style={{ maxWidth:"78%", background:m.from==="runner"?T.grad:T.card, border:m.from==="runner"?"none":`1px solid ${T.border}`, borderRadius:m.from==="runner"?"14px 14px 4px 14px":"14px 14px 14px 4px", padding:"10px 13px" }}>
+                        <div style={{ fontSize:12, lineHeight:1.6 }}>{m.text}</div>
+                        <div style={{ fontSize:9, opacity:.4, marginTop:3, textAlign:m.from==="runner"?"right":"left" }}>{m.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={endRef}/>
+                </div>
+                <div style={{ display:"flex", gap:8, background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:8, flexShrink:0 }}>
+                  <input value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder="Message your coach..." style={{ flex:1, background:"none", border:"none", outline:"none", fontFamily:"'Inter'", fontSize:12, color:T.ink, padding:"4px 6px" }}/>
+                  <button onClick={sendMsg} style={{ background:T.grad, color:"#fff", border:"none", borderRadius:8, padding:"7px 12px", fontFamily:"'Inter'", fontSize:12, fontWeight:700, cursor:"pointer" }}>Send</button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Message threads */}
+                {[
+                  {init:"SM",name:"Sarah Mitchell",preview:"Great job on today's tempo run! Keep the effor...",time:"2m",badge:2,color:"#7c3aed",online:true},
+                  {init:"AT",name:"Alex Thompson",preview:"Thanks for the plan adjustments, feeling much bett...",time:"1h",badge:0,color:T.orange,online:false},
+                  {init:"JC",name:"Jamie Chen",preview:"Readiness score looking good this week!",time:"3h",badge:1,color:T.green,online:true},
+                  {init:"🏃",name:"Morning Runners Club",preview:"Ryan: See you all at 6am Saturday!",time:"Yesterday",badge:5,color:T.purple,online:false,group:true},
+                  {init:"ML",name:"Marcus Lee",preview:"That trail route you shared looks epic",time:"Yesterday",badge:0,color:T.yellow,online:false},
+                ].map((c,i)=>(
+                  <div key={i} onClick={()=>{ if(i===0) { setCoach(COACHES[0]); } }} style={{ display:"flex", gap:12, alignItems:"center", padding:"12px 0", borderBottom:`1px solid ${T.border}`, cursor:"pointer" }}>
+                    <div style={{ position:"relative" }}>
+                      <Av init={c.init} color={c.color} size={44}/>
+                      {c.online && <div style={{ position:"absolute", bottom:1, right:1, width:10, height:10, borderRadius:"50%", background:T.green, border:`2px solid ${T.bg}` }}/>}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontWeight:600, fontSize:13 }}>{c.name}</div>
+                      <div style={{ fontSize:11, color:T.muted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{c.preview}</div>
+                    </div>
+                    <div style={{ textAlign:"right", flexShrink:0 }}>
+                      <div style={{ fontSize:10, color:c.badge?T.blue:T.muted, marginBottom:4 }}>{c.time}</div>
+                      {c.badge>0 && <div style={{ width:18, height:18, borderRadius:"50%", background:T.blue, display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700, marginLeft:"auto" }}>{c.badge}</div>}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:8 }}>
+                  {[{icon:"👥",title:"Find a Friend",sub:"Connect with other runners"},{icon:"🏃",title:"Find a Community",sub:"Join running groups near you"}].map(c=>(
+                    <div key={c.title} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"12px 14px", display:"flex", gap:12, alignItems:"center", cursor:"pointer" }}>
+                      <div style={{ width:40, height:40, borderRadius:10, background:T.purple+"20", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>{c.icon}</div>
+                      <div>
+                        <div style={{ fontWeight:600, fontSize:13 }}>{c.title}</div>
+                        <div style={{ fontSize:11, color:T.muted }}>{c.sub}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* PROFILE */}
+        {tab==="profile" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            {/* Header card */}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:16, padding:20, marginBottom:16, textAlign:"center" }}>
+              <div style={{ position:"relative", display:"inline-block", marginBottom:12 }}>
+                <div style={{ width:72, height:72, borderRadius:"50%", background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:32 }}>🏃</div>
+                <div style={{ position:"absolute", bottom:0, right:0, width:22, height:22, borderRadius:"50%", background:T.purple, border:`2px solid ${T.bg}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10 }}>✏</div>
+              </div>
+              <div style={{ fontWeight:800, fontSize:18 }}>Alex Thompson</div>
+              <div style={{ fontSize:11, color:T.muted, marginBottom:14 }}>Marathon Runner · Sub-4hr Goal</div>
+              <div style={{ display:"flex", justifyContent:"space-around" }}>
+                {[["247","Total KM"],["42","Runs"],["8","Weeks"]].map(([v,l])=>(
+                  <div key={l} style={{ textAlign:"center" }}>
+                    <div style={{ fontFamily:"'DM Mono'", fontSize:22, fontWeight:500 }}>{v}</div>
+                    <div style={{ fontSize:10, color:T.muted, marginTop:2 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Coach section */}
+            {coach && (
+              <div style={{ marginBottom:16 }}>
+                <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>My Coach</div>
+                <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:14, display:"flex", gap:12, alignItems:"center" }}>
+                  <Av init={coach.init} color={coach.color} size={44}/>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14 }}>{coach.name}</div>
+                    <div style={{ fontSize:11, color:T.muted }}>{coach.title}</div>
+                  </div>
+                  <button onClick={()=>setTab("chat")} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:8, padding:"7px 12px", fontFamily:"'Inter'", fontSize:11, fontWeight:600, color:T.ink, cursor:"pointer" }}>💬 Message</button>
+                </div>
+              </div>
+            )}
+
+            {/* Goal */}
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>Current Goal</div>
+              <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:14 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <div style={{ fontWeight:700 }}>Sub-4hr Marathon</div>
+                  <div style={{ fontFamily:"'DM Mono'", fontSize:13, color:T.cyan }}>34%</div>
+                </div>
+                <div style={{ fontSize:11, color:T.muted, marginBottom:10 }}>Target: October 15, 2026</div>
+                <Bar pct={34}/>
+                <div style={{ display:"flex", justifyContent:"space-between", marginTop:6, fontSize:10, color:T.muted }}>
+                  <span>Week 8 of 24</span><span>34% complete</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Account */}
+            <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>Account</div>
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
+              {[
+                {icon:"👤",label:"Edit Profile",sub:"Name, bio, personal info"},
+                {icon:"🔔",label:"Notifications",sub:"Alerts & reminders"},
+                {icon:"💳",label:"Subscription",sub:"Free plan · Upgrade to Pro"},
+                {icon:"🔒",label:"Privacy",sub:"Data & visibility settings"},
+                {icon:"❓",label:"Help & Support",sub:"FAQ, contact, feedback"},
+              ].map((r,i)=>(
+                <div key={r.label} style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 16px", borderBottom:i<4?`1px solid ${T.border}`:"none", cursor:"pointer" }}>
+                  <div style={{ width:32, height:32, borderRadius:8, background:T.surface, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>{r.icon}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:500, fontSize:13 }}>{r.label}</div>
+                    <div style={{ fontSize:10, color:T.muted }}>{r.sub}</div>
+                  </div>
+                  <span style={{ color:T.dim, fontSize:14 }}>›</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Nav */}
+      <div style={{ background:T.surface, borderTop:`1px solid ${T.border}`, display:"flex", padding:"8px 0 4px", flexShrink:0 }}>
+        {navItems.map(n=>(
+          <button key={n.id} onClick={()=>setTab(n.id)} style={{ flex:1, background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, padding:"4px 0" }}>
+            <span style={{ fontSize:16, opacity:tab===n.id?1:.25 }}>{n.icon}</span>
+            <span style={{ fontFamily:"'Inter'", fontSize:8, color:tab===n.id?T.purpleLight:T.muted, fontWeight:tab===n.id?700:400, letterSpacing:.3 }}>{n.label}</span>
+            {tab===n.id && <div style={{ width:4, height:4, borderRadius:"50%", background:T.purpleLight, marginTop:1 }}/>}
+          </button>
+        ))}
+      </div>
+
+      {/* Booking sheet */}
+      {showBooking && bookingCoach && (
+        <div style={{ position:"absolute", inset:0, background:"#00000080", display:"flex", alignItems:"flex-end", zIndex:100 }} onClick={()=>setShowBooking(false)}>
+          <div style={{ background:T.surface, borderRadius:"20px 20px 0 0", padding:24, width:"100%", animation:"slideSheet .3s ease" }} onClick={e=>e.stopPropagation()}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
+              <div style={{ fontWeight:800, fontSize:18 }}>Book {bookingCoach.name.split(" ")[0]}</div>
+              <button onClick={()=>setShowBooking(false)} style={{ background:"none", border:"none", color:T.muted, fontSize:20, cursor:"pointer" }}>✕</button>
+            </div>
+            <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:20 }}>
+              <Av init={bookingCoach.init} color={bookingCoach.color} size={48}/>
+              <div>
+                <div style={{ fontWeight:700, fontSize:15 }}>{bookingCoach.name}</div>
+                <div style={{ fontSize:12, color:T.muted }}>{bookingCoach.title}</div>
+              </div>
+            </div>
+            <div style={{ fontSize:10, color:T.muted, letterSpacing:1.5, marginBottom:12 }}>WHAT'S INCLUDED</div>
+            {["Personalized 7-day training plan","Weekly 1:1 video check-in","Real-time messaging support","RUNIQ AI + coach hybrid insights","Plan adjustments based on HRV & readiness"].map(i=>(
+              <div key={i} style={{ display:"flex", gap:10, alignItems:"center", marginBottom:10 }}>
+                <span style={{ color:T.green, fontSize:14 }}>✓</span>
+                <span style={{ fontSize:13 }}>{i}</span>
+              </div>
+            ))}
+            <div style={{ fontSize:10, color:T.muted, letterSpacing:1.5, margin:"16px 0 10px" }}>COACH HIGHLIGHTS</div>
+            {bookingCoach.highlights.map(h=>(
+              <div key={h} style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8 }}>
+                <div style={{ width:4, height:4, borderRadius:"50%", background:T.muted }}/>
+                <span style={{ fontSize:12, color:T.muted }}>{h}</span>
+              </div>
+            ))}
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"14px 16px", margin:"16px 0", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontFamily:"'DM Mono'", fontSize:22, fontWeight:500 }}>${bookingCoach.price}<span style={{ fontSize:11, color:T.muted, fontFamily:"'Inter'" }}>/month</span></div>
+                <div style={{ fontSize:10, color:T.muted }}>Cancel anytime · No setup fee</div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:10, color:T.muted }}>Responds in</div>
+                <div style={{ fontWeight:700, fontSize:13, color:T.green }}>{bookingCoach.response}</div>
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={()=>{setShowBooking(false);setTab("chat");}} style={{ flex:1, background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:12, fontFamily:"'Inter'", fontSize:13, fontWeight:600, color:T.muted, cursor:"pointer" }}>💬 Message First</button>
+              <button onClick={()=>{ setCoach(bookingCoach); setShowBooking(false); setPlanApproved(false); setTab("plan"); }} style={{ flex:2, background:T.grad, border:"none", borderRadius:12, padding:12, fontFamily:"'Inter'", fontSize:13, fontWeight:700, color:"#fff", cursor:"pointer" }}>📅 Book Now</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── COACH APP ────────────────────────────────────────────────────
+function CoachApp({ onApprove, approved }) {
+  const [tab, setTab] = useState("runners");
+  const [selected, setSelected] = useState(null);
+  const [plan, setPlan] = useState(WEEK_PLAN);
+  const [editing, setEditing] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [msgs, setMsgs] = useState(MESSAGES);
+  const [draft, setDraft] = useState("");
+  const endRef = useRef(null);
+  useEffect(()=>{ endRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
+
+  const sendMsg = () => { if(!draft.trim()) return; setMsgs(m=>[...m,{id:Date.now(),from:"coach",text:draft,time:"Now"}]); setDraft(""); };
+
+  const navItems = [
+    {id:"runners",icon:"◈",label:"Runners"},
+    {id:"review", icon:"◷",label:"Review"},
+    {id:"chat",   icon:"✉",label:"Chat"},
+    {id:"squad",  icon:"∿",label:"Squad"},
+  ];
+
+  return (
+    <div style={{ height:"100%", display:"flex", flexDirection:"column", background:T.bg, fontFamily:"'Inter',sans-serif", color:T.ink, overflow:"hidden" }}>
+
+      {/* Header */}
+      <div style={{ background:T.surface, borderBottom:`1px solid ${T.border}`, padding:"12px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <div style={{ width:28, height:28, borderRadius:8, background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13 }}>〜</div>
+          <span style={{ fontWeight:800, fontSize:15, letterSpacing:-0.3 }}>RUNIQ</span>
+          <Chip label="Coach" color={T.purple}/>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <Chip label={`${COACH_RUNNERS.filter(r=>r.status==="needs_review").length} pending`} color={T.orange}/>
+          <Av init="SM" color={T.purple} size={28}/>
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:"auto", overflowX:"hidden" }}>
+
+        {/* RUNNERS */}
+        {tab==="runners" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            <div style={{ fontWeight:800, fontSize:18, marginBottom:4 }}>Your Runners</div>
+            <div style={{ fontSize:11, color:T.muted, marginBottom:16 }}>{COACH_RUNNERS.length} active · {COACH_RUNNERS.filter(r=>r.status==="needs_review").length} plans need review</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {COACH_RUNNERS.map(r=>{
+                const isApproved = approved.includes(r.id) || r.status==="approved";
+                return (
+                  <div key={r.id} onClick={()=>{ setSelected(r); setTab("review"); }} style={{ background:T.card, border:`1px solid ${isApproved?T.border:T.orange+"50"}`, borderRadius:14, padding:14, cursor:"pointer", transition:"all .2s" }}>
+                    <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:10 }}>
+                      <Av init={r.init} color={r.color} size={38}/>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:700, fontSize:13 }}>{r.name}</div>
+                        <div style={{ fontSize:10, color:T.muted }}>{r.goal}</div>
+                      </div>
+                      {isApproved ? <Chip label="✓ Approved" color={T.green}/> : <Chip label="Needs Review" color={T.orange}/>}
+                    </div>
+                    <div style={{ display:"flex", justifyContent:"space-around", paddingTop:10, borderTop:`1px solid ${T.border}` }}>
+                      {[
+                        {l:"Readiness",v:r.readiness,c:r.readiness>=80?T.green:r.readiness>=60?T.yellow:T.red},
+                        {l:"HRV",v:`${r.hrv}ms`,c:T.ink},
+                        {l:"Load",v:`${r.load}/10`,c:r.load>7?T.red:T.ink},
+                        {l:"Active",v:r.lastActive,c:T.muted},
+                      ].map(s=>(
+                        <div key={s.l} style={{ textAlign:"center" }}>
+                          <div style={{ fontFamily:"'DM Mono'", fontSize:13, color:s.c, fontWeight:500 }}>{s.v}</div>
+                          <div style={{ fontSize:9, color:T.muted, letterSpacing:.5, textTransform:"uppercase", marginTop:2 }}>{s.l}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* REVIEW */}
+        {tab==="review" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            <button onClick={()=>setTab("runners")} style={{ background:"none", border:"none", color:T.muted, fontFamily:"'Inter'", fontSize:11, cursor:"pointer", marginBottom:14, padding:0 }}>← Back to Runners</button>
+            {selected ? (
+              <>
+                {/* Runner context */}
+                <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:14, marginBottom:12, display:"flex", gap:10, alignItems:"center" }}>
+                  <Av init={selected.init} color={selected.color} size={44}/>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:700, fontSize:14 }}>{selected.name}</div>
+                    <div style={{ fontSize:11, color:T.muted, marginBottom:8 }}>{selected.goal}</div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      <Chip label={`Readiness ${selected.readiness}`} color={selected.readiness>=80?T.green:T.yellow}/>
+                      <Chip label={`HRV ${selected.hrv}ms`} color={T.blue}/>
+                      {selected.load>7 && <Chip label={`Load ${selected.load} ⚠`} color={T.red}/>}
+                    </div>
+                  </div>
+                  <Ring value={selected.readiness} size={60}/>
+                </div>
+
+                {/* AI rationale */}
+                <div style={{ background:`${T.purple}12`, border:`1px solid ${T.purple}30`, borderRadius:12, padding:14, marginBottom:12 }}>
+                  <div style={{ fontSize:9, color:T.purple, letterSpacing:1.5, fontWeight:700, marginBottom:8 }}>✦ AI PLAN RATIONALE</div>
+                  <div style={{ fontSize:11, color:T.muted, lineHeight:1.7 }}>HRV is {((selected.hrv-62)/62*100).toFixed(1)}% below 4-week baseline. Intensity adjusted: easy sessions maintained, high-intensity capped at 1 session this week. Long run preserved at 22km — aerobic base priority. Recommend coach monitors Thursday tempo execution. Weekly load: {selected.load}/10 — within safe range.</div>
+                  <div style={{ fontSize:10, color:T.purple, marginTop:8, cursor:"pointer" }}>↓ Show full analysis</div>
+                </div>
+
+                {/* Plan */}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
+                    <div style={{ fontWeight:700, fontSize:13 }}>Weekly Plan</div>
+                    <button onClick={()=>setEditing(!editing)} style={{ background:editing?T.purple:T.card, border:`1px solid ${editing?T.purple:T.border}`, borderRadius:6, padding:"4px 10px", fontFamily:"'Inter'", fontSize:11, fontWeight:600, color:editing?"#fff":T.muted, cursor:"pointer" }}>
+                      {editing?"Done":"Edit"}
+                    </button>
+                  </div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {plan.map((s,i)=>(
+                      <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"11px 13px", display:"flex", gap:10, alignItems:"center" }}>
+                        <div style={{ fontFamily:"'DM Mono'", fontSize:9, color:T.muted, width:22 }}>{s.day}</div>
+                        <div style={{ width:3, height:30, borderRadius:2, background:s.color, flexShrink:0 }}/>
+                        <div style={{ flex:1 }}>
+                          {editing
+                            ? <input value={s.detail} onChange={e=>setPlan(p=>p.map((x,j)=>j===i?{...x,detail:e.target.value}:x))} style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:6, color:T.ink, fontFamily:"'Inter'", fontSize:11, padding:"4px 8px", width:"100%", outline:"none" }}/>
+                            : <>
+                                <div style={{ fontWeight:600, fontSize:12 }}>{s.type}{s.km?` · ${s.km}km`:""}</div>
+                                <div style={{ fontSize:10, color:T.muted, marginTop:1 }}>{s.detail}</div>
+                              </>}
+                        </div>
+                        {s.zone && <Chip label={s.zone} color={s.color}/>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Approve */}
+                {!approved.includes(selected.id) && selected.status!=="approved" ? (
+                  <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:14 }}>
+                    <div style={{ fontSize:12, fontWeight:700, marginBottom:10 }}>Coaching Notes for {selected.name.split(" ")[0]}</div>
+                    <textarea value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="Add feedback before approving... (e.g. 'Reduce tempo to 6km — HRV dip. Keep long run.')" style={{ width:"100%", background:T.bg, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink, fontFamily:"'Inter'", fontSize:12, padding:10, resize:"none", minHeight:70, outline:"none" }}/>
+                    <div style={{ display:"flex", gap:8, marginTop:10 }}>
+                      <button onClick={()=>{ onApprove(selected.id); }} style={{ flex:2, background:T.grad, color:"#fff", border:"none", borderRadius:10, padding:10, fontFamily:"'Inter'", fontSize:12, fontWeight:800, cursor:"pointer" }}>✓ Approve & Send to Runner</button>
+                      <button onClick={()=>setTab("chat")} style={{ flex:1, background:T.bg, color:T.muted, border:`1px solid ${T.border}`, borderRadius:10, padding:10, fontFamily:"'Inter'", fontSize:12, fontWeight:600, cursor:"pointer" }}>Message</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ background:`${T.green}12`, border:`1px solid ${T.green}30`, borderRadius:12, padding:14, textAlign:"center" }}>
+                    <div style={{ fontWeight:700, color:T.green, marginBottom:4 }}>✓ Plan Approved & Sent</div>
+                    <div style={{ fontSize:11, color:T.muted }}>{selected.name.split(" ")[0]} has been notified. Plan is live.</div>
+                  </div>
                 )}
-                {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} openDetail={openDetail} />}
-                {screen === "messages" && <MessagesScreen openDetail={openDetail} />}
-                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} />}
-              </main>
-              <TabBar screen={screen} setScreen={setScreen} />
-              {settingsOpen && (
-                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
-              )}
-              {bookOpen && <BookSheet onClose={() => setBookOpen(false)} />}
-              {detail && <DetailOverlay detail={detail} onBack={() => setDetail(null)} />}
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Logo({ size = 40 }: { size?: number }) {
-  return (
-    <div className="flex items-center justify-center rounded-2xl shadow-brand"
-      style={{ width: size, height: size, background: "var(--gradient-brand)" }}>
-      <Activity className="text-white" size={size * 0.55} strokeWidth={2.5} />
-    </div>
-  );
-}
-
-function TopBar({ onSettings }: { onSettings: () => void }) {
-  return (
-    <header className="flex items-center justify-between border-b border-white/5 px-5 py-4">
-      <div className="flex items-center gap-3">
-        <Logo size={42} />
-        <h1 className="text-2xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
-      </div>
-      <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground">
-        <Settings size={22} />
-      </button>
-    </header>
-  );
-}
-
-function TabBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) => void }) {
-  const items: { id: Screen; icon: any }[] = [
-    { id: "dashboard", icon: LayoutGrid },
-    { id: "plan", icon: Calendar },
-    { id: "activity", icon: Activity },
-    { id: "messages", icon: MessageCircle },
-    { id: "profile", icon: User },
-  ];
-  return (
-    <nav className="absolute bottom-0 left-0 right-0 border-t border-white/5 bg-[#0a0f24]/95 backdrop-blur">
-      <div className="flex items-center justify-around px-2 py-3">
-        {items.map((it) => {
-          const active = screen === it.id;
-          const Icon = it.icon;
-          return (
-            <button key={it.id} onClick={() => setScreen(it.id)} className="relative flex flex-col items-center gap-1 px-4 py-1">
-              <Icon size={22} className={active ? "text-[#3b82f6]" : "text-muted-foreground"} />
-              {active && <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-[#3b82f6]" />}
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-white/5 bg-card/80 ${className}`}>{children}</div>;
-}
-
-function LoginScreen({ onLogin }: { onLogin: () => void }) {
-  return (
-    <div className="flex min-h-screen flex-col px-6 pt-20">
-      <div className="flex flex-col items-center">
-        <Logo size={88} />
-        <h1 className="mt-6 text-4xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
-        <p className="mt-2 text-muted-foreground">AI-Powered Training Platform</p>
-      </div>
-      <form onSubmit={(e) => { e.preventDefault(); onLogin(); }} className="mt-12 space-y-5">
-        <div>
-          <label className="text-sm font-medium">Email</label>
-          <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <Mail size={18} className="text-muted-foreground" />
-            <input type="email" placeholder="you@example.com" className="w-full bg-transparent text-sm outline-none" />
-          </div>
-        </div>
-        <div>
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Password</label>
-            <button type="button" className="text-sm text-[#3b82f6]">Forgot password?</button>
-          </div>
-          <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <Lock size={18} className="text-muted-foreground" />
-            <input type="password" placeholder="••••••••" className="w-full bg-transparent text-sm outline-none" />
-            <Eye size={18} className="text-muted-foreground" />
-          </div>
-        </div>
-        <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">
-          Log In <ArrowRight size={18} />
-        </button>
-      </form>
-      <div className="my-8 flex items-center gap-4">
-        <div className="h-px flex-1 bg-white/10" />
-        <span className="text-xs text-muted-foreground">or continue with</span>
-        <div className="h-px flex-1 bg-white/10" />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold">
-          <Activity size={16} className="text-orange-500" /> Strava
-        </button>
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold">
-          <Activity size={16} className="text-[#3b82f6]" /> Garmin
-        </button>
-      </div>
-      <p className="mt-8 text-center text-sm text-muted-foreground">
-        Don't have an account? <span className="font-semibold text-[#3b82f6]">Sign up</span>
-      </p>
-    </div>
-  );
-}
-
-function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
-  return (
-    <div className="space-y-6 px-5 pt-6">
-      <section>
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-3xl font-bold">Your Readiness</h2>
-            <p className="text-muted-foreground">Ready to train</p>
-          </div>
-          <div className="text-right">
-            <div className="text-5xl font-black text-[#3b82f6]">72</div>
-            <div className="text-xs text-muted-foreground">/ 100</div>
-          </div>
-        </div>
-      </section>
-      <div className="grid grid-cols-3 gap-3">
-        <MetricCard icon={<Heart size={14} />} label="HRV" value="68" unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
-        <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
-        <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
-      </div>
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">7-Day Trend</h3>
-          <TrendingUp size={18} className="text-green-400" />
-        </div>
-        <Sparkline />
-        <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-          {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
-        </div>
-      </Card>
-      <Card className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold">Marathon Goal</h3>
-            <p className="text-sm text-muted-foreground">Sub 3:30 · October 2026</p>
-          </div>
-          <div className="text-2xl font-black text-[#3b82f6]">65%</div>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full bg-gradient-brand" style={{ width: "65%" }} />
-        </div>
-        <div className="mt-5 grid grid-cols-3 text-center">
-          <div><div className="text-xl font-bold">142</div><div className="text-xs text-muted-foreground">Total Miles</div></div>
-          <div><div className="text-xl font-bold">12</div><div className="text-xs text-muted-foreground">Long Runs</div></div>
-          <div><div className="text-xl font-bold">7:45</div><div className="text-xs text-muted-foreground">Avg Pace</div></div>
-        </div>
-      </Card>
-      <section>
-        <h3 className="mb-3 text-xl font-bold">Friends Activity</h3>
-        <button onClick={() => openDetail({ kind: "run", title: "Trail Morning Run — Marcus", date: "Today, 6:14 AM", stats: ["8.3 mi", "1:04:20", "7:45/mi", "158 bpm"] })} className="w-full text-left">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AvatarC initials="ML" color="from-orange-400 to-amber-500" />
-              <div>
-                <div className="font-semibold">Marcus Lee</div>
-                <div className="text-xs text-muted-foreground">Today, 6:14 AM</div>
+              </>
+            ) : (
+              <div style={{ textAlign:"center", padding:"60px 20px", color:T.muted }}>
+                <div style={{ fontSize:40, marginBottom:12 }}>◈</div>
+                <div style={{ fontSize:13 }}>Select a runner from the Runners tab to review their plan</div>
               </div>
-            </div>
-            <span className="rounded-full bg-purple-500/15 px-3 py-1 text-xs font-semibold text-purple-300">Strong</span>
+            )}
           </div>
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500">
-              <Activity size={18} className="text-white" />
+        )}
+
+        {/* CHAT coach */}
+        {tab==="chat" && (
+          <div style={{ padding:18, animation:"su .3s ease", height:"calc(100% - 36px)", display:"flex", flexDirection:"column" }}>
+            <div style={{ fontWeight:700, fontSize:15, marginBottom:2 }}>Alex Thompson</div>
+            <div style={{ fontSize:11, color:T.muted, marginBottom:14 }}>Sub-4hr Marathon · Readiness 72</div>
+            <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:10, marginBottom:12 }}>
+              {msgs.map(m=>(
+                <div key={m.id} style={{ display:"flex", flexDirection:m.from==="coach"?"row-reverse":"row", gap:8, alignItems:"flex-end" }}>
+                  {m.from==="runner" && <Av init="AT" color={T.blue} size={26}/>}
+                  <div style={{ maxWidth:"78%", background:m.from==="coach"?T.grad:T.card, border:m.from==="coach"?"none":`1px solid ${T.border}`, borderRadius:m.from==="coach"?"14px 14px 4px 14px":"14px 14px 14px 4px", padding:"10px 13px" }}>
+                    <div style={{ fontSize:12, lineHeight:1.6 }}>{m.text}</div>
+                    <div style={{ fontSize:9, opacity:.4, marginTop:3, textAlign:m.from==="coach"?"right":"left" }}>{m.time}</div>
+                  </div>
+                </div>
+              ))}
+              <div ref={endRef}/>
             </div>
-            <div className="font-semibold">Trail Morning Run</div>
+            <div style={{ display:"flex", gap:8, background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:8, flexShrink:0 }}>
+              <input value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder="Message Alex..." style={{ flex:1, background:"none", border:"none", outline:"none", fontFamily:"'Inter'", fontSize:12, color:T.ink, padding:"4px 6px" }}/>
+              <button onClick={sendMsg} style={{ background:T.grad, color:"#fff", border:"none", borderRadius:8, padding:"7px 12px", fontFamily:"'Inter'", fontSize:12, fontWeight:800, cursor:"pointer" }}>Send</button>
+            </div>
           </div>
-          <div className="mt-3 grid grid-cols-4 text-sm">
-            <Stat label="Distance" value="8.3 mi" />
-            <Stat label="Duration" value="1:04:20" />
-            <Stat label="Pace" value="7:45/mi" />
-            <Stat label="Avg HR" value="158 bpm" />
+        )}
+
+        {/* SQUAD */}
+        {tab==="squad" && (
+          <div style={{ padding:18, animation:"su .3s ease" }}>
+            <div style={{ fontWeight:800, fontSize:18, marginBottom:16 }}>Squad Overview</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+              {[
+                {label:"Active Runners",val:COACH_RUNNERS.length,color:T.purple},
+                {label:"Plans Pending",val:COACH_RUNNERS.filter(r=>r.status==="needs_review").length,color:T.orange},
+                {label:"Avg Readiness",val:Math.round(COACH_RUNNERS.reduce((a,r)=>a+r.readiness,0)/COACH_RUNNERS.length),color:T.green},
+                {label:"High Load >7",val:COACH_RUNNERS.filter(r=>r.load>7).length,color:T.red},
+              ].map(s=>(
+                <div key={s.label} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:14 }}>
+                  <div style={{ fontFamily:"'DM Mono'", fontSize:30, color:s.color, fontWeight:500 }}>{s.val}</div>
+                  <div style={{ fontSize:10, color:T.muted, marginTop:4 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:16 }}>
+              <div style={{ fontSize:10, color:T.muted, letterSpacing:1.5, marginBottom:14, textTransform:"uppercase" }}>Runner Readiness</div>
+              {COACH_RUNNERS.map(r=>(
+                <div key={r.id} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+                  <Av init={r.init} color={r.color} size={30}/>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                      <span style={{ fontSize:12, fontWeight:600 }}>{r.name.split(" ")[0]}</span>
+                      <span style={{ fontFamily:"'DM Mono'", fontSize:11, color:r.readiness>=80?T.green:r.readiness>=60?T.yellow:T.red }}>{r.readiness}</span>
+                    </div>
+                    <Bar pct={r.readiness} gradient={r.readiness>=80?T.gradGreen:r.readiness>=60?`linear-gradient(90deg,${T.yellow},${T.orange})`:`linear-gradient(90deg,${T.red},#ff6b6b)`} height={4}/>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </Card>
-        </button>
-      </section>
-    </div>
-  );
-}
+        )}
+      </div>
 
-function MetricCard({ icon, label, value, unit, bar }: any) {
-  return (
-    <Card className="p-3">
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
-      <div className="mt-2 flex items-baseline gap-1">
-        <span className="text-xl font-bold">{value}</span>
-        <span className="text-xs text-muted-foreground">{unit}</span>
-      </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/5">
-        <div className="h-full w-2/3 rounded-full" style={{ background: bar }} />
-      </div>
-    </Card>
-  );
-}
-function Stat({ label, value }: { label: string; value: string }) {
-  return <div><div className="text-xs text-muted-foreground">{label}</div><div className="font-semibold">{value}</div></div>;
-}
-function AvatarC({ initials, color }: { initials: string; color: string }) {
-  return (
-    <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${color} text-sm font-bold text-white`}>
-      {initials}
-    </div>
-  );
-}
-function Sparkline() {
-  const pts = [40, 55, 48, 62, 58, 70, 72];
-  const max = 80;
-  const w = 320, h = 90;
-  const step = w / (pts.length - 1);
-  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${i * step} ${h - (p / max) * h}`).join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="mt-4 h-24 w-full">
-      <defs>
-        <linearGradient id="sg" x1="0" x2="1">
-          <stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#a855f7" />
-        </linearGradient>
-      </defs>
-      <path d={path} fill="none" stroke="url(#sg)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function PlanScreen({ tab, setTab, onBook, openDetail }: { tab: "plan" | "find"; setTab: (t: any) => void; onBook: () => void; openDetail: (d: Detail) => void }) {
-  return (
-    <div className="space-y-6 px-5 pt-6">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
-        <div className="grid grid-cols-2 gap-1">
-          <button onClick={() => setTab("plan")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "plan" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>My Plan</button>
-          <button onClick={() => setTab("find")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "find" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Find Coach</button>
-        </div>
-      </div>
-      {tab === "plan" ? <MyPlan openDetail={openDetail} /> : <FindCoach onBook={onBook} openDetail={openDetail} />}
-    </div>
-  );
-}
-
-function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
-  const days = [
-    { day: "Monday", date: "May 5", type: "Easy Run", miles: "5 miles", pace: "8:30/mi", done: true },
-    { day: "Tuesday", date: "May 6", type: "Intervals", miles: "6 miles", pace: "6x800m @ 6:45", done: true },
-    { day: "Wednesday", date: "May 7", type: "Recovery", miles: "4 miles", pace: "9:00/mi", done: true },
-    { day: "Thursday", date: "May 8", type: "Tempo", miles: "5 miles", pace: "7:30/mi", done: false },
-  ];
-  return (
-    <>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold leading-tight">This Week's<br />Plan</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Week 8 of 16 · Base Building Phase</p>
-        </div>
-        <button onClick={() => openDetail({ kind: "ai-notes" })} className="flex items-center gap-2 rounded-2xl bg-gradient-brand px-4 py-3 text-xs font-semibold text-white shadow-brand">
-          <Sparkles size={16} /> AI Coach<br />Notes
-        </button>
-      </div>
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Weekly Progress</span>
-          <span className="font-bold">3/7 sessions</span>
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: "43%", background: "linear-gradient(90deg,#10b981,#3b82f6)" }} />
-        </div>
-      </Card>
-      <div className="space-y-3">
-        {days.map((d) => (
-          <button key={d.day} onClick={() => openDetail({ kind: "workout", day: d.day, date: d.date, type: d.type, miles: d.miles, pace: d.pace })} className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
-            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${d.done ? "bg-emerald-500" : "border border-white/15"}`}>
-              {d.done && <Check size={16} className="text-white" />}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2"><span className="font-bold">{d.day}</span><span className="text-sm text-muted-foreground">{d.date}</span></div>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm">
-                <span className="font-semibold text-[#3b82f6]">{d.type}</span>
-                <span className="text-muted-foreground">·</span>
-                <span>{d.miles}</span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">{d.pace}</span>
-              </div>
-            </div>
-            <ChevronRight size={18} className="text-muted-foreground" />
+      {/* Nav */}
+      <div style={{ background:T.surface, borderTop:`1px solid ${T.border}`, display:"flex", padding:"8px 0 4px", flexShrink:0 }}>
+        {navItems.map(n=>(
+          <button key={n.id} onClick={()=>setTab(n.id)} style={{ flex:1, background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, padding:"4px 0" }}>
+            <span style={{ fontSize:16, opacity:tab===n.id?1:.25 }}>{n.icon}</span>
+            <span style={{ fontFamily:"'Inter'", fontSize:8, color:tab===n.id?T.purpleLight:T.muted, fontWeight:tab===n.id?700:400, letterSpacing:.3 }}>{n.label}</span>
+            {tab===n.id && <div style={{ width:4, height:4, borderRadius:"50%", background:T.purpleLight, marginTop:1 }}/>}
           </button>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
-function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
-  const filters = ["All", "Marathon", "Speed", "Beginner", "Ultra"];
-  const [active, setActive] = useState("All");
+// ── PHONE BEZEL ───────────────────────────────────────────────────
+function Phone({ children, label }) {
   return (
-    <>
-      <div>
-        <h2 className="text-3xl font-bold">Find Your Coach</h2>
-        <p className="mt-2 text-muted-foreground">Expert guidance for your running goals</p>
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
+      <div style={{ fontFamily:"'DM Mono'", fontSize:9, color:T.muted, letterSpacing:2, textTransform:"uppercase" }}>{label}</div>
+      <div style={{ width:300, background:"#0a0a0f", borderRadius:42, padding:"10px 8px", boxShadow:"0 40px 80px #000000cc, 0 0 0 1px #1a1a2e, inset 0 0 0 1px #252840" }}>
+        <div style={{ display:"flex", justifyContent:"center", marginBottom:6 }}>
+          <div style={{ width:90, height:26, background:"#0a0a0f", borderRadius:18, display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+            <div style={{ width:8, height:8, borderRadius:"50%", background:"#1a1a2e" }}/>
+            <div style={{ width:44, height:7, borderRadius:4, background:"#1a1a2e" }}/>
+          </div>
+        </div>
+        <div style={{ borderRadius:30, overflow:"hidden", height:580, position:"relative" }}>
+          {children}
+        </div>
+        <div style={{ display:"flex", justifyContent:"center", marginTop:8 }}>
+          <div style={{ width:90, height:4, borderRadius:2, background:"#252840" }}/>
+        </div>
       </div>
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-        <Search size={18} className="text-muted-foreground" />
-        <input placeholder="Search coaches…" className="w-full bg-transparent text-sm outline-none" />
-      </div>
-      <div className="-mx-5 flex gap-2 overflow-x-auto px-5 scrollbar-hide">
-        {filters.map((f) => (
-          <button key={f} onClick={() => setActive(f)} className={`shrink-0 rounded-full border px-5 py-2 text-sm font-semibold ${active === f ? "border-transparent bg-[#3b82f6] text-white" : "border-white/10 text-muted-foreground"}`}>{f}</button>
+    </div>
+  );
+}
+
+// ── ROOT ─────────────────────────────────────────────────────────
+export default function App() {
+  const [screen, setScreen] = useState("landing");
+  const [coach, setCoach] = useState(null);
+  const [planApproved, setPlanApproved] = useState(false);
+  const [approvedIds, setApprovedIds] = useState([]);
+
+  const handleApprove = (id) => { setApprovedIds(a=>[...a,id]); if(id===1) setPlanApproved(true); };
+
+  if(screen==="login") return (
+    <div style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:"'Inter',sans-serif" }}>
+      <style>{FONTS+`*{box-sizing:border-box;margin:0;padding:0;} @keyframes su{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} @keyframes slideSheet{from{transform:translateY(100%)}to{transform:none}} ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:${T.border};border-radius:2px}`}</style>
+      <div style={{ width:"100%", maxWidth:360, animation:"su .5s ease" }}>
+        {/* Logo */}
+        <div style={{ textAlign:"center", marginBottom:40 }}>
+          <div style={{ width:72, height:72, borderRadius:20, background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:32, margin:"0 auto 16px" }}>〜</div>
+          <div style={{ fontWeight:900, fontSize:28, letterSpacing:-1, background:T.grad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>RUNIQ</div>
+          <div style={{ fontSize:12, color:T.muted, marginTop:4 }}>AI-Powered Training Platform</div>
+        </div>
+
+        {/* Role toggle */}
+        <div style={{ background:T.card, borderRadius:14, padding:4, marginBottom:24 }}>
+          <div style={{ display:"flex" }}>
+            {["Runner","Trainer"].map((r,i)=>(
+              <button key={r} style={{ flex:1, background:i===0?T.grad:"none", border:"none", borderRadius:11, padding:"10px", fontFamily:"'Inter'", fontSize:13, fontWeight:700, color:i===0?"#fff":T.muted, cursor:"pointer" }}>{r}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Form */}
+        {[["Email","you@example.com","✉"],["Password","••••••••","🔒"]].map(([l,ph,ic])=>(
+          <div key={l} style={{ marginBottom:14 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+              <span style={{ fontSize:12, fontWeight:600 }}>{l}</span>
+              {l==="Password" && <span style={{ fontSize:11, color:T.blue, cursor:"pointer" }}>Forgot password?</span>}
+            </div>
+            <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"12px 14px", display:"flex", gap:10, alignItems:"center" }}>
+              <span style={{ fontSize:14, opacity:.4 }}>{ic}</span>
+              <span style={{ fontSize:12, color:T.dim }}>{ph}</span>
+              {l==="Password" && <span style={{ fontSize:14, opacity:.3, marginLeft:"auto" }}>👁</span>}
+            </div>
+          </div>
         ))}
-      </div>
-      <p className="text-sm text-muted-foreground">4 coaches found</p>
-      <CoachCard onBook={onBook} openDetail={openDetail} />
-      <button onClick={() => openDetail({ kind: "coach", name: "Marcus Chen", specialty: "Speed & Track", initials: "MC", price: "$199" })} className="w-full text-left">
-      <Card className="p-5">
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 font-bold text-white">MC</div>
-          <div className="flex-1">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-lg font-bold">Marcus Chen</div>
-                <div className="text-sm text-muted-foreground">Speed & Track</div>
-              </div>
-              <div className="text-right">
-                <div className="font-bold">$199<span className="text-xs text-muted-foreground">/mo</span></div>
-                <span className="mt-1 inline-block rounded-full border border-orange-500/40 px-2 py-0.5 text-xs text-orange-400">Waitlist</span>
-              </div>
-            </div>
-            <div className="mt-3"><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L3</span></div>
-          </div>
-        </div>
-      </Card>
-      </button>
-    </>
-  );
-}
 
-function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
-  return (
-    <Card className="p-5">
-      <button onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "$149" })} className="w-full text-left">
-      <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-brand font-bold text-white shadow-brand">SM</div>
-        <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-lg font-bold">Sarah Mitchell</div>
-              <div className="text-sm text-muted-foreground">Marathon Specialist</div>
-            </div>
-            <div className="text-right">
-              <div className="font-bold">$149<span className="text-xs text-muted-foreground">/mo</span></div>
-              <span className="mt-1 inline-block rounded-full border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-400">Available</span>
-            </div>
-          </div>
-          <div className="mt-3 flex gap-2">
-            <span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L2</span>
-            <span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">RRCA</span>
-          </div>
-        </div>
-      </div>
-      <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><Star size={14} className="fill-yellow-400 text-yellow-400" /><span className="font-semibold text-foreground">4.9</span> (127)</span>
-        <span>·</span>
-        <span className="flex items-center gap-1"><Users size={14} /> 42 runners</span>
-        <span>·</span>
-        <span className="flex items-center gap-1"><Zap size={14} className="text-yellow-400" /> &lt; 1 hr</span>
-      </div>
-      <p className="mt-4 text-sm text-muted-foreground">
-        Former Boston qualifier with 10+ years coaching experience. Specializing in sub-3hr marathon training and injury prevention through biomechanics analysis.
-      </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {["Sub-3hr","VO2max","Injury Prevention"].map((t) => (
-          <span key={t} className="rounded-full bg-white/5 px-3 py-1 text-xs text-muted-foreground">{t}</span>
-        ))}
-      </div>
-      </button>
-      <button onClick={onBook} className="mt-5 w-full rounded-2xl bg-gradient-brand py-3.5 font-semibold text-white shadow-brand">Book Sarah</button>
-    </Card>
-  );
-}
+        <button onClick={()=>setScreen("demo")} style={{ width:"100%", background:T.grad, border:"none", borderRadius:12, padding:"14px", fontFamily:"'Inter'", fontSize:14, fontWeight:800, color:"#fff", cursor:"pointer", marginBottom:20, letterSpacing:-.2 }}>Log In →</button>
 
-function BookSheet({ onClose }: { onClose: () => void }) {
-  const features = [
-    "Personalized 7-day training plan",
-    "Weekly 1:1 video check-in",
-    "Real-time messaging support",
-    "RUNIQ AI + coach hybrid insights",
-    "Plan adjustments based on HRV & readiness",
-  ];
-  return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="mt-auto max-h-[90vh] overflow-y-auto rounded-t-3xl bg-[#0f1530] p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between">
-          <h3 className="text-2xl font-bold">Book Sarah</h3>
-          <button onClick={onClose}><X /></button>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+          <div style={{ flex:1, height:1, background:T.border }}/>
+          <span style={{ fontSize:11, color:T.muted }}>or continue with</span>
+          <div style={{ flex:1, height:1, background:T.border }}/>
         </div>
-        <div className="mt-5 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-brand font-bold text-white shadow-brand">SM</div>
-          <div>
-            <div className="font-bold">Sarah Mitchell</div>
-            <div className="text-sm text-muted-foreground">Marathon Specialist</div>
-          </div>
-        </div>
-        <p className="mt-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">What's included</p>
-        <ul className="mt-3 space-y-3">
-          {features.map((f) => (
-            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="mt-0.5 text-emerald-400" /> {f}</li>
-          ))}
-        </ul>
-        <div className="mt-6 rounded-2xl border border-white/5 bg-white/5 p-4">
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-2xl font-bold">$149<span className="text-sm font-normal text-muted-foreground">/month</span></div>
-              <div className="text-xs text-muted-foreground">Cancel anytime · No setup fee</div>
-            </div>
-            <div className="text-right text-xs">
-              <div className="text-muted-foreground">Responds in</div>
-              <div className="font-bold">&lt; 1 hour</div>
-            </div>
-          </div>
-        </div>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <button className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 py-3.5 text-sm font-semibold"><MessageSquare size={16} /> Message First</button>
-          <button className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-3.5 text-sm font-semibold text-white shadow-brand"><Calendar size={16} /> Book Now</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function ActivityScreen({ tab, setTab, openDetail }: { tab: "week" | "record"; setTab: (t: any) => void; openDetail: (d: Detail) => void }) {
-  return (
-    <div className="space-y-6 px-5 pt-6">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
-        <div className="grid grid-cols-2 gap-1">
-          <button onClick={() => setTab("week")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "week" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>This Week</button>
-          <button onClick={() => setTab("record")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "record" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Record</button>
-        </div>
-      </div>
-      {tab === "week" ? <WeekActivity openDetail={openDetail} /> : <RecordView />}
-    </div>
-  );
-}
-
-function WeekActivity({ openDetail }: { openDetail: (d: Detail) => void }) {
-  return (
-    <>
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">May 5 – May 11, 2026</span>
-        <span className="text-sm font-semibold text-[#3b82f6]">5 activities · 34.8 mi</span>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <SummaryCard icon={<MapPin size={14} />} label="Distance" value="34.8 mi" />
-        <SummaryCard icon={<Zap size={14} />} label="Avg Pace" value="8:02/mi" />
-        <SummaryCard icon={<Heart size={14} />} label="Avg HR" value="152 bpm" />
-      </div>
-      <button onClick={() => openDetail({ kind: "run", title: "Morning Easy Run", date: "Mon, May 5", stats: ["4.2 mi","37:42","8:58/mi","142 bpm"] })} className="block w-full text-left">
-        <RunCard title="Morning Easy Run" date="Mon, May 5" tag="Strava" badge="Great" badgeColor="emerald" stats={["4.2 mi","37:42","8:58/mi","142 bpm"]} routeColor="#f97316" />
-      </button>
-      <button onClick={() => openDetail({ kind: "run", title: "Interval Workout", date: "Tue, May 6", stats: ["6.1 mi","45:18","7:25/mi","168 bpm"] })} className="block w-full text-left">
-        <RunCard title="Interval Workout" date="Tue, May 6" tag="Garmin" badge="Hard" badgeColor="orange" stats={["6.1 mi","45:18","7:25/mi","168 bpm"]} routeColor="#3b82f6" />
-      </button>
-    </>
-  );
-}
-
-function SummaryCard({ icon, label, value }: any) {
-  return (
-    <Card className="p-3">
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
-      <div className="mt-2 text-lg font-bold">{value}</div>
-    </Card>
-  );
-}
-
-function RunCard({ title, date, tag, badge, badgeColor, stats, routeColor }: any) {
-  return (
-    <Card className="overflow-hidden">
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500">
-            <Activity size={20} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-bold">{title}</div>
-                <div className="text-sm text-muted-foreground">{date}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-white/5 px-2 py-1 text-xs text-muted-foreground">{tag}</span>
-                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badgeColor === "emerald" ? "border border-emerald-500/40 text-emerald-400" : "border border-orange-500/40 text-orange-400"}`}>{badge}</span>
-              </div>
-            </div>
-            <div className="mt-3 grid grid-cols-4">
-              <Stat label="Distance" value={stats[0]} />
-              <Stat label="Duration" value={stats[1]} />
-              <Stat label="Pace" value={stats[2]} />
-              <Stat label="Avg HR" value={stats[3]} />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="relative h-40 bg-black/30">
-        <svg viewBox="0 0 300 140" className="h-full w-full">
-          <defs>
-            <pattern id={`g-${routeColor}`} width="30" height="30" patternUnits="userSpaceOnUse">
-              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="white" strokeOpacity="0.05" />
-            </pattern>
-          </defs>
-          <rect width="300" height="140" fill={`url(#g-${routeColor})`} />
-          {routeColor === "#f97316" ? (
-            <path d="M 60 110 L 90 80 L 150 60 L 200 70 L 180 100 L 100 115 Z" fill="none" stroke={routeColor} strokeWidth="3" />
-          ) : (
-            <polyline points="30,110 70,50 110,90 150,40 190,90 230,110" fill="none" stroke={routeColor} strokeWidth="3" />
-          )}
-          <circle cx={routeColor === "#f97316" ? 60 : 30} cy={110} r="5" fill="#10b981" />
-          <circle cx={routeColor === "#f97316" ? 90 : 150} cy={routeColor === "#f97316" ? 115 : 70} r="5" fill="#ef4444" />
-        </svg>
-        <button className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-xs"><Camera size={12} /> Add photo</button>
-      </div>
-    </Card>
-  );
-}
-
-function RecordView() {
-  return (
-    <div className="flex flex-col items-center pt-4">
-      <div className="flex w-full items-center justify-between">
-        <ArrowLeft className="text-muted-foreground" />
-        <span className="text-sm font-bold tracking-[0.3em]">RECORD</span>
-        <div className="text-right text-xs text-emerald-400">
-          <div className="text-lg leading-none">▮▮▮▮▮</div>
-          GPS locked
-        </div>
-      </div>
-      <div className="mt-12 flex flex-col items-center" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.7))" }}>
-        <div className="text-7xl font-black text-emerald-400">00:00</div>
-        <div className="mt-2 text-xs tracking-[0.3em] text-muted-foreground">DURATION</div>
-      </div>
-      <Card className="mt-8 grid w-full grid-cols-3 divide-x divide-white/5 p-5">
-        <div className="text-center"><div className="text-2xl font-bold">0.00</div><div className="text-xs text-muted-foreground tracking-wider">MILES</div></div>
-        <div className="text-center"><div className="text-2xl font-bold">--:--</div><div className="text-xs text-muted-foreground tracking-wider">PACE /MI</div></div>
-        <div className="text-center"><div className="text-2xl font-bold">--</div><div className="text-xs text-muted-foreground tracking-wider">BPM</div></div>
-      </Card>
-      <button className="mt-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.6)]">
-        <Play size={36} className="ml-1 fill-black text-black" />
-      </button>
-      <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 py-4 text-sm font-semibold"><Pencil size={16} /> Manual Input</button>
-    </div>
-  );
-}
-
-function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
-  const convos = [
-    { name: "Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", time: "2m", timeBlue: true, preview: "Great job on today's tempo run! Keep the effor…", unread: 2, online: true },
-    { name: "Alex Thompson", initials: "AT", color: "from-orange-500 to-red-500", time: "1h", preview: "Thanks for the plan adjustments, feeling much bett…" },
-    { name: "Jamie Chen", initials: "JC", color: "from-emerald-400 to-teal-500", time: "3h", timeBlue: true, preview: "Readiness score looking good this week!", unread: 1, online: true },
-    { name: "Morning Runners Club", icon: true, color: "from-pink-500 to-fuchsia-500", time: "Yesterday", timeBlue: true, preview: "Ryan: See you all at 6am Saturday!", unread: 5 },
-    { name: "Marcus Lee", initials: "ML", color: "from-orange-400 to-amber-500", time: "Yesterday", preview: "That trail route you shared looks epic" },
-    { name: "RUNIQ Coaches", icon: true, color: "from-cyan-400 to-blue-500", time: "Mon", preview: "Coach Dana: New HRV protocols drop Monday" },
-  ] as const;
-  return (
-    <div className="space-y-4 px-5 pt-6">
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-        <Search size={18} className="text-muted-foreground" />
-        <input placeholder="Search messages…" className="w-full bg-transparent text-sm outline-none" />
-      </div>
-      <div className="space-y-4">
-        {convos.map((c) => (
-          <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: (c as any).initials, color: c.color, icon: (c as any).icon })} className="flex w-full items-center gap-3 text-left">
-            <div className="relative">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>
-                {(c as any).icon ? <Users size={20} /> : (c as any).initials}
-              </div>
-              {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <div className="truncate font-bold">{c.name}</div>
-                <div className={`text-xs ${(c as any).timeBlue ? "text-[#3b82f6] font-semibold" : "text-muted-foreground"}`}>{c.time}</div>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
-                {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-      <div className="my-4 border-t border-white/5" />
-      <button onClick={() => openDetail({ kind: "find-friend" })} className="w-full text-left">
-        <Card className="flex items-center gap-3 p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
-          <div><div className="font-bold">Find a Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
-        </Card>
-      </button>
-      <button onClick={() => openDetail({ kind: "find-community" })} className="w-full text-left">
-        <Card className="flex items-center gap-3 p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/15 text-purple-400"><Users size={18} /></div>
-          <div><div className="font-bold">Find a Community</div><div className="text-sm text-muted-foreground">Join running groups near you</div></div>
-        </Card>
-      </button>
-    </div>
-  );
-}
-
-function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
-  const items = [
-    { icon: User, title: "Edit Profile", sub: "Name, bio, personal info" },
-    { icon: Bell, title: "Notifications", sub: "Alerts & reminders" },
-    { icon: FileText, title: "Subscription", sub: "Free plan · Upgrade to Pro" },
-    { icon: Shield, title: "Privacy", sub: "Data & visibility settings" },
-    { icon: HelpCircle, title: "Help & Support", sub: "FAQ, contact, feedback" },
-  ];
-  return (
-    <div className="space-y-6 px-5 pt-6">
-      <Card className="p-6 text-center">
-        <div className="relative mx-auto h-20 w-20">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-brand text-3xl shadow-brand">🏃</div>
-          <button onClick={onSettings} className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6]">
-            <Pencil size={12} className="text-white" />
-          </button>
-        </div>
-        <div className="mt-3 text-2xl font-bold">A</div>
-        <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
-        <div className="my-5 h-px bg-white/5" />
-        <div className="grid grid-cols-3 divide-x divide-white/5">
-          <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
-          <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Runs</div></div>
-          <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Weeks</div></div>
-        </div>
-      </Card>
-      <section>
-        <h3 className="mb-3 font-bold">My Coach</h3>
-        <Card className="flex items-center gap-3 p-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-brand text-lg">👩</div>
-          <div className="flex-1">
-            <div className="font-bold">Sarah Mitchell</div>
-            <div className="text-sm text-muted-foreground">Marathon Specialist</div>
-          </div>
-          <button className="flex items-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs"><MessageSquare size={14} /> Message</button>
-        </Card>
-      </section>
-      <section>
-        <h3 className="mb-3 font-bold">Current Goal</h3>
-        <Card className="p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="font-bold">Sub-4hr Marathon</div>
-              <div className="text-sm text-muted-foreground">Target: October 15, 2026</div>
-            </div>
-            <div className="text-xl font-black text-[#3b82f6]">34%</div>
-          </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-            <div className="h-full rounded-full bg-gradient-brand" style={{ width: "34%" }} />
-          </div>
-          <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-            <span>Week 8 of 24</span><span>34% complete</span>
-          </div>
-        </Card>
-      </section>
-      <section>
-        <h3 className="mb-3 font-bold">Account</h3>
-        <Card className="divide-y divide-white/5">
-          {items.map((it) => (
-            <button key={it.title} onClick={() => openDetail({ kind: "profile-item", title: it.title, sub: it.sub })} className="flex w-full items-center gap-4 p-4 text-left">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground"><it.icon size={18} /></div>
-              <div className="flex-1">
-                <div className="font-semibold">{it.title}</div>
-                <div className="text-xs text-muted-foreground">{it.sub}</div>
-              </div>
-              <ChevronRight size={18} className="text-muted-foreground" />
+        <div style={{ display:"flex", gap:10, marginBottom:24 }}>
+          {[["🟠","Strava"],["⬤","Garmin"]].map(([ic,l])=>(
+            <button key={l} onClick={()=>setScreen("demo")} style={{ flex:1, background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"12px", fontFamily:"'Inter'", fontSize:13, fontWeight:600, color:T.ink, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+              <span>{ic}</span>{l}
             </button>
           ))}
-        </Card>
-      </section>
-    </div>
-  );
-}
+        </div>
 
-function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
-  const items = [
-    { icon: LinkIcon, label: "Connect Apps" },
-    { icon: Shield, label: "Privacy Settings" },
-    { icon: Mail, label: "Email Preferences" },
-    { icon: Bell, label: "Notifications" },
-  ];
-  const more = [
-    { icon: HelpCircle, label: "Support" },
-    { icon: FileText, label: "Legal" },
-  ];
-  return (
-    <div className="absolute inset-0 z-50 bg-black/60" onClick={onClose}>
-      <div className="absolute right-0 top-0 h-full w-[88%] overflow-y-auto bg-[#0f1530] p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-white/5 pb-4">
-          <h2 className="text-2xl font-bold">Settings</h2>
-          <button onClick={onClose}><X /></button>
+        <div style={{ textAlign:"center", fontSize:12, color:T.muted }}>
+          Don't have an account? <span style={{ color:T.blue, fontWeight:600, cursor:"pointer" }}>Sign up</span>
         </div>
-        <div className="mt-6 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
-          <div><div className="font-bold">A</div><div className="text-sm text-muted-foreground">Athlete</div></div>
-        </div>
-        <div className="mt-6 space-y-1">
-          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
-        </div>
-        <div className="my-5 h-px bg-white/5" />
-        <div className="space-y-1">
-          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
-        </div>
-        <div className="my-5 h-px bg-white/5" />
-        <button onClick={onLogout} className="flex w-full items-center gap-4 rounded-xl py-3 text-left text-rose-400">
-          <LogOut size={20} /> <span className="font-bold">Log Out</span>
-        </button>
       </div>
     </div>
   );
-}
 
-function Row({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
-  return (
-    <button onClick={onClick} className="flex w-full items-center gap-4 rounded-xl py-3 text-left">
-      <span className="text-muted-foreground">{icon}</span>
-      <span className="flex-1 font-semibold">{label}</span>
-      <ChevronRight size={18} className="text-muted-foreground" />
-    </button>
-  );
-}
-
-function DetailOverlay({ detail, onBack }: { detail: Detail; onBack: () => void }) {
-  return (
-    <div className="absolute inset-0 z-[60] flex flex-col bg-[#0a0f24]">
-      <header className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
-        <button onClick={onBack} className="rounded-full p-1"><ArrowLeft size={22} /></button>
-        <h2 className="text-lg font-bold">{detailTitle(detail)}</h2>
-      </header>
-      <div className="flex-1 overflow-y-auto px-5 py-6">
-        <DetailBody detail={detail} />
+  if(screen==="demo") return (
+    <div style={{ minHeight:"100vh", background:"#08090d", display:"flex", flexDirection:"column", fontFamily:"'Inter',sans-serif" }}>
+      <style>{FONTS+`*{box-sizing:border-box;margin:0;padding:0;} @keyframes su{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} @keyframes slideSheet{from{transform:translateY(100%)}to{transform:none}} ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:${T.border};border-radius:2px}`}</style>
+      {/* Topbar */}
+      <div style={{ background:"#0c0d12", borderBottom:`1px solid ${T.border}`, padding:"10px 20px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <div style={{ width:24, height:24, borderRadius:7, background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11 }}>〜</div>
+          <span style={{ fontWeight:800, fontSize:14, color:T.ink }}>RUNIQ</span>
+          <span style={{ fontSize:9, color:T.muted, fontFamily:"'DM Mono'", letterSpacing:2 }}>v2.0 · LIVE DEMO</span>
+        </div>
+        <button onClick={()=>setScreen("landing")} style={{ background:"none", border:"none", color:T.muted, fontSize:11, cursor:"pointer" }}>← Back</button>
+      </div>
+      {/* Two phones */}
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:48, padding:"32px 16px", flexWrap:"wrap" }}>
+        <Phone label="🏃 Runner App">
+          <RunnerApp coach={coach} setCoach={setCoach} planApproved={planApproved} setPlanApproved={setPlanApproved}/>
+        </Phone>
+        <Phone label="📋 Coach App">
+          <CoachApp onApprove={handleApprove} approved={approvedIds}/>
+        </Phone>
+      </div>
+      <div style={{ textAlign:"center", padding:"0 0 20px", fontFamily:"'DM Mono'", fontSize:8, color:T.dim, letterSpacing:2 }}>
+        LIVE CLAUDE API · NEXT.JS 14 · SUPABASE · STRAVA + GARMIN
       </div>
     </div>
   );
-}
 
-function detailTitle(d: Detail): string {
-  switch (d.kind) {
-    case "chat": return d.name;
-    case "coach": return d.name;
-    case "workout": return `${d.day} · ${d.type}`;
-    case "run": return d.title;
-    case "profile-item": return d.title;
-    case "settings-item": return d.label;
-    case "find-friend": return "Find a Friend";
-    case "find-community": return "Find a Community";
-    case "ai-notes": return "AI Coach Notes";
-    case "upgrade": return "Upgrade to Pro";
-  }
-}
+  // LANDING
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"40px 20px", fontFamily:"'Inter',sans-serif", color:T.ink }}>
+      <style>{FONTS+`*{box-sizing:border-box;margin:0;padding:0;} @keyframes su{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}} @keyframes slideSheet{from{transform:translateY(100%)}to{transform:none}} @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}} ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:${T.border};border-radius:2px}`}</style>
 
-function DetailBody({ detail }: { detail: Detail }) {
-  if (detail.kind === "chat") {
-    const msgs = [
-      { me: false, t: "Great job on today's tempo run! Keep the effort dialed in." },
-      { me: true, t: "Thanks coach — legs felt strong today." },
-      { me: false, t: "Recovery jog tomorrow. Keep HR under 140." },
-    ];
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex-1 space-y-3">
-          {msgs.map((m, i) => (
-            <div key={i} className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${m.me ? "ml-auto bg-[#3b82f6] text-white" : "bg-white/5"}`}>{m.t}</div>
-          ))}
-        </div>
-        <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3">
-          <input placeholder="Type a message…" className="w-full bg-transparent text-sm outline-none" />
-          <button className="rounded-full bg-gradient-brand px-4 py-1.5 text-sm font-semibold text-white">Send</button>
-        </div>
-      </div>
-    );
-  }
-  if (detail.kind === "coach") {
-    return (
-      <div className="space-y-5">
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-brand text-xl font-bold text-white shadow-brand">{detail.initials}</div>
-          <div>
-            <div className="text-xl font-bold">{detail.name}</div>
-            <div className="text-sm text-muted-foreground">{detail.specialty}</div>
-          </div>
-        </div>
-        <Card className="p-5">
-          <div className="text-sm text-muted-foreground">Monthly subscription</div>
-          <div className="text-3xl font-black">{detail.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
-        </Card>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:32, animation:"su .5s ease" }}>
+        <div style={{ width:52, height:52, borderRadius:14, background:T.grad, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, animation:"float 3s ease infinite" }}>〜</div>
         <div>
-          <h3 className="mb-2 font-bold">About</h3>
-          <p className="text-sm text-muted-foreground">10+ years coaching elite runners. Personalized plans validated against your HRV, sleep and recent training load.</p>
+          <div style={{ fontWeight:900, fontSize:34, letterSpacing:-1.5, background:T.grad, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>RUNIQ</div>
+          <div style={{ fontFamily:"'DM Mono'", fontSize:9, color:T.muted, letterSpacing:2 }}>INVESTOR PREVIEW · 2026</div>
         </div>
-        <div>
-          <h3 className="mb-2 font-bold">Certifications</h3>
-          <div className="flex gap-2"><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L2</span><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">RRCA</span></div>
+      </div>
+
+      <div style={{ textAlign:"center", maxWidth:480, marginBottom:40, animation:"su .6s ease" }}>
+        <div style={{ fontSize:38, fontWeight:900, lineHeight:1.15, marginBottom:14, letterSpacing:-1 }}>
+          AI training plans,<br/><Grad>human-validated.</Grad>
         </div>
-        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Book {detail.name.split(" ")[0]}</button>
-      </div>
-    );
-  }
-  if (detail.kind === "workout") {
-    return (
-      <div className="space-y-5">
-        <Card className="p-5">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">{detail.date}</div>
-          <div className="mt-1 text-2xl font-bold text-[#3b82f6]">{detail.type}</div>
-          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-            <div><div className="text-muted-foreground">Distance</div><div className="text-lg font-bold">{detail.miles}</div></div>
-            <div><div className="text-muted-foreground">Target</div><div className="text-lg font-bold">{detail.pace}</div></div>
-          </div>
-        </Card>
-        <div>
-          <h3 className="mb-2 font-bold">Coach Notes</h3>
-          <p className="text-sm text-muted-foreground">Keep effort conversational. Focus on cadence around 175 spm. Hydrate well before and after.</p>
+        <div style={{ fontSize:14, color:T.muted, lineHeight:1.7 }}>
+          The marketplace that connects Indonesian runners with certified coaches — where AI generates the plan, a real expert approves it before the athlete ever sees it.
         </div>
-        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Start Workout</button>
       </div>
-    );
-  }
-  if (detail.kind === "run") {
-    return (
-      <div className="space-y-5">
-        <div className="text-sm text-muted-foreground">{detail.date}</div>
-        <Card className="grid grid-cols-2 gap-4 p-5 text-sm">
-          {["Distance","Duration","Pace","Avg HR"].map((l,i)=>(
-            <div key={l}><div className="text-muted-foreground">{l}</div><div className="text-lg font-bold">{detail.stats[i]}</div></div>
-          ))}
-        </Card>
-        <Card className="h-44 p-0">
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Route map</div>
-        </Card>
-        <button className="w-full rounded-2xl border border-white/10 py-3.5 text-sm font-semibold">Share Activity</button>
-      </div>
-    );
-  }
-  if (detail.kind === "ai-notes") {
-    return (
-      <div className="space-y-4">
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-[#3b82f6]"><Sparkles size={18} /><span className="font-bold">This Week</span></div>
-          <p className="mt-3 text-sm text-muted-foreground">Your HRV is trending up. We've increased Thursday's tempo by 0.5 mi. Coach Sarah reviewed and approved on May 6.</p>
-        </Card>
-        <Card className="p-5">
-          <div className="font-bold">Why this week</div>
-          <ul className="mt-3 space-y-2 text-sm text-muted-foreground list-disc pl-5">
-            <li>Readiness 72 (up from 65)</li>
-            <li>Sleep avg 7.2 hrs</li>
-            <li>Load below CTL target</li>
-          </ul>
-        </Card>
-      </div>
-    );
-  }
-  if (detail.kind === "find-friend") {
-    return (
-      <div className="space-y-3">
-        {["Aldi P.","Rina S.","Budi H.","Citra M."].map((n,i) => (
-          <Card key={n} className="flex items-center gap-3 p-4">
-            <AvatarC initials={n.split(" ").map(s=>s[0]).join("")} color={["from-orange-400 to-amber-500","from-indigo-500 to-purple-500","from-emerald-400 to-teal-500","from-pink-500 to-fuchsia-500"][i]} />
-            <div className="flex-1"><div className="font-bold">{n}</div><div className="text-xs text-muted-foreground">Jakarta · 5x/wk</div></div>
-            <button className="rounded-full bg-[#3b82f6] px-4 py-2 text-xs font-semibold text-white">Add</button>
-          </Card>
+
+      <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center", marginBottom:40, animation:"su .65s ease" }}>
+        {["✦ Live Claude AI","◈ Coach marketplace","◷ Human approval layer","∿ HRV + sleep + load","✉ Real-time coaching"].map(f=>(
+          <div key={f} style={{ fontSize:11, color:T.muted, background:T.card, border:`1px solid ${T.border}`, padding:"5px 12px", borderRadius:999 }}>{f}</div>
         ))}
       </div>
-    );
-  }
-  if (detail.kind === "find-community") {
-    return (
-      <div className="space-y-3">
-        {[
-          { name: "Morning Runners Club", members: 128 },
-          { name: "Jakarta Trail Pack", members: 64 },
-          { name: "Sub-4 Marathon Squad", members: 42 },
-        ].map((g) => (
-          <Card key={g.name} className="p-4">
-            <div className="font-bold">{g.name}</div>
-            <div className="text-xs text-muted-foreground">{g.members} runners</div>
-            <button className="mt-3 w-full rounded-xl bg-gradient-brand py-2.5 text-sm font-semibold text-white shadow-brand">Join</button>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-  if (detail.kind === "upgrade") {
-    return (
-      <div className="space-y-4">
-        <Card className="p-5 text-center">
-          <div className="text-3xl font-black">Pro</div>
-          <div className="text-2xl font-bold">Rp 149k<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
-        </Card>
-        <ul className="space-y-3">
-          {["Unlimited AI plan rewrites","Coach-validated workouts","Advanced HRV insights","Priority messaging"].map(f => (
-            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="text-emerald-400" /> {f}</li>
-          ))}
-        </ul>
-        <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Upgrade</button>
-      </div>
-    );
-  }
-  if (detail.kind === "settings-item" || detail.kind === "profile-item") {
-    const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
-    return (
-      <div className="space-y-4">
-        <Card className="p-5">
-          <div className="font-bold">{(detail as any).title ?? (detail as any).label}</div>
-          <div className="mt-1 text-sm text-muted-foreground">{sub}</div>
-        </Card>
-        <Card className="divide-y divide-white/5">
-          {["Option A","Option B","Option C"].map(o => (
-            <div key={o} className="flex items-center justify-between p-4">
-              <span className="text-sm">{o}</span>
-              <span className="h-5 w-9 rounded-full bg-white/10 p-0.5"><span className="block h-4 w-4 rounded-full bg-white" /></span>
-            </div>
-          ))}
-        </Card>
-      </div>
-    );
-  }
-  return null;
-}
 
+      <div style={{ display:"flex", gap:14, animation:"su .7s ease", flexWrap:"wrap", justifyContent:"center" }}>
+        <button onClick={()=>setScreen("demo")} style={{ background:T.grad, border:"none", borderRadius:14, padding:"14px 32px", fontFamily:"'Inter'", fontSize:15, fontWeight:800, color:"#fff", cursor:"pointer", letterSpacing:-.2 }}>View Live Demo →</button>
+        <button onClick={()=>setScreen("login")} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 28px", fontFamily:"'Inter'", fontSize:15, fontWeight:600, color:T.muted, cursor:"pointer" }}>Try Login Flow</button>
+      </div>
+
+      <div style={{ marginTop:20, fontFamily:"'DM Mono'", fontSize:9, color:T.dim, letterSpacing:2, animation:"su .75s ease" }}>
+        LIVE CLAUDE API · TWO-SIDED PLATFORM · REAL INTERACTIONS
+      </div>
+    </div>
+  );
+}
