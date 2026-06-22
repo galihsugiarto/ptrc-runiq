@@ -191,7 +191,7 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
 
 function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () => void }) {
   const [name, setName] = useState("");
-  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
+  const [gender, setGender] = useState<"male" | "female" | "">("");
   const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
