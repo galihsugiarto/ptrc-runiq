@@ -22,6 +22,66 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+// ---------- OAuth helpers ----------
+// Build provider authorize URLs. The redirect_uri must be whitelisted in each
+// provider's developer console and the access-token exchange must run on a
+// backend (client_secret cannot ship in the browser).
+function connectStrava() {
+  const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID as string | undefined;
+  const redirectUri = `${window.location.origin}/api/public/strava/callback`;
+  if (!clientId) {
+    alert(
+      "Strava not configured.\n\n" +
+      "1) Create an app at https://www.strava.com/settings/api\n" +
+      "2) Set Authorization Callback Domain to this app's host\n" +
+      "3) Add VITE_STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET as project secrets\n" +
+      "4) Implement /api/public/strava/callback to exchange the code for tokens"
+    );
+    return;
+  }
+  const url = new URL("https://www.strava.com/oauth/authorize");
+  url.searchParams.set("client_id", clientId);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("approval_prompt", "auto");
+  url.searchParams.set("scope", "read,activity:read_all,profile:read_all");
+  window.location.href = url.toString();
+}
+
+function connectGarmin() {
+  // Garmin Connect uses OAuth 2.0 + PKCE (Health/Activity API).
+  // The authorize URL is hosted by Garmin; token exchange needs a backend.
+  const clientId = import.meta.env.VITE_GARMIN_CLIENT_ID as string | undefined;
+  const redirectUri = `${window.location.origin}/api/public/garmin/callback`;
+  if (!clientId) {
+    alert(
+      "Garmin not configured.\n\n" +
+      "1) Request access at https://developer.garmin.com/gc-developer-program/\n" +
+      "2) Register the redirect URI: " + redirectUri + "\n" +
+      "3) Add VITE_GARMIN_CLIENT_ID and GARMIN_CLIENT_SECRET as project secrets\n" +
+      "4) Implement PKCE token exchange on /api/public/garmin/callback"
+    );
+    return;
+  }
+  // Generate PKCE verifier/challenge
+  const verifier = crypto.getRandomValues(new Uint8Array(32))
+    .reduce((s, b) => s + b.toString(16).padStart(2, "0"), "");
+  sessionStorage.setItem("garmin_pkce_verifier", verifier);
+  crypto.subtle
+    .digest("SHA-256", new TextEncoder().encode(verifier))
+    .then((buf) => {
+      const challenge = btoa(String.fromCharCode(...new Uint8Array(buf)))
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      const url = new URL("https://connect.garmin.com/oauth2Confirm");
+      url.searchParams.set("client_id", clientId);
+      url.searchParams.set("response_type", "code");
+      url.searchParams.set("redirect_uri", redirectUri);
+      url.searchParams.set("code_challenge", challenge);
+      url.searchParams.set("code_challenge_method", "S256");
+      window.location.href = url.toString();
+    });
+}
+
 type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
 
 export type Detail =
@@ -173,10 +233,10 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
         <div className="h-px flex-1 bg-white/10" />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold">
+        <button onClick={connectStrava} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
           <Activity size={16} className="text-orange-500" /> Strava
         </button>
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold">
+        <button onClick={connectGarmin} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
           <Activity size={16} className="text-[#3b82f6]" /> Garmin
         </button>
       </div>
@@ -191,7 +251,7 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
 
 function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () => void }) {
   const [name, setName] = useState("");
-  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
+  const [gender, setGender] = useState<"male" | "female" | "">("");
   const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -227,8 +287,8 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
 
         <div>
           <label className="text-sm font-medium">Gender</label>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {(["male", "female", "other"] as const).map((g) => (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {(["male", "female"] as const).map((g) => (
               <button
                 key={g}
                 type="button"
@@ -323,6 +383,20 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
           Create Account <ArrowRight size={18} />
         </button>
       </form>
+
+      <div className="my-6 flex items-center gap-4">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="text-xs text-muted-foreground">or sign up with</span>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={connectStrava} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
+          <Activity size={16} className="text-orange-500" /> Strava
+        </button>
+        <button type="button" onClick={connectGarmin} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
+          <Activity size={16} className="text-[#3b82f6]" /> Garmin
+        </button>
+      </div>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
