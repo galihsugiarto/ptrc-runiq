@@ -57,7 +57,6 @@ function Index() {
               <SignupScreen onSignup={() => setAuthed(true)} onBack={() => setAuthMode("login")} />
             )
           ) : (
-          ) : (
             <>
               <TopBar onSettings={() => setSettingsOpen(true)} />
               <main className="pb-28">
