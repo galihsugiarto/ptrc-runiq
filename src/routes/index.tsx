@@ -1,4 +1,8 @@
+// @ts-nocheck
 import { useState, useRef, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/")({ component: App });
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');`;
 
