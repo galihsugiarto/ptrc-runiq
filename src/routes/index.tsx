@@ -51,7 +51,12 @@ function Index() {
       <div className="mx-auto flex max-w-[420px] flex-col">
         <div className="relative min-h-screen overflow-hidden bg-[#0a0f24]">
           {!authed ? (
-            <LoginScreen onLogin={() => setAuthed(true)} />
+            authMode === "login" ? (
+              <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} />
+            ) : (
+              <SignupScreen onSignup={() => setAuthed(true)} onBack={() => setAuthMode("login")} />
+            )
+          ) : (
           ) : (
             <>
               <TopBar onSettings={() => setSettingsOpen(true)} />
