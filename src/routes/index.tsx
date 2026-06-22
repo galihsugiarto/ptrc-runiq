@@ -135,7 +135,7 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   return <div className={`rounded-2xl border border-white/5 bg-card/80 ${className}`}>{children}</div>;
 }
 
-function LoginScreen({ onLogin }: { onLogin: () => void }) {
+function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => void }) {
   return (
     <div className="flex min-h-screen flex-col px-6 pt-20">
       <div className="flex flex-col items-center">
