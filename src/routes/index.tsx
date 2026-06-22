@@ -233,10 +233,10 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
         <div className="h-px flex-1 bg-white/10" />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold">
+        <button onClick={connectStrava} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
           <Activity size={16} className="text-orange-500" /> Strava
         </button>
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold">
+        <button onClick={connectGarmin} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
           <Activity size={16} className="text-[#3b82f6]" /> Garmin
         </button>
       </div>
