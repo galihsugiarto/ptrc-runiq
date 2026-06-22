@@ -384,6 +384,20 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
         </button>
       </form>
 
+      <div className="my-6 flex items-center gap-4">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="text-xs text-muted-foreground">or sign up with</span>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={connectStrava} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
+          <Activity size={16} className="text-orange-500" /> Strava
+        </button>
+        <button type="button" onClick={connectGarmin} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
+          <Activity size={16} className="text-[#3b82f6]" /> Garmin
+        </button>
+      </div>
+
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <button type="button" onClick={onBack} className="font-semibold text-[#3b82f6]">Log in</button>
