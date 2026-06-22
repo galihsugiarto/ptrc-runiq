@@ -37,6 +37,7 @@ export type Detail =
 
 function Index() {
   const [authed, setAuthed] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coachTab, setCoachTab] = useState<"plan" | "find">("plan");
