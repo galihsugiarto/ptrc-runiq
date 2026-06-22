@@ -188,6 +188,186 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
   );
 }
 
+
+function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () => void }) {
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
+  const [dob, setDob] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [role, setRole] = useState<"athlete" | "coach" | "">("");
+  const [agreed, setAgreed] = useState(false);
+
+  const canSubmit = name && gender && dob && email && password && role && agreed;
+
+  return (
+    <div className="flex min-h-screen flex-col px-6 pt-10 pb-10">
+      <button onClick={onBack} className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+        <ArrowLeft size={18} /> Back
+      </button>
+      <div className="flex flex-col items-center">
+        <Logo size={64} />
+        <h1 className="mt-4 text-3xl font-black tracking-wider text-gradient-brand">Create Account</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Join the RUNIQ community</p>
+      </div>
+
+      <form
+        onSubmit={(e) => { e.preventDefault(); if (canSubmit) onSignup(); }}
+        className="mt-8 space-y-4"
+      >
+        <Field label="Full Name">
+          <User size={18} className="text-muted-foreground" />
+          <input
+            value={name} onChange={(e) => setName(e.target.value)}
+            placeholder="Your full name"
+            className="w-full bg-transparent text-sm outline-none"
+          />
+        </Field>
+
+        <div>
+          <label className="text-sm font-medium">Gender</label>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {(["male", "female", "other"] as const).map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => setGender(g)}
+                className={`rounded-xl border py-3 text-sm capitalize transition-colors ${
+                  gender === g
+                    ? "border-[#3b82f6] bg-[#3b82f6]/15 text-white"
+                    : "border-white/10 bg-white/5 text-muted-foreground"
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Field label="Date of Birth">
+          <Calendar size={18} className="text-muted-foreground" />
+          <input
+            type="date"
+            value={dob} onChange={(e) => setDob(e.target.value)}
+            className="w-full bg-transparent text-sm outline-none [color-scheme:dark]"
+          />
+        </Field>
+
+        <Field label="Email">
+          <Mail size={18} className="text-muted-foreground" />
+          <input
+            type="email"
+            value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full bg-transparent text-sm outline-none"
+          />
+        </Field>
+
+        <Field label="Password">
+          <Lock size={18} className="text-muted-foreground" />
+          <input
+            type={showPw ? "text" : "password"}
+            value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="w-full bg-transparent text-sm outline-none"
+          />
+          <button type="button" onClick={() => setShowPw((v) => !v)}>
+            <Eye size={18} className="text-muted-foreground" />
+          </button>
+        </Field>
+
+        <div>
+          <label className="text-sm font-medium">I am a</label>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <RoleCard
+              icon={<Footprints size={22} />}
+              label="Athlete"
+              active={role === "athlete"}
+              onClick={() => setRole("athlete")}
+            />
+            <RoleCard
+              icon={<Award size={22} />}
+              label="Coach"
+              active={role === "coach"}
+              onClick={() => setRole("coach")}
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setAgreed((v) => !v)}
+          className="flex w-full items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-left"
+        >
+          <span
+            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+              agreed ? "border-[#3b82f6] bg-[#3b82f6]" : "border-white/30 bg-transparent"
+            }`}
+          >
+            {agreed && <Check size={14} className="text-white" />}
+          </span>
+          <span className="text-xs leading-relaxed text-muted-foreground">
+            I agree to the{" "}
+            <span className="font-semibold text-[#3b82f6]">Terms of Service</span> and{" "}
+            <span className="font-semibold text-[#3b82f6]">Privacy Policy</span>, and consent to
+            RUNIQ processing my health and training data.
+          </span>
+        </button>
+
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand disabled:opacity-40"
+        >
+          Create Account <ArrowRight size={18} />
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <button type="button" onClick={onBack} className="font-semibold text-[#3b82f6]">Log in</button>
+      </p>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-sm font-medium">{label}</label>
+      <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function RoleCard({
+  icon, label, active, onClick,
+}: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors ${
+        active
+          ? "border-[#3b82f6] bg-[#3b82f6]/15 text-white"
+          : "border-white/10 bg-white/5 text-muted-foreground"
+      }`}
+    >
+      <span
+        className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+          active ? "bg-[#3b82f6] text-white" : "bg-white/5 text-muted-foreground"
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="text-sm font-semibold">{label}</span>
+    </button>
+  );
+}
+
 function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
