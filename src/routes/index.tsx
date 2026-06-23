@@ -99,7 +99,7 @@ export type Detail =
 
 function Index() {
   const [authed, setAuthed] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot">("login");
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coachTab, setCoachTab] = useState<"plan" | "find">("plan");
@@ -114,9 +114,11 @@ function Index() {
         <div className="relative min-h-screen overflow-hidden bg-[#0a0f24]">
           {!authed ? (
             authMode === "login" ? (
-              <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} />
-            ) : (
+              <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
+            ) : authMode === "signup" ? (
               <SignupScreen onSignup={() => setAuthed(true)} onBack={() => setAuthMode("login")} />
+            ) : (
+              <ForgotPasswordScreen onBack={() => setAuthMode("login")} />
             )
           ) : (
             <>
