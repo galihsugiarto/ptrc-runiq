@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Activity, Settings, LayoutGrid, Calendar, MessageCircle, User,
   Heart, Moon, Dumbbell, TrendingUp, ChevronRight, Link as LinkIcon,
   Shield, Mail, Bell, HelpCircle, FileText, LogOut, X, Pencil,
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
-  Footprints, Award,
+  Footprints, Award, Send,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/")({
@@ -98,7 +99,7 @@ export type Detail =
 
 function Index() {
   const [authed, setAuthed] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot">("login");
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coachTab, setCoachTab] = useState<"plan" | "find">("plan");
@@ -113,9 +114,11 @@ function Index() {
         <div className="relative min-h-screen overflow-hidden bg-[#0a0f24]">
           {!authed ? (
             authMode === "login" ? (
-              <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} />
-            ) : (
+              <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
+            ) : authMode === "signup" ? (
               <SignupScreen onSignup={() => setAuthed(true)} onBack={() => setAuthMode("login")} />
+            ) : (
+              <ForgotPasswordScreen onBack={() => setAuthMode("login")} />
             )
           ) : (
             <>
@@ -196,7 +199,7 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   return <div className={`rounded-2xl border border-white/5 bg-card/80 ${className}`}>{children}</div>;
 }
 
-function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => void }) {
+function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onSignup: () => void; onForgot: () => void }) {
   return (
     <div className="flex min-h-screen flex-col px-6 pt-20">
       <div className="flex flex-col items-center">
@@ -215,7 +218,7 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
         <div>
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">Password</label>
-            <button type="button" className="text-sm text-[#3b82f6]">Forgot password?</button>
+            <button type="button" onClick={onForgot} className="text-sm text-[#3b82f6]">Forgot password?</button>
           </div>
           <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <Lock size={18} className="text-muted-foreground" />
@@ -244,6 +247,80 @@ function LoginScreen({ onLogin, onSignup }: { onLogin: () => void; onSignup: () 
         Don't have an account?{" "}
         <button type="button" onClick={onSignup} className="font-semibold text-[#3b82f6]">Sign up</button>
       </p>
+    </div>
+  );
+}
+
+function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!email.trim()) return;
+    setLoading(true);
+    const { error: supaError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (supaError) {
+      setError(supaError.message);
+    } else {
+      setSent(true);
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col px-6 pt-20">
+      <button onClick={onBack} className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+        <ArrowLeft size={18} /> Back to login
+      </button>
+      <div className="flex flex-col items-center">
+        <Logo size={64} />
+        <h1 className="mt-4 text-3xl font-black tracking-wider text-gradient-brand">Reset Password</h1>
+        <p className="mt-1 text-sm text-muted-foreground">We'll send you a reset link</p>
+      </div>
+
+      {sent ? (
+        <div className="mt-12 flex flex-col items-center gap-4 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500/15">
+            <Send size={28} className="text-green-400" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Check your inbox for a password reset link.
+          </p>
+          <button onClick={onBack} className="text-sm font-semibold text-[#3b82f6]">
+            Back to login
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="mt-12 space-y-5">
+          <div>
+            <label className="text-sm font-medium">Email</label>
+            <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <Mail size={18} className="text-muted-foreground" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full bg-transparent text-sm outline-none"
+              />
+            </div>
+          </div>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading || !email.trim()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand disabled:opacity-40"
+          >
+            {loading ? "Sending..." : "Send Reset Link"} <ArrowRight size={18} />
+          </button>
+        </form>
+      )}
     </div>
   );
 }
