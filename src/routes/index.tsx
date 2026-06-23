@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Activity, Settings, LayoutGrid, Calendar, MessageCircle, User,
   Heart, Moon, Dumbbell, TrendingUp, ChevronRight, Link as LinkIcon,
   Shield, Mail, Bell, HelpCircle, FileText, LogOut, X, Pencil,
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
-  Footprints, Award,
+  Footprints, Award, Send,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/")({
