@@ -861,16 +861,54 @@ function RunCard({ title, date, tag, badge, badgeColor, stats, routeColor }: any
   );
 }
 
+type SignalState = "searching" | "low" | "good" | "ready";
+
+const SIGNAL_CONFIG: Record<SignalState, { label: string; color: string; dim: string; bars: number }> = {
+  searching: { label: "Searching…", color: "#ef4444", dim: "rgba(239,68,68,0.15)", bars: 1 },
+  low: { label: "Low signal", color: "#f97316", dim: "rgba(249,115,22,0.15)", bars: 2 },
+  good: { label: "Good signal", color: "#86efac", dim: "rgba(134,239,172,0.15)", bars: 3 },
+  ready: { label: "GPS ready", color: "#22c55e", dim: "rgba(34,197,94,0.15)", bars: 4 },
+};
+
+function SignalIndicator({ state }: { state: SignalState }) {
+  const cfg = SIGNAL_CONFIG[state];
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-end gap-[3px]">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="rounded-sm transition-all duration-300"
+            style={{
+              width: 5,
+              height: 8 + i * 5,
+              backgroundColor: i < cfg.bars ? cfg.color : cfg.dim,
+              boxShadow: i < cfg.bars ? `0 0 8px ${cfg.color}` : "none",
+            }}
+          />
+        ))}
+      </div>
+      <span className="text-[10px] font-semibold tracking-wide" style={{ color: cfg.color }}>
+        {cfg.label}
+      </span>
+    </div>
+  );
+}
+
 function RecordView() {
+  const [signal, setSignal] = useState<SignalState>("ready");
+  const cycle = () => {
+    const order: SignalState[] = ["searching", "low", "good", "ready"];
+    const idx = order.indexOf(signal);
+    setSignal(order[(idx + 1) % order.length]);
+  };
+
   return (
     <div className="flex flex-col items-center pt-4">
-      <div className="flex w-full items-center justify-between">
-        <ArrowLeft className="text-muted-foreground" />
+      <div className="flex w-full items-center justify-between px-5">
+        <button onClick={cycle} className="text-muted-foreground hover:text-foreground"><ArrowLeft size={22} /></button>
         <span className="text-sm font-bold tracking-[0.3em]">RECORD</span>
-        <div className="text-right text-xs text-emerald-400">
-          <div className="text-lg leading-none">▮▮▮▮▮</div>
-          GPS locked
-        </div>
+        <button onClick={cycle}><SignalIndicator state={signal} /></button>
       </div>
       <div className="mt-12 flex flex-col items-center" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.7))" }}>
         <div className="text-7xl font-black text-emerald-400">00:00</div>
