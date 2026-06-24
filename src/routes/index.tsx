@@ -641,6 +641,10 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
     { day: "Wednesday", date: "May 7", type: "Recovery", miles: "4 miles", pace: "9:00/mi", done: true },
     { day: "Thursday", date: "May 8", type: "Tempo", miles: "5 miles", pace: "7:30/mi", done: false },
   ];
+  const total = days.length;
+  const completed = days.filter((d) => d.done).length;
+  const pct = Math.round((completed / total) * 100);
+
   return (
     <>
       <div className="flex items-start justify-between gap-4">
