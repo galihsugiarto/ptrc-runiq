@@ -545,38 +545,6 @@ function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
           </div>
         </div>
       </section>
-      <div className="grid grid-cols-3 gap-3">
-        <MetricCard icon={<Heart size={14} />} label="HRV" value="68" unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
-        <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
-        <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
-      </div>
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">7-Day Trend</h3>
-          <TrendingUp size={18} className="text-green-400" />
-        </div>
-        <Sparkline />
-        <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-          {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
-        </div>
-      </Card>
-      <Card className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold">Marathon Goal</h3>
-            <p className="text-sm text-muted-foreground">Sub 3:30 · October 2026</p>
-          </div>
-          <div className="text-2xl font-black text-[#3b82f6]">65%</div>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full bg-gradient-brand" style={{ width: "65%" }} />
-        </div>
-        <div className="mt-5 grid grid-cols-3 text-center">
-          <div><div className="text-xl font-bold">142</div><div className="text-xs text-muted-foreground">Total Miles</div></div>
-          <div><div className="text-xl font-bold">12</div><div className="text-xs text-muted-foreground">Long Runs</div></div>
-          <div><div className="text-xl font-bold">7:45</div><div className="text-xs text-muted-foreground">Avg Pace</div></div>
-        </div>
-      </Card>
       <section>
         <h3 className="mb-3 text-xl font-bold">Friends Activity</h3>
         <button onClick={() => openDetail({ kind: "run", title: "Trail Morning Run — Marcus", date: "Today, 6:14 AM", stats: ["8.3 mi", "1:04:20", "7:45/mi", "158 bpm"] })} className="w-full text-left">
