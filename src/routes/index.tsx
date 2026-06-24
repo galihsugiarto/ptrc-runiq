@@ -1,14 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Activity, Settings, LayoutGrid, Calendar, MessageCircle, User,
   Heart, Moon, Dumbbell, TrendingUp, ChevronRight, Link as LinkIcon,
-  Shield, Mail, Bell, HelpCircle, FileText, LogOut, X, Pencil,
+  Shield, Bell, HelpCircle, FileText, LogOut, X, Pencil,
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
-  Footprints, Award, Send,
+  Footprints, Award, Send, Mail, AlertTriangle, Smartphone, Watch,
+  Apple, Utensils, ChevronLeft, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import disclaimerMd from "@/content/legal/disclaimer.md?raw";
+import privacyMd from "@/content/legal/privacy.md?raw";
+import tosMd from "@/content/legal/tos.md?raw";
+
 
 
 export const Route = createFileRoute("/")({
@@ -95,7 +100,11 @@ export type Detail =
   | { kind: "find-friend" }
   | { kind: "find-community" }
   | { kind: "ai-notes" }
-  | { kind: "upgrade" };
+  | { kind: "upgrade" }
+  | { kind: "connect-apps" }
+  | { kind: "legal"; doc: "tos" | "privacy" | "disclaimer"; title: string }
+  | { kind: "current-progress" };
+
 
 function Index() {
   const [authed, setAuthed] = useState(false);
@@ -446,10 +455,12 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
           </span>
           <span className="text-xs leading-relaxed text-muted-foreground">
             I agree to the{" "}
-            <span className="font-semibold text-[#3b82f6]">Terms of Service</span> and{" "}
-            <span className="font-semibold text-[#3b82f6]">Privacy Policy</span>, and consent to
-            RUNIQ processing my health and training data.
+            <span className="font-semibold text-[#3b82f6]">Terms of Service</span>,{" "}
+            <span className="font-semibold text-[#3b82f6]">Privacy Policy</span>, and{" "}
+            <span className="font-semibold text-[#3b82f6]">Medical & Fitness Disclaimer</span>, and
+            consent to RUNIQ processing my health and training data.
           </span>
+
         </button>
 
         <button
@@ -534,38 +545,6 @@ function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
           </div>
         </div>
       </section>
-      <div className="grid grid-cols-3 gap-3">
-        <MetricCard icon={<Heart size={14} />} label="HRV" value="68" unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
-        <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
-        <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
-      </div>
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">7-Day Trend</h3>
-          <TrendingUp size={18} className="text-green-400" />
-        </div>
-        <Sparkline />
-        <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-          {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
-        </div>
-      </Card>
-      <Card className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold">Marathon Goal</h3>
-            <p className="text-sm text-muted-foreground">Sub 3:30 · October 2026</p>
-          </div>
-          <div className="text-2xl font-black text-[#3b82f6]">65%</div>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full bg-gradient-brand" style={{ width: "65%" }} />
-        </div>
-        <div className="mt-5 grid grid-cols-3 text-center">
-          <div><div className="text-xl font-bold">142</div><div className="text-xs text-muted-foreground">Total Miles</div></div>
-          <div><div className="text-xl font-bold">12</div><div className="text-xs text-muted-foreground">Long Runs</div></div>
-          <div><div className="text-xl font-bold">7:45</div><div className="text-xs text-muted-foreground">Avg Pace</div></div>
-        </div>
-      </Card>
       <section>
         <h3 className="mb-3 text-xl font-bold">Friends Activity</h3>
         <button onClick={() => openDetail({ kind: "run", title: "Trail Morning Run — Marcus", date: "Today, 6:14 AM", stats: ["8.3 mi", "1:04:20", "7:45/mi", "158 bpm"] })} className="w-full text-left">
@@ -662,6 +641,10 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
     { day: "Wednesday", date: "May 7", type: "Recovery", miles: "4 miles", pace: "9:00/mi", done: true },
     { day: "Thursday", date: "May 8", type: "Tempo", miles: "5 miles", pace: "7:30/mi", done: false },
   ];
+  const total = days.length;
+  const completed = days.filter((d) => d.done).length;
+  const pct = Math.round((completed / total) * 100);
+
   return (
     <>
       <div className="flex items-start justify-between gap-4">
@@ -676,12 +659,43 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
       <Card className="p-5">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Weekly Progress</span>
-          <span className="font-bold">3/7 sessions</span>
+          <span className="font-bold">{completed}/{total} sessions</span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: "43%", background: "linear-gradient(90deg,#10b981,#3b82f6)" }} />
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#3b82f6)" }} />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Sessions auto-fill when synced from Strava, Garmin, or Health apps.</p>
+      </Card>
+
+      <Card className="p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-bold">Program Plan</h3>
+            <p className="text-sm text-muted-foreground">Sub 3:30 Marathon · October 2026</p>
+          </div>
+          <div className="text-2xl font-black text-[#3b82f6]">65%</div>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
+          <div className="h-full rounded-full bg-gradient-brand" style={{ width: "65%" }} />
+        </div>
+        <div className="mt-5 grid grid-cols-3 text-center">
+          <div><div className="text-xl font-bold">142</div><div className="text-xs text-muted-foreground">Total KM</div></div>
+          <div><div className="text-xl font-bold">12</div><div className="text-xs text-muted-foreground">Long Runs</div></div>
+          <div><div className="text-xl font-bold">7:45</div><div className="text-xs text-muted-foreground">Avg Pace</div></div>
+        </div>
+        <div className="mt-5 border-t border-white/5 pt-4">
+          <p className="text-xs text-muted-foreground mb-3">Sync this program as a structured workout plan to:</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => alert("Syncing program to Strava…\n\nWorkouts will appear in your Strava Training Plan.")} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold hover:bg-white/10">
+              <RefreshCw size={14} className="text-orange-500" /> Sync to Strava
+            </button>
+            <button onClick={() => alert("Syncing program to Garmin Connect…\n\nWorkouts will appear on your Garmin device.")} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold hover:bg-white/10">
+              <RefreshCw size={14} className="text-[#3b82f6]" /> Sync to Garmin
+            </button>
+          </div>
         </div>
       </Card>
+
       <div className="space-y-3">
         {days.map((d) => (
           <button key={d.day} onClick={() => openDetail({ kind: "workout", day: d.day, date: d.date, type: d.type, miles: d.miles, pace: d.pace })} className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
@@ -1066,24 +1080,62 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
     { icon: Shield, title: "Privacy", sub: "Data & visibility settings" },
     { icon: HelpCircle, title: "Help & Support", sub: "FAQ, contact, feedback" },
   ];
+  const photoInput = useRef<HTMLInputElement>(null);
+  const bgInput = useRef<HTMLInputElement>(null);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [bg, setBg] = useState<string>("linear-gradient(135deg,#3b82f6,#a855f7)");
+
+  function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (f) setPhoto(URL.createObjectURL(f));
+  }
+  function onBg(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (f) setBg(`url(${URL.createObjectURL(f)}) center/cover`);
+  }
+
   return (
     <div className="space-y-6 px-5 pt-6">
-      <Card className="p-6 text-center">
-        <div className="relative mx-auto h-20 w-20">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-brand text-3xl shadow-brand">🏃</div>
-          <button onClick={onSettings} className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6]">
-            <Pencil size={12} className="text-white" />
+      <Card className="overflow-hidden p-0">
+        {/* Background avatar (editable) */}
+        <div className="relative h-28 w-full" style={{ background: bg }}>
+          <button
+            onClick={() => bgInput.current?.click()}
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 backdrop-blur hover:bg-black/70"
+            aria-label="Edit background"
+          >
+            <Pencil size={14} className="text-white" />
           </button>
+          <input ref={bgInput} type="file" accept="image/*" hidden onChange={onBg} />
         </div>
-        <div className="mt-3 text-2xl font-bold">A</div>
-        <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
-        <div className="my-5 h-px bg-white/5" />
-        <div className="grid grid-cols-3 divide-x divide-white/5">
-          <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
-          <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Runs</div></div>
-          <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Weeks</div></div>
+        <div className="px-6 pb-6 text-center">
+          <div className="relative mx-auto -mt-10 h-20 w-20">
+            <div
+              className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-brand text-3xl shadow-brand ring-4 ring-[#0a0f24]"
+              style={photo ? { backgroundImage: `url(${photo})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+            >
+              {!photo && "🏃"}
+            </div>
+            <button
+              onClick={() => photoInput.current?.click()}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6] ring-2 ring-[#0a0f24]"
+              aria-label="Edit profile photo"
+            >
+              <Pencil size={12} className="text-white" />
+            </button>
+            <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
+          </div>
+          <div className="mt-3 text-2xl font-bold">A</div>
+          <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
+          <div className="my-5 h-px bg-white/5" />
+          <div className="grid grid-cols-3 divide-x divide-white/5">
+            <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
+            <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Runs</div></div>
+            <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Weeks</div></div>
+          </div>
         </div>
       </Card>
+
       <section>
         <h3 className="mb-3 font-bold">My Coach</h3>
         <Card className="flex items-center gap-3 p-4">
@@ -1095,24 +1147,42 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           <button className="flex items-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs"><MessageSquare size={14} /> Message</button>
         </Card>
       </section>
+
       <section>
-        <h3 className="mb-3 font-bold">Current Goal</h3>
-        <Card className="p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="font-bold">Sub-4hr Marathon</div>
-              <div className="text-sm text-muted-foreground">Target: October 15, 2026</div>
+        <h3 className="mb-3 font-bold">Current Progress</h3>
+        <button onClick={() => openDetail({ kind: "current-progress" })} className="w-full text-left">
+          <Card className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold">Training Consistency</div>
+                <div className="text-sm text-muted-foreground">Tap to view weekly & monthly summary</div>
+              </div>
+              <ChevronRight size={20} className="text-muted-foreground" />
             </div>
-            <div className="text-xl font-black text-[#3b82f6]">34%</div>
+            <ProgressGridMini />
+          </Card>
+        </button>
+      </section>
+
+      <section>
+        <h3 className="mb-3 font-bold">Daily Readiness</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <MetricCard icon={<Heart size={14} />} label="HRV" value="68" unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
+          <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
+          <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
+        </div>
+        <Card className="mt-3 p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">7-Day Trend</h3>
+            <TrendingUp size={18} className="text-green-400" />
           </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-            <div className="h-full rounded-full bg-gradient-brand" style={{ width: "34%" }} />
-          </div>
+          <Sparkline />
           <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-            <span>Week 8 of 24</span><span>34% complete</span>
+            {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
           </div>
         </Card>
       </section>
+
       <section>
         <h3 className="mb-3 font-bold">Account</h3>
         <Card className="divide-y divide-white/5">
@@ -1132,16 +1202,65 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
   );
 }
 
+// Status for each calendar day in Current Progress
+type DayStatus = "training" | "rest" | "none";
+
+function generateMonth(year: number, month: number): { date: Date; status: DayStatus }[] {
+  // Build a 5-week (35 day) view starting from the first Sunday on/before the 1st
+  const first = new Date(year, month, 1);
+  const startOffset = first.getDay(); // 0=Sun
+  const start = new Date(year, month, 1 - startOffset);
+  const out: { date: Date; status: DayStatus }[] = [];
+  const today = new Date();
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    let status: DayStatus = "none";
+    if (d.getMonth() === month && d.getTime() <= today.getTime()) {
+      // Demo: weekdays training, weekends rest, with some misses
+      const wd = d.getDay();
+      if (wd === 0 || wd === 6) status = "rest";
+      else status = d.getDate() % 5 === 0 ? "rest" : "training";
+    }
+    out.push({ date: d, status });
+  }
+  return out;
+}
+
+function ProgressGridMini() {
+  const now = new Date();
+  const cells = generateMonth(now.getFullYear(), now.getMonth());
+  return (
+    <div className="mt-4 grid grid-cols-7 gap-1.5">
+      {cells.slice(0, 14).map((c, i) => (
+        <div
+          key={i}
+          className="aspect-square rounded-full"
+          style={{
+            background:
+              c.status === "training" ? "#22c55e" :
+              c.status === "rest" ? "#ef4444" :
+              "rgba(255,255,255,0.08)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
-  const items = [
-    { icon: LinkIcon, label: "Connect Apps" },
-    { icon: Shield, label: "Privacy Settings" },
-    { icon: Mail, label: "Email Preferences" },
-    { icon: Bell, label: "Notifications" },
+  type Item = { icon: any; label: string; onClick: () => void };
+  const items: Item[] = [
+    { icon: LinkIcon, label: "Connect Apps", onClick: () => openDetail({ kind: "connect-apps" }) },
+    { icon: Shield, label: "Privacy Settings", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Settings" }) },
+    { icon: Bell, label: "Notifications", onClick: () => openDetail({ kind: "settings-item", label: "Notifications" }) },
   ];
-  const more = [
-    { icon: HelpCircle, label: "Support" },
-    { icon: FileText, label: "Legal" },
+  const more: Item[] = [
+    { icon: HelpCircle, label: "Support", onClick: () => openDetail({ kind: "settings-item", label: "Support" }) },
+    { icon: FileText, label: "Terms of Service", onClick: () => openDetail({ kind: "legal", doc: "tos", title: "Terms of Service" }) },
+    { icon: Shield, label: "Privacy Policy", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Policy" }) },
+    { icon: AlertTriangle, label: "Medical & Fitness Disclaimer", onClick: () => openDetail({ kind: "legal", doc: "disclaimer", title: "Medical & Fitness Disclaimer" }) },
   ];
   return (
     <div className="absolute inset-0 z-50 bg-black/60" onClick={onClose}>
@@ -1155,12 +1274,13 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
           <div><div className="font-bold">A</div><div className="text-sm text-muted-foreground">Athlete</div></div>
         </div>
         <div className="mt-6 space-y-1">
-          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
+          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
         </div>
         <div className="my-5 h-px bg-white/5" />
         <div className="space-y-1">
-          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
+          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
         </div>
+
         <div className="my-5 h-px bg-white/5" />
         <button onClick={onLogout} className="flex w-full items-center gap-4 rounded-xl py-3 text-left text-rose-400">
           <LogOut size={20} /> <span className="font-bold">Log Out</span>
@@ -1206,8 +1326,12 @@ function detailTitle(d: Detail): string {
     case "find-community": return "Find a Community";
     case "ai-notes": return "AI Coach Notes";
     case "upgrade": return "Upgrade to Pro";
+    case "connect-apps": return "Connect Apps";
+    case "legal": return d.title;
+    case "current-progress": return "Current Progress";
   }
 }
+
 
 function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "chat") {
@@ -1355,6 +1479,19 @@ function DetailBody({ detail }: { detail: Detail }) {
       </div>
     );
   }
+  if (detail.kind === "connect-apps") return <ConnectAppsView />;
+  if (detail.kind === "legal") {
+    const text =
+      detail.doc === "tos" ? tosMd :
+      detail.doc === "privacy" ? privacyMd :
+      disclaimerMd;
+    return (
+      <div className="prose prose-invert max-w-none text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
+        {text}
+      </div>
+    );
+  }
+  if (detail.kind === "current-progress") return <CurrentProgressView />;
   if (detail.kind === "settings-item" || detail.kind === "profile-item") {
     const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
     return (
@@ -1373,7 +1510,169 @@ function DetailBody({ detail }: { detail: Detail }) {
         </Card>
       </div>
     );
+
   }
   return null;
 }
+
+function ConnectAppsView() {
+  const [connected, setConnected] = useState<Record<string, boolean>>({});
+  const apps = [
+    { id: "garmin", name: "Garmin Connect", desc: "Watches & cycling computers", icon: <Watch size={22} className="text-[#3b82f6]" />, onConnect: connectGarmin },
+    { id: "strava", name: "Strava", desc: "Activities & social feed", icon: <Activity size={22} className="text-orange-500" />, onConnect: connectStrava },
+    { id: "apple-health", name: "Apple Health", desc: "iPhone & Apple Watch", icon: <Apple size={22} className="text-white" />, onConnect: () => alert("Apple Health: Tap Allow when iOS prompts to share HealthKit data.") },
+    { id: "google-fit", name: "Google Fit / Android Health", desc: "Android phones & Wear OS", icon: <Smartphone size={22} className="text-emerald-400" />, onConnect: () => alert("Android: redirect to Google Fit authorization (OAuth).") },
+    { id: "huawei-health", name: "Huawei Health", desc: "Huawei watches & bands", icon: <Smartphone size={22} className="text-red-400" />, onConnect: () => alert("Huawei Health Kit: redirect to Huawei ID OAuth.") },
+    { id: "mfp", name: "MyFitnessPal", desc: "Nutrition & calorie tracking", icon: <Utensils size={22} className="text-blue-400" />, onConnect: () => alert("MyFitnessPal: redirect to MFP OAuth.") },
+    { id: "whoop", name: "Whoop", desc: "Recovery, strain & sleep", icon: <Heart size={22} className="text-rose-400" />, onConnect: () => alert("Whoop: redirect to api.prod.whoop.com OAuth.") },
+  ];
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Connect your devices and apps so RUNIQ can sync workouts, recovery metrics, and nutrition automatically.
+      </p>
+      {apps.map((a) => {
+        const isConnected = connected[a.id];
+        return (
+          <Card key={a.id} className="flex items-center gap-4 p-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/5">{a.icon}</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold">{a.name}</div>
+              <div className="text-xs text-muted-foreground truncate">{a.desc}</div>
+            </div>
+            <button
+              onClick={() => {
+                if (isConnected) {
+                  setConnected((c) => ({ ...c, [a.id]: false }));
+                } else {
+                  setConnected((c) => ({ ...c, [a.id]: true }));
+                  a.onConnect();
+                }
+              }}
+              className={`rounded-full px-4 py-2 text-xs font-semibold ${
+                isConnected
+                  ? "border border-emerald-500/40 text-emerald-400"
+                  : "bg-[#3b82f6] text-white"
+              }`}
+            >
+              {isConnected ? "Connected" : "Connect"}
+            </button>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function CurrentProgressView() {
+  const [cursor, setCursor] = useState(() => {
+    const n = new Date();
+    return { y: n.getFullYear(), m: n.getMonth() };
+  });
+  const cells = generateMonth(cursor.y, cursor.m);
+  const monthName = new Date(cursor.y, cursor.m, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const trained = cells.filter((c) => c.status === "training").length;
+  const rest = cells.filter((c) => c.status === "rest").length;
+
+  function shift(delta: number) {
+    setCursor((c) => {
+      const d = new Date(c.y, c.m + delta, 1);
+      return { y: d.getFullYear(), m: d.getMonth() };
+    });
+  }
+
+  // Touch swipe handlers
+  const touchX = useRef<number | null>(null);
+  function onTouchStart(e: React.TouchEvent) { touchX.current = e.touches[0].clientX; }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    if (Math.abs(dx) > 40) shift(dx < 0 ? 1 : -1);
+    touchX.current = null;
+  }
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-5">
+        <div className="flex items-center justify-between">
+          <button onClick={() => shift(-1)} className="rounded-full p-1.5 hover:bg-white/5"><ChevronLeft size={20} /></button>
+          <div className="font-bold">{monthName}</div>
+          <button onClick={() => shift(1)} className="rounded-full p-1.5 hover:bg-white/5"><ChevronRight size={20} /></button>
+        </div>
+        <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-muted-foreground">
+          {["S","M","T","W","T","F","S"].map((d, i) => <div key={i}>{d}</div>)}
+        </div>
+        <div
+          className="mt-2 grid grid-cols-7 gap-1.5 select-none"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {cells.map((c, i) => {
+            const inMonth = c.date.getMonth() === cursor.m;
+            const color =
+              c.status === "training" ? "#22c55e" :
+              c.status === "rest" ? "#ef4444" :
+              "rgba(255,255,255,0.08)";
+            return (
+              <div
+                key={i}
+                className="flex aspect-square items-center justify-center rounded-full text-[10px] font-semibold"
+                style={{
+                  background: color,
+                  color: c.status === "none" ? "rgba(255,255,255,0.4)" : "#0a0f24",
+                  opacity: inMonth ? 1 : 0.25,
+                }}
+              >
+                {c.date.getDate()}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Training</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-500" /> Rest</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-white/10" /> No plan</span>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="mb-3 font-bold">Weekly Summary</h3>
+        <div className="grid grid-cols-7 gap-1.5">
+          {cells.slice(0, 7).map((c, i) => {
+            const ratio = c.status === "training" ? 1 : c.status === "rest" ? 0.3 : 0;
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div className="relative h-9 w-9">
+                  <svg viewBox="0 0 36 36" className="h-9 w-9 -rotate-90">
+                    <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+                    <circle
+                      cx="18" cy="18" r="15" fill="none"
+                      stroke={c.status === "training" ? "#22c55e" : c.status === "rest" ? "#ef4444" : "transparent"}
+                      strokeWidth="4"
+                      strokeDasharray={`${ratio * 94.2} 94.2`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <span className="text-[10px] text-muted-foreground">{["S","M","T","W","T","F","S"][c.date.getDay()]}</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Card className="grid grid-cols-2 gap-4 p-5 text-center">
+        <div>
+          <div className="text-2xl font-bold text-emerald-400">{trained}</div>
+          <div className="text-xs text-muted-foreground">Training days</div>
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-red-400">{rest}</div>
+          <div className="text-xs text-muted-foreground">Rest / missed</div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 
