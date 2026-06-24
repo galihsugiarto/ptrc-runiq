@@ -655,12 +655,43 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
       <Card className="p-5">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Weekly Progress</span>
-          <span className="font-bold">3/7 sessions</span>
+          <span className="font-bold">{completed}/{total} sessions</span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: "43%", background: "linear-gradient(90deg,#10b981,#3b82f6)" }} />
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#3b82f6)" }} />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Sessions auto-fill when synced from Strava, Garmin, or Health apps.</p>
+      </Card>
+
+      <Card className="p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-bold">Program Plan</h3>
+            <p className="text-sm text-muted-foreground">Sub 3:30 Marathon · October 2026</p>
+          </div>
+          <div className="text-2xl font-black text-[#3b82f6]">65%</div>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
+          <div className="h-full rounded-full bg-gradient-brand" style={{ width: "65%" }} />
+        </div>
+        <div className="mt-5 grid grid-cols-3 text-center">
+          <div><div className="text-xl font-bold">142</div><div className="text-xs text-muted-foreground">Total KM</div></div>
+          <div><div className="text-xl font-bold">12</div><div className="text-xs text-muted-foreground">Long Runs</div></div>
+          <div><div className="text-xl font-bold">7:45</div><div className="text-xs text-muted-foreground">Avg Pace</div></div>
+        </div>
+        <div className="mt-5 border-t border-white/5 pt-4">
+          <p className="text-xs text-muted-foreground mb-3">Sync this program as a structured workout plan to:</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => alert("Syncing program to Strava…\n\nWorkouts will appear in your Strava Training Plan.")} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold hover:bg-white/10">
+              <RefreshCw size={14} className="text-orange-500" /> Sync to Strava
+            </button>
+            <button onClick={() => alert("Syncing program to Garmin Connect…\n\nWorkouts will appear on your Garmin device.")} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold hover:bg-white/10">
+              <RefreshCw size={14} className="text-[#3b82f6]" /> Sync to Garmin
+            </button>
+          </div>
         </div>
       </Card>
+
       <div className="space-y-3">
         {days.map((d) => (
           <button key={d.day} onClick={() => openDetail({ kind: "workout", day: d.day, date: d.date, type: d.type, miles: d.miles, pace: d.pace })} className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
