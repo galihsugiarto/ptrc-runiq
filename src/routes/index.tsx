@@ -455,10 +455,12 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
           </span>
           <span className="text-xs leading-relaxed text-muted-foreground">
             I agree to the{" "}
-            <span className="font-semibold text-[#3b82f6]">Terms of Service</span> and{" "}
-            <span className="font-semibold text-[#3b82f6]">Privacy Policy</span>, and consent to
-            RUNIQ processing my health and training data.
+            <span className="font-semibold text-[#3b82f6]">Terms of Service</span>,{" "}
+            <span className="font-semibold text-[#3b82f6]">Privacy Policy</span>, and{" "}
+            <span className="font-semibold text-[#3b82f6]">Medical & Fitness Disclaimer</span>, and
+            consent to RUNIQ processing my health and training data.
           </span>
+
         </button>
 
         <button
