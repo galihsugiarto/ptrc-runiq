@@ -1479,6 +1479,19 @@ function DetailBody({ detail }: { detail: Detail }) {
       </div>
     );
   }
+  if (detail.kind === "connect-apps") return <ConnectAppsView />;
+  if (detail.kind === "legal") {
+    const text =
+      detail.doc === "tos" ? tosMd :
+      detail.doc === "privacy" ? privacyMd :
+      disclaimerMd;
+    return (
+      <div className="prose prose-invert max-w-none text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
+        {text}
+      </div>
+    );
+  }
+  if (detail.kind === "current-progress") return <CurrentProgressView />;
   if (detail.kind === "settings-item" || detail.kind === "profile-item") {
     const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
     return (
@@ -1497,6 +1510,7 @@ function DetailBody({ detail }: { detail: Detail }) {
         </Card>
       </div>
     );
+
   }
   return null;
 }
