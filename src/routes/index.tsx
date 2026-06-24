@@ -1326,8 +1326,12 @@ function detailTitle(d: Detail): string {
     case "find-community": return "Find a Community";
     case "ai-notes": return "AI Coach Notes";
     case "upgrade": return "Upgrade to Pro";
+    case "connect-apps": return "Connect Apps";
+    case "legal": return d.title;
+    case "current-progress": return "Current Progress";
   }
 }
+
 
 function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "chat") {
