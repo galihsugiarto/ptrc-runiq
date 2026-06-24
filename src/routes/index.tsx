@@ -100,7 +100,11 @@ export type Detail =
   | { kind: "find-friend" }
   | { kind: "find-community" }
   | { kind: "ai-notes" }
-  | { kind: "upgrade" };
+  | { kind: "upgrade" }
+  | { kind: "connect-apps" }
+  | { kind: "legal"; doc: "tos" | "privacy" | "disclaimer"; title: string }
+  | { kind: "current-progress" };
+
 
 function Index() {
   const [authed, setAuthed] = useState(false);
