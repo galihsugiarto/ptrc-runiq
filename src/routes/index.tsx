@@ -1080,24 +1080,62 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
     { icon: Shield, title: "Privacy", sub: "Data & visibility settings" },
     { icon: HelpCircle, title: "Help & Support", sub: "FAQ, contact, feedback" },
   ];
+  const photoInput = useRef<HTMLInputElement>(null);
+  const bgInput = useRef<HTMLInputElement>(null);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [bg, setBg] = useState<string>("linear-gradient(135deg,#3b82f6,#a855f7)");
+
+  function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (f) setPhoto(URL.createObjectURL(f));
+  }
+  function onBg(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (f) setBg(`url(${URL.createObjectURL(f)}) center/cover`);
+  }
+
   return (
     <div className="space-y-6 px-5 pt-6">
-      <Card className="p-6 text-center">
-        <div className="relative mx-auto h-20 w-20">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-brand text-3xl shadow-brand">🏃</div>
-          <button onClick={onSettings} className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6]">
-            <Pencil size={12} className="text-white" />
+      <Card className="overflow-hidden p-0">
+        {/* Background avatar (editable) */}
+        <div className="relative h-28 w-full" style={{ background: bg }}>
+          <button
+            onClick={() => bgInput.current?.click()}
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 backdrop-blur hover:bg-black/70"
+            aria-label="Edit background"
+          >
+            <Pencil size={14} className="text-white" />
           </button>
+          <input ref={bgInput} type="file" accept="image/*" hidden onChange={onBg} />
         </div>
-        <div className="mt-3 text-2xl font-bold">A</div>
-        <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
-        <div className="my-5 h-px bg-white/5" />
-        <div className="grid grid-cols-3 divide-x divide-white/5">
-          <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
-          <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Runs</div></div>
-          <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Weeks</div></div>
+        <div className="px-6 pb-6 text-center">
+          <div className="relative mx-auto -mt-10 h-20 w-20">
+            <div
+              className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-brand text-3xl shadow-brand ring-4 ring-[#0a0f24]"
+              style={photo ? { backgroundImage: `url(${photo})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+            >
+              {!photo && "🏃"}
+            </div>
+            <button
+              onClick={() => photoInput.current?.click()}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6] ring-2 ring-[#0a0f24]"
+              aria-label="Edit profile photo"
+            >
+              <Pencil size={12} className="text-white" />
+            </button>
+            <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
+          </div>
+          <div className="mt-3 text-2xl font-bold">A</div>
+          <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
+          <div className="my-5 h-px bg-white/5" />
+          <div className="grid grid-cols-3 divide-x divide-white/5">
+            <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
+            <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Runs</div></div>
+            <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Weeks</div></div>
+          </div>
         </div>
       </Card>
+
       <section>
         <h3 className="mb-3 font-bold">My Coach</h3>
         <Card className="flex items-center gap-3 p-4">
@@ -1109,24 +1147,42 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           <button className="flex items-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs"><MessageSquare size={14} /> Message</button>
         </Card>
       </section>
+
       <section>
-        <h3 className="mb-3 font-bold">Current Goal</h3>
-        <Card className="p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="font-bold">Sub-4hr Marathon</div>
-              <div className="text-sm text-muted-foreground">Target: October 15, 2026</div>
+        <h3 className="mb-3 font-bold">Current Progress</h3>
+        <button onClick={() => openDetail({ kind: "current-progress" })} className="w-full text-left">
+          <Card className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold">Training Consistency</div>
+                <div className="text-sm text-muted-foreground">Tap to view weekly & monthly summary</div>
+              </div>
+              <ChevronRight size={20} className="text-muted-foreground" />
             </div>
-            <div className="text-xl font-black text-[#3b82f6]">34%</div>
+            <ProgressGridMini />
+          </Card>
+        </button>
+      </section>
+
+      <section>
+        <h3 className="mb-3 font-bold">Daily Readiness</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <MetricCard icon={<Heart size={14} />} label="HRV" value="68" unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
+          <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
+          <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
+        </div>
+        <Card className="mt-3 p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">7-Day Trend</h3>
+            <TrendingUp size={18} className="text-green-400" />
           </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-            <div className="h-full rounded-full bg-gradient-brand" style={{ width: "34%" }} />
-          </div>
+          <Sparkline />
           <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-            <span>Week 8 of 24</span><span>34% complete</span>
+            {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
           </div>
         </Card>
       </section>
+
       <section>
         <h3 className="mb-3 font-bold">Account</h3>
         <Card className="divide-y divide-white/5">
@@ -1145,6 +1201,53 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
     </div>
   );
 }
+
+// Status for each calendar day in Current Progress
+type DayStatus = "training" | "rest" | "none";
+
+function generateMonth(year: number, month: number): { date: Date; status: DayStatus }[] {
+  // Build a 5-week (35 day) view starting from the first Sunday on/before the 1st
+  const first = new Date(year, month, 1);
+  const startOffset = first.getDay(); // 0=Sun
+  const start = new Date(year, month, 1 - startOffset);
+  const out: { date: Date; status: DayStatus }[] = [];
+  const today = new Date();
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    let status: DayStatus = "none";
+    if (d.getMonth() === month && d.getTime() <= today.getTime()) {
+      // Demo: weekdays training, weekends rest, with some misses
+      const wd = d.getDay();
+      if (wd === 0 || wd === 6) status = "rest";
+      else status = d.getDate() % 5 === 0 ? "rest" : "training";
+    }
+    out.push({ date: d, status });
+  }
+  return out;
+}
+
+function ProgressGridMini() {
+  const now = new Date();
+  const cells = generateMonth(now.getFullYear(), now.getMonth());
+  return (
+    <div className="mt-4 grid grid-cols-7 gap-1.5">
+      {cells.slice(0, 14).map((c, i) => (
+        <div
+          key={i}
+          className="aspect-square rounded-full"
+          style={{
+            background:
+              c.status === "training" ? "#22c55e" :
+              c.status === "rest" ? "#ef4444" :
+              "rgba(255,255,255,0.08)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
   const items = [
