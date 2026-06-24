@@ -1250,15 +1250,17 @@ function ProgressGridMini() {
 
 
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
-  const items = [
-    { icon: LinkIcon, label: "Connect Apps" },
-    { icon: Shield, label: "Privacy Settings" },
-    { icon: Mail, label: "Email Preferences" },
-    { icon: Bell, label: "Notifications" },
+  type Item = { icon: any; label: string; onClick: () => void };
+  const items: Item[] = [
+    { icon: LinkIcon, label: "Connect Apps", onClick: () => openDetail({ kind: "connect-apps" }) },
+    { icon: Shield, label: "Privacy Settings", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Settings" }) },
+    { icon: Bell, label: "Notifications", onClick: () => openDetail({ kind: "settings-item", label: "Notifications" }) },
   ];
-  const more = [
-    { icon: HelpCircle, label: "Support" },
-    { icon: FileText, label: "Legal" },
+  const more: Item[] = [
+    { icon: HelpCircle, label: "Support", onClick: () => openDetail({ kind: "settings-item", label: "Support" }) },
+    { icon: FileText, label: "Terms of Service", onClick: () => openDetail({ kind: "legal", doc: "tos", title: "Terms of Service" }) },
+    { icon: Shield, label: "Privacy Policy", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Policy" }) },
+    { icon: AlertTriangle, label: "Medical & Fitness Disclaimer", onClick: () => openDetail({ kind: "legal", doc: "disclaimer", title: "Medical & Fitness Disclaimer" }) },
   ];
   return (
     <div className="absolute inset-0 z-50 bg-black/60" onClick={onClose}>
@@ -1272,12 +1274,13 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
           <div><div className="font-bold">A</div><div className="text-sm text-muted-foreground">Athlete</div></div>
         </div>
         <div className="mt-6 space-y-1">
-          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
+          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
         </div>
         <div className="my-5 h-px bg-white/5" />
         <div className="space-y-1">
-          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => openDetail({ kind: "settings-item", label: it.label })} />)}
+          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
         </div>
+
         <div className="my-5 h-px bg-white/5" />
         <button onClick={onLogout} className="flex w-full items-center gap-4 rounded-xl py-3 text-left text-rose-400">
           <LogOut size={20} /> <span className="font-bold">Log Out</span>
