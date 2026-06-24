@@ -1,14 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Activity, Settings, LayoutGrid, Calendar, MessageCircle, User,
   Heart, Moon, Dumbbell, TrendingUp, ChevronRight, Link as LinkIcon,
-  Shield, Mail, Bell, HelpCircle, FileText, LogOut, X, Pencil,
+  Shield, Bell, HelpCircle, FileText, LogOut, X, Pencil,
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
-  Footprints, Award, Send,
+  Footprints, Award, Send, Mail, AlertTriangle, Smartphone, Watch,
+  Apple, Utensils, ChevronLeft, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import disclaimerMd from "@/content/legal/disclaimer.md?raw";
+import privacyMd from "@/content/legal/privacy.md?raw";
+import tosMd from "@/content/legal/tos.md?raw";
+
 
 
 export const Route = createFileRoute("/")({
