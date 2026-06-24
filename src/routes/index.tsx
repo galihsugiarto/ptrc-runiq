@@ -1515,3 +1515,164 @@ function DetailBody({ detail }: { detail: Detail }) {
   return null;
 }
 
+function ConnectAppsView() {
+  const [connected, setConnected] = useState<Record<string, boolean>>({});
+  const apps = [
+    { id: "garmin", name: "Garmin Connect", desc: "Watches & cycling computers", icon: <Watch size={22} className="text-[#3b82f6]" />, onConnect: connectGarmin },
+    { id: "strava", name: "Strava", desc: "Activities & social feed", icon: <Activity size={22} className="text-orange-500" />, onConnect: connectStrava },
+    { id: "apple-health", name: "Apple Health", desc: "iPhone & Apple Watch", icon: <Apple size={22} className="text-white" />, onConnect: () => alert("Apple Health: Tap Allow when iOS prompts to share HealthKit data.") },
+    { id: "google-fit", name: "Google Fit / Android Health", desc: "Android phones & Wear OS", icon: <Smartphone size={22} className="text-emerald-400" />, onConnect: () => alert("Android: redirect to Google Fit authorization (OAuth).") },
+    { id: "huawei-health", name: "Huawei Health", desc: "Huawei watches & bands", icon: <Smartphone size={22} className="text-red-400" />, onConnect: () => alert("Huawei Health Kit: redirect to Huawei ID OAuth.") },
+    { id: "mfp", name: "MyFitnessPal", desc: "Nutrition & calorie tracking", icon: <Utensils size={22} className="text-blue-400" />, onConnect: () => alert("MyFitnessPal: redirect to MFP OAuth.") },
+    { id: "whoop", name: "Whoop", desc: "Recovery, strain & sleep", icon: <Heart size={22} className="text-rose-400" />, onConnect: () => alert("Whoop: redirect to api.prod.whoop.com OAuth.") },
+  ];
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Connect your devices and apps so RUNIQ can sync workouts, recovery metrics, and nutrition automatically.
+      </p>
+      {apps.map((a) => {
+        const isConnected = connected[a.id];
+        return (
+          <Card key={a.id} className="flex items-center gap-4 p-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/5">{a.icon}</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold">{a.name}</div>
+              <div className="text-xs text-muted-foreground truncate">{a.desc}</div>
+            </div>
+            <button
+              onClick={() => {
+                if (isConnected) {
+                  setConnected((c) => ({ ...c, [a.id]: false }));
+                } else {
+                  setConnected((c) => ({ ...c, [a.id]: true }));
+                  a.onConnect();
+                }
+              }}
+              className={`rounded-full px-4 py-2 text-xs font-semibold ${
+                isConnected
+                  ? "border border-emerald-500/40 text-emerald-400"
+                  : "bg-[#3b82f6] text-white"
+              }`}
+            >
+              {isConnected ? "Connected" : "Connect"}
+            </button>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function CurrentProgressView() {
+  const [cursor, setCursor] = useState(() => {
+    const n = new Date();
+    return { y: n.getFullYear(), m: n.getMonth() };
+  });
+  const cells = generateMonth(cursor.y, cursor.m);
+  const monthName = new Date(cursor.y, cursor.m, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const trained = cells.filter((c) => c.status === "training").length;
+  const rest = cells.filter((c) => c.status === "rest").length;
+
+  function shift(delta: number) {
+    setCursor((c) => {
+      const d = new Date(c.y, c.m + delta, 1);
+      return { y: d.getFullYear(), m: d.getMonth() };
+    });
+  }
+
+  // Touch swipe handlers
+  const touchX = useRef<number | null>(null);
+  function onTouchStart(e: React.TouchEvent) { touchX.current = e.touches[0].clientX; }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    if (Math.abs(dx) > 40) shift(dx < 0 ? 1 : -1);
+    touchX.current = null;
+  }
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-5">
+        <div className="flex items-center justify-between">
+          <button onClick={() => shift(-1)} className="rounded-full p-1.5 hover:bg-white/5"><ChevronLeft size={20} /></button>
+          <div className="font-bold">{monthName}</div>
+          <button onClick={() => shift(1)} className="rounded-full p-1.5 hover:bg-white/5"><ChevronRight size={20} /></button>
+        </div>
+        <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-muted-foreground">
+          {["S","M","T","W","T","F","S"].map((d, i) => <div key={i}>{d}</div>)}
+        </div>
+        <div
+          className="mt-2 grid grid-cols-7 gap-1.5 select-none"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {cells.map((c, i) => {
+            const inMonth = c.date.getMonth() === cursor.m;
+            const color =
+              c.status === "training" ? "#22c55e" :
+              c.status === "rest" ? "#ef4444" :
+              "rgba(255,255,255,0.08)";
+            return (
+              <div
+                key={i}
+                className="flex aspect-square items-center justify-center rounded-full text-[10px] font-semibold"
+                style={{
+                  background: color,
+                  color: c.status === "none" ? "rgba(255,255,255,0.4)" : "#0a0f24",
+                  opacity: inMonth ? 1 : 0.25,
+                }}
+              >
+                {c.date.getDate()}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Training</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-500" /> Rest</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-white/10" /> No plan</span>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="mb-3 font-bold">Weekly Summary</h3>
+        <div className="grid grid-cols-7 gap-1.5">
+          {cells.slice(0, 7).map((c, i) => {
+            const ratio = c.status === "training" ? 1 : c.status === "rest" ? 0.3 : 0;
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div className="relative h-9 w-9">
+                  <svg viewBox="0 0 36 36" className="h-9 w-9 -rotate-90">
+                    <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+                    <circle
+                      cx="18" cy="18" r="15" fill="none"
+                      stroke={c.status === "training" ? "#22c55e" : c.status === "rest" ? "#ef4444" : "transparent"}
+                      strokeWidth="4"
+                      strokeDasharray={`${ratio * 94.2} 94.2`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <span className="text-[10px] text-muted-foreground">{["S","M","T","W","T","F","S"][c.date.getDay()]}</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Card className="grid grid-cols-2 gap-4 p-5 text-center">
+        <div>
+          <div className="text-2xl font-bold text-emerald-400">{trained}</div>
+          <div className="text-xs text-muted-foreground">Training days</div>
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-red-400">{rest}</div>
+          <div className="text-xs text-muted-foreground">Rest / missed</div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+
