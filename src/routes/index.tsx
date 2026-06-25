@@ -1905,12 +1905,12 @@ function Trend28View() {
           ))}
         </div>
         <div className="mt-3 flex justify-between text-[10px] text-muted-foreground">
-          <span>4 minggu lalu</span><span>Hari ini</span>
+          <span>4 weeks ago</span><span>Today</span>
         </div>
       </Card>
       <Card className="p-4 text-sm">
         <div className="font-semibold">Insight</div>
-        <p className="mt-1 text-muted-foreground">Rata-rata 28 hari: 64. Trend 7 hari terakhir membaik (+8). Pertahankan tidur 7+ jam.</p>
+        <p className="mt-1 text-muted-foreground">28-day average: 64. Last 7-day trend improving (+8). Maintain 7+ hours of sleep.</p>
       </Card>
     </div>
   );
