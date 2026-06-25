@@ -723,19 +723,6 @@ function MetricCard({ icon, label, value, unit, bar, sub }: any) {
     </Card>
   );
 }
-  return (
-    <Card className="p-3">
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
-      <div className="mt-2 flex items-baseline gap-1">
-        <span className="text-xl font-bold">{value}</span>
-        <span className="text-xs text-muted-foreground">{unit}</span>
-      </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/5">
-        <div className="h-full w-2/3 rounded-full" style={{ background: bar }} />
-      </div>
-    </Card>
-  );
-}
 function Stat({ label, value }: { label: string; value: string }) {
   return <div><div className="text-xs text-muted-foreground">{label}</div><div className="font-semibold">{value}</div></div>;
 }
