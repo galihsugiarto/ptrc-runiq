@@ -695,12 +695,12 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
       <section className="grid grid-cols-2 gap-3">
         <button onClick={() => openDetail({ kind: "find-friend" })} className="flex flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500"><UserPlus size={16} className="text-white" /></div>
-          <div className="text-sm font-semibold">Cari Teman Runner</div>
+          <div className="text-sm font-semibold">Find Runner Friends</div>
           <div className="text-xs text-muted-foreground">Connect & follow</div>
         </button>
         <button onClick={() => openDetail({ kind: "find-community" })} className="flex flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500"><Users size={16} className="text-white" /></div>
-          <div className="text-sm font-semibold">Komunitas Lari</div>
+          <div className="text-sm font-semibold">Running Communities</div>
           <div className="text-xs text-muted-foreground">Join groups</div>
         </button>
       </section>
@@ -1817,10 +1817,10 @@ function CurrentProgressView() {
 function NotificationsView() {
   const groups = [
     {
-      label: "Hari Ini",
+      label: "Today",
       items: [
-        { title: "Sesi Tempo Run menanti", body: "12 km · Zone 4 · Tap untuk mulai", time: "08:12", icon: <Activity size={16} className="text-[#3b82f6]" /> },
-        { title: "Coach Andre mengirim pesan", body: "Fokus di pace, jangan over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-emerald-400" /> },
+        { title: "Tempo Run session waiting", body: "12 km · Zone 4 · Tap to start", time: "08:12", icon: <Activity size={16} className="text-[#3b82f6]" /> },
+        { title: "Coach Andre sent a message", body: "Focus on pace, don't over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-emerald-400" /> },
         { title: "Readiness siap", body: "Skor 72 — Latihan Sedang", time: "06:30", icon: <Heart size={16} className="text-rose-400" /> },
       ],
     },
