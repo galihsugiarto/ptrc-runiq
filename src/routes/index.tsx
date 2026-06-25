@@ -635,14 +635,14 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
         </div>
         <button onClick={() => openDetail({ kind: "chat", name: "Coach Andre", initials: "CA", color: "from-blue-400 to-indigo-500" })} className="mt-3 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-xs text-muted-foreground hover:bg-white/10">
           <MessageSquare size={14} className="text-[#3b82f6]" />
-          <span><span className="font-semibold text-foreground">Coach Andre:</span> Fokus di pace, jangan over-effort di KM awal.</span>
+          <span><span className="font-semibold text-foreground">Coach Andre:</span> Focus on pace, don't go over-effort early.</span>
         </button>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button onClick={() => setScreen("activity")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-semibold text-white shadow-brand">
-            <Play size={16} /> Mulai Lari
+            <Play size={16} /> Start Run
           </button>
-          <button onClick={() => openDetail({ kind: "workout", day: "Kamis", date: "8 Mei", type: "Tempo Run", miles: "12 km", pace: "Zone 4" })} className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
-            Lihat Detail
+          <button onClick={() => openDetail({ kind: "workout", day: "Thursday", date: "8 May", type: "Tempo Run", miles: "12 km", pace: "Zone 4" })} className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
+            View Details
           </button>
         </div>
       </Card>
@@ -652,7 +652,7 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
         <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
           <div className="flex items-center justify-between">
             <h3 className="font-bold">7-Day Readiness Trend</h3>
-            <span className="text-xs font-semibold text-emerald-400">↗ Membaik</span>
+            <span className="text-xs font-semibold text-emerald-400">↗ Improving</span>
           </div>
           <div className="mt-4 flex h-24 items-end justify-between gap-2">
             {trend.map((v, i) => (
@@ -674,7 +674,7 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
       {/* Friends Activity Strip */}
       {friends.length > 0 && (
         <section>
-          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Aktivitas Teman Hari Ini</h3>
+          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Friends Activity Today</h3>
           <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
             {friends.map((f) => (
               <button
