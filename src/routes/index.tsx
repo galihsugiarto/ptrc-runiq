@@ -551,55 +551,178 @@ function RoleCard({
   );
 }
 
-function DashboardScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
+function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) => void; setScreen: (s: Screen) => void }) {
+  const readiness = 72;
+  const readinessColor = readiness >= 80 ? "#10b981" : readiness >= 60 ? "#eab308" : "#ef4444";
+  const readinessLabel = readiness >= 80 ? "Siap Berlatih Keras 💪" : readiness >= 60 ? "Latihan Sedang" : "Fokus Pemulihan 🛌";
+  const trendUp = true;
+
+  const trend = [62, 68, 58, 71, 65, 70, 72]; // Mon..Sun
+  const todayIdx = 3; // Thu highlight
+  const days = ["S", "S", "R", "K", "J", "S", "M"];
+
+  const friends = [
+    { name: "Marcus", initials: "ML", color: "from-orange-400 to-amber-500", dist: "8.3 km", time: "06:14" },
+    { name: "Sarah", initials: "SK", color: "from-pink-400 to-rose-500", dist: "5.0 km", time: "05:42" },
+    { name: "Budi", initials: "BP", color: "from-emerald-400 to-teal-500", dist: "12.1 km", time: "05:10" },
+  ];
+
   return (
     <div className="space-y-6 px-5 pt-6">
+      {/* Readiness Dashboard */}
       <section>
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-3xl font-bold">Your Readiness</h2>
-            <p className="text-muted-foreground">Ready to train</p>
+        <button onClick={() => openDetail({ kind: "readiness-breakdown" })} className="w-full text-left">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Readiness</h2>
+              <p className="mt-1 text-sm" style={{ color: readinessColor }}>{readinessLabel}</p>
+              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                <TrendingUp size={12} className={trendUp ? "text-emerald-400" : "rotate-180 text-rose-400"} />
+                {trendUp ? "+4" : "-3"} vs kemarin
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-6xl font-black" style={{ color: readinessColor }}>{readiness}</div>
+              <div className="text-xs text-muted-foreground">/ 100 · tap untuk detail</div>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-5xl font-black text-[#3b82f6]">72</div>
-            <div className="text-xs text-muted-foreground">/ 100</div>
-          </div>
-        </div>
+        </button>
       </section>
-      <section>
-        <h3 className="mb-3 text-xl font-bold">Friends Activity</h3>
-        <button onClick={() => openDetail({ kind: "run", title: "Trail Morning Run — Marcus", date: "Today, 6:14 AM", stats: ["8.3 mi", "1:04:20", "7:45/mi", "158 bpm"] })} className="w-full text-left">
-        <Card className="p-4">
+
+      {/* Health Metrics Strip */}
+      <section className="grid grid-cols-3 gap-3">
+        <MetricCard icon={<Heart size={12} />} label="HRV" value="58" unit="ms" bar="linear-gradient(90deg,#ef4444,#f97316)" sub="vs 62ms base" />
+        <MetricCard icon={<Moon size={12} />} label="Sleep" value="7.2" unit="h · 84%" bar="linear-gradient(90deg,#6366f1,#a855f7)" sub="Good quality" />
+        <MetricCard icon={<Dumbbell size={12} />} label="Load" value="68" unit="ACWR 1.1" bar="linear-gradient(90deg,#10b981,#3b82f6)" sub="Optimal" />
+      </section>
+
+      {/* Nutrition (MyFitnessPal) */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="flex items-center gap-1"><Utensils size={12} /> Nutrition · MyFitnessPal</span>
+          <span>1,420 / 2,200 kcal</span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
+          <div className="h-full rounded-full" style={{ width: "64%", background: "linear-gradient(90deg,#10b981,#eab308)" }} />
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+          {[
+            { l: "Karbo", v: "180g", c: "#3b82f6" },
+            { l: "Protein", v: "92g", c: "#a855f7" },
+            { l: "Lemak", v: "48g", c: "#f59e0b" },
+          ].map((m) => (
+            <div key={m.l}>
+              <div className="flex justify-between"><span className="text-muted-foreground">{m.l}</span><span>{m.v}</span></div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full" style={{ width: "65%", background: m.c }} /></div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Today's Session Card */}
+      <Card className="p-5">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sesi Hari Ini · Kamis, 8 Mei</div>
+        <div className="mt-2 flex items-start justify-between">
+          <div>
+            <h3 className="text-2xl font-bold">Tempo Run</h3>
+            <p className="mt-1 text-sm text-muted-foreground">12 km · Zone 4 · HR 165–175</p>
+            <p className="text-sm text-muted-foreground">≈ 1h 05m</p>
+          </div>
+          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">● Belum Dimulai</span>
+        </div>
+        <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm">
+          2km WU · 8km threshold · 2km CD
+        </div>
+        <button onClick={() => openDetail({ kind: "chat", name: "Coach Andre", initials: "CA", color: "from-blue-400 to-indigo-500" })} className="mt-3 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-xs text-muted-foreground hover:bg-white/10">
+          <MessageSquare size={14} className="text-[#3b82f6]" />
+          <span><span className="font-semibold text-foreground">Coach Andre:</span> Fokus di pace, jangan over-effort di KM awal.</span>
+        </button>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button onClick={() => setScreen("activity")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-semibold text-white shadow-brand">
+            <Play size={16} /> Mulai Lari
+          </button>
+          <button onClick={() => openDetail({ kind: "workout", day: "Kamis", date: "8 Mei", type: "Tempo Run", miles: "12 km", pace: "Zone 4" })} className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
+            Lihat Detail
+          </button>
+        </div>
+      </Card>
+
+      {/* 7-Day Readiness Trend */}
+      <Card className="p-5">
+        <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AvatarC initials="ML" color="from-orange-400 to-amber-500" />
-              <div>
-                <div className="font-semibold">Marcus Lee</div>
-                <div className="text-xs text-muted-foreground">Today, 6:14 AM</div>
+            <h3 className="font-bold">7-Day Readiness Trend</h3>
+            <span className="text-xs font-semibold text-emerald-400">↗ Membaik</span>
+          </div>
+          <div className="mt-4 flex h-24 items-end justify-between gap-2">
+            {trend.map((v, i) => (
+              <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                <div
+                  className="w-full rounded-t"
+                  style={{
+                    height: `${(v / 100) * 100}%`,
+                    background: i === todayIdx ? "#22d3ee" : "rgba(168,85,247,0.6)",
+                  }}
+                />
+                <span className={`text-[10px] ${i === todayIdx ? "text-[#22d3ee] font-bold" : "text-muted-foreground"}`}>{days[i]}</span>
               </div>
-            </div>
-            <span className="rounded-full bg-purple-500/15 px-3 py-1 text-xs font-semibold text-purple-300">Strong</span>
+            ))}
           </div>
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500">
-              <Activity size={18} className="text-white" />
-            </div>
-            <div className="font-semibold">Trail Morning Run</div>
+        </button>
+      </Card>
+
+      {/* Friends Activity Strip */}
+      {friends.length > 0 && (
+        <section>
+          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Aktivitas Teman Hari Ini</h3>
+          <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
+            {friends.map((f) => (
+              <button
+                key={f.name}
+                onClick={() => openDetail({ kind: "run", title: `${f.name}'s Run`, date: `Today, ${f.time}`, stats: [f.dist, "—", "—", "—"] })}
+                className="flex min-w-[140px] flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-3 text-left"
+              >
+                <AvatarC initials={f.initials} color={f.color} />
+                <div className="text-sm font-semibold">{f.name}</div>
+                <div className="text-xs text-muted-foreground">{f.dist} · {f.time}</div>
+              </button>
+            ))}
           </div>
-          <div className="mt-3 grid grid-cols-4 text-sm">
-            <Stat label="Distance" value="8.3 mi" />
-            <Stat label="Duration" value="1:04:20" />
-            <Stat label="Pace" value="7:45/mi" />
-            <Stat label="Avg HR" value="158 bpm" />
-          </div>
-        </Card>
+        </section>
+      )}
+
+      {/* Community Quick Access */}
+      <section className="grid grid-cols-2 gap-3">
+        <button onClick={() => openDetail({ kind: "find-friend" })} className="flex flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500"><UserPlus size={16} className="text-white" /></div>
+          <div className="text-sm font-semibold">Cari Teman Runner</div>
+          <div className="text-xs text-muted-foreground">Connect & follow</div>
+        </button>
+        <button onClick={() => openDetail({ kind: "find-community" })} className="flex flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500"><Users size={16} className="text-white" /></div>
+          <div className="text-sm font-semibold">Komunitas Lari</div>
+          <div className="text-xs text-muted-foreground">Join groups</div>
         </button>
       </section>
     </div>
   );
 }
 
-function MetricCard({ icon, label, value, unit, bar }: any) {
+function MetricCard({ icon, label, value, unit, bar, sub }: any) {
+  return (
+    <Card className="p-3">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
+      <div className="mt-2 flex items-baseline gap-1">
+        <span className="text-xl font-bold">{value}</span>
+        <span className="text-[10px] text-muted-foreground">{unit}</span>
+      </div>
+      <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/5">
+        <div className="h-full w-2/3 rounded-full" style={{ background: bar }} />
+      </div>
+      {sub && <div className="mt-1 text-[10px] text-muted-foreground">{sub}</div>}
+    </Card>
+  );
+}
   return (
     <Card className="p-3">
       <div className="flex items-center gap-1 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
