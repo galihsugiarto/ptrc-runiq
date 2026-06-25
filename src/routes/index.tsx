@@ -171,16 +171,30 @@ function Logo({ size = 40 }: { size?: number }) {
   );
 }
 
-function TopBar({ onSettings }: { onSettings: () => void }) {
+function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: () => void; onAvatar?: () => void; onSettings?: () => void }) {
+  const unread = 3;
   return (
     <header className="flex items-center justify-between border-b border-white/5 px-5 py-4">
       <div className="flex items-center gap-3">
         <Logo size={42} />
         <h1 className="text-2xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
       </div>
-      <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground">
-        <Settings size={22} />
-      </button>
+      <div className="flex items-center gap-2">
+        <button onClick={onNotifications} className="relative rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Notifications">
+          <Bell size={22} />
+          {unread > 0 && (
+            <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[10px] font-bold text-white">{unread}</span>
+          )}
+        </button>
+        <button onClick={onAvatar} className="rounded-full" aria-label="Profile">
+          <AvatarC initials="AR" color="from-[#3b82f6] to-[#a855f7]" />
+        </button>
+        {onSettings && (
+          <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Settings">
+            <Settings size={20} />
+          </button>
+        )}
+      </div>
     </header>
   );
 }
