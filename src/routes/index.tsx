@@ -134,9 +134,13 @@ function Index() {
             )
           ) : (
             <>
-              <TopBar onSettings={() => setSettingsOpen(true)} />
+              <TopBar
+                onNotifications={() => openDetail({ kind: "notifications" })}
+                onAvatar={() => setScreen("profile")}
+                onSettings={() => setSettingsOpen(true)}
+              />
               <main className="pb-28">
-                {screen === "dashboard" && <DashboardScreen openDetail={openDetail} />}
+                {screen === "dashboard" && <DashboardScreen openDetail={openDetail} setScreen={setScreen} />}
                 {screen === "plan" && (
                   <PlanScreen tab={coachTab} setTab={setCoachTab} onBook={() => setBookOpen(true)} openDetail={openDetail} />
                 )}
