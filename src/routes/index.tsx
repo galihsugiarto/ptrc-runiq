@@ -1821,17 +1821,17 @@ function NotificationsView() {
       items: [
         { title: "Tempo Run session waiting", body: "12 km · Zone 4 · Tap to start", time: "08:12", icon: <Activity size={16} className="text-[#3b82f6]" /> },
         { title: "Coach Andre sent a message", body: "Focus on pace, don't over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-emerald-400" /> },
-        { title: "Readiness siap", body: "Skor 72 — Latihan Sedang", time: "06:30", icon: <Heart size={16} className="text-rose-400" /> },
+        { title: "Readiness ready", body: "Score 72 — Moderate Training", time: "06:30", icon: <Heart size={16} className="text-rose-400" /> },
       ],
     },
     {
-      label: "Kemarin",
+      label: "Yesterday",
       items: [
         { title: "Sarah selesai 5 km", body: "Pace 5:42/km · 28:30", time: "Kemarin", icon: <Footprints size={16} className="text-amber-400" /> },
       ],
     },
     {
-      label: "Minggu Lalu",
+      label: "Last Week",
       items: [
         { title: "Program plan diperbarui", body: "Week 8 of 16 · Base Building", time: "3 hari", icon: <Calendar size={16} className="text-purple-400" /> },
       ],
@@ -1840,7 +1840,7 @@ function NotificationsView() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Notifikasi terbaru</span>
+        <span className="text-xs text-muted-foreground">Latest notifications</span>
         <button className="text-xs font-semibold text-[#3b82f6]">Mark all read</button>
       </div>
       {groups.map((g) => (
@@ -1876,7 +1876,7 @@ function ReadinessBreakdownView() {
     <div className="space-y-4">
       <Card className="p-5 text-center">
         <div className="text-5xl font-black text-[#eab308]">72</div>
-        <div className="mt-1 text-sm text-muted-foreground">Composite harian · Latihan Sedang</div>
+        <div className="mt-1 text-sm text-muted-foreground">Daily composite · Moderate Training</div>
       </Card>
       {parts.map((p) => (
         <Card key={p.l} className="p-4">
