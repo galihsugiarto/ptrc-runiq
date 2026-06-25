@@ -1813,3 +1813,105 @@ function CurrentProgressView() {
 }
 
 
+
+function NotificationsView() {
+  const groups = [
+    {
+      label: "Hari Ini",
+      items: [
+        { title: "Sesi Tempo Run menanti", body: "12 km · Zone 4 · Tap untuk mulai", time: "08:12", icon: <Activity size={16} className="text-[#3b82f6]" /> },
+        { title: "Coach Andre mengirim pesan", body: "Fokus di pace, jangan over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-emerald-400" /> },
+        { title: "Readiness siap", body: "Skor 72 — Latihan Sedang", time: "06:30", icon: <Heart size={16} className="text-rose-400" /> },
+      ],
+    },
+    {
+      label: "Kemarin",
+      items: [
+        { title: "Sarah selesai 5 km", body: "Pace 5:42/km · 28:30", time: "Kemarin", icon: <Footprints size={16} className="text-amber-400" /> },
+      ],
+    },
+    {
+      label: "Minggu Lalu",
+      items: [
+        { title: "Program plan diperbarui", body: "Week 8 of 16 · Base Building", time: "3 hari", icon: <Calendar size={16} className="text-purple-400" /> },
+      ],
+    },
+  ];
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">Notifikasi terbaru</span>
+        <button className="text-xs font-semibold text-[#3b82f6]">Mark all read</button>
+      </div>
+      {groups.map((g) => (
+        <div key={g.label}>
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{g.label}</h4>
+          <div className="space-y-2">
+            {g.items.map((n, i) => (
+              <Card key={i} className="flex items-start gap-3 p-3">
+                <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">{n.icon}</div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">{n.title}</span>
+                    <span className="text-[10px] text-muted-foreground">{n.time}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{n.body}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReadinessBreakdownView() {
+  const parts = [
+    { l: "HRV", w: 40, v: 70, c: "#ef4444", sub: "58 ms vs 62 ms baseline" },
+    { l: "Sleep", w: 30, v: 84, c: "#a855f7", sub: "7.2 h · 84% quality" },
+    { l: "Load", w: 30, v: 68, c: "#10b981", sub: "ACWR 1.1 · optimal" },
+  ];
+  return (
+    <div className="space-y-4">
+      <Card className="p-5 text-center">
+        <div className="text-5xl font-black text-[#eab308]">72</div>
+        <div className="mt-1 text-sm text-muted-foreground">Composite harian · Latihan Sedang</div>
+      </Card>
+      {parts.map((p) => (
+        <Card key={p.l} className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="font-semibold">{p.l} <span className="text-xs text-muted-foreground">({p.w}%)</span></div>
+            <div className="text-sm font-bold">{p.v}</div>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
+            <div className="h-full rounded-full" style={{ width: `${p.v}%`, background: p.c }} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{p.sub}</p>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function Trend28View() {
+  const data = Array.from({ length: 28 }, (_, i) => 50 + Math.round(Math.sin(i / 3) * 15 + (i % 5) * 3));
+  return (
+    <div className="space-y-4">
+      <Card className="p-5">
+        <div className="flex items-end justify-between gap-1" style={{ height: 160 }}>
+          {data.map((v, i) => (
+            <div key={i} className="flex-1 rounded-t" style={{ height: `${v}%`, background: i === data.length - 1 ? "#22d3ee" : "rgba(168,85,247,0.6)" }} />
+          ))}
+        </div>
+        <div className="mt-3 flex justify-between text-[10px] text-muted-foreground">
+          <span>4 minggu lalu</span><span>Hari ini</span>
+        </div>
+      </Card>
+      <Card className="p-4 text-sm">
+        <div className="font-semibold">Insight</div>
+        <p className="mt-1 text-muted-foreground">Rata-rata 28 hari: 64. Trend 7 hari terakhir membaik (+8). Pertahankan tidur 7+ jam.</p>
+      </Card>
+    </div>
+  );
+}
