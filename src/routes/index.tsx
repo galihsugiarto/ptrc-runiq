@@ -554,12 +554,12 @@ function RoleCard({
 function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) => void; setScreen: (s: Screen) => void }) {
   const readiness = 72;
   const readinessColor = readiness >= 80 ? "#10b981" : readiness >= 60 ? "#eab308" : "#ef4444";
-  const readinessLabel = readiness >= 80 ? "Siap Berlatih Keras 💪" : readiness >= 60 ? "Latihan Sedang" : "Fokus Pemulihan 🛌";
+  const readinessLabel = readiness >= 80 ? "Ready to Train Hard 💪" : readiness >= 60 ? "Moderate Training" : "Recovery Focus 🛌";
   const trendUp = true;
 
   const trend = [62, 68, 58, 71, 65, 70, 72]; // Mon..Sun
   const todayIdx = 3; // Thu highlight
-  const days = ["S", "S", "R", "K", "J", "S", "M"];
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
 
   const friends = [
     { name: "Marcus", initials: "ML", color: "from-orange-400 to-amber-500", dist: "8.3 km", time: "06:14" },
@@ -578,12 +578,12 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
               <p className="mt-1 text-sm" style={{ color: readinessColor }}>{readinessLabel}</p>
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                 <TrendingUp size={12} className={trendUp ? "text-emerald-400" : "rotate-180 text-rose-400"} />
-                {trendUp ? "+4" : "-3"} vs kemarin
+                {trendUp ? "+4" : "-3"} vs yesterday
               </p>
             </div>
             <div className="text-right">
               <div className="text-6xl font-black" style={{ color: readinessColor }}>{readiness}</div>
-              <div className="text-xs text-muted-foreground">/ 100 · tap untuk detail</div>
+              <div className="text-xs text-muted-foreground">/ 100 · tap for details</div>
             </div>
           </div>
         </button>
@@ -621,28 +621,28 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
 
       {/* Today's Session Card */}
       <Card className="p-5">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sesi Hari Ini · Kamis, 8 Mei</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Today's Session · Thursday, 8 May</div>
         <div className="mt-2 flex items-start justify-between">
           <div>
             <h3 className="text-2xl font-bold">Tempo Run</h3>
             <p className="mt-1 text-sm text-muted-foreground">12 km · Zone 4 · HR 165–175</p>
             <p className="text-sm text-muted-foreground">≈ 1h 05m</p>
           </div>
-          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">● Belum Dimulai</span>
+          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">● Not Started</span>
         </div>
         <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm">
           2km WU · 8km threshold · 2km CD
         </div>
         <button onClick={() => openDetail({ kind: "chat", name: "Coach Andre", initials: "CA", color: "from-blue-400 to-indigo-500" })} className="mt-3 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-xs text-muted-foreground hover:bg-white/10">
           <MessageSquare size={14} className="text-[#3b82f6]" />
-          <span><span className="font-semibold text-foreground">Coach Andre:</span> Fokus di pace, jangan over-effort di KM awal.</span>
+          <span><span className="font-semibold text-foreground">Coach Andre:</span> Focus on pace, don't go over-effort early.</span>
         </button>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button onClick={() => setScreen("activity")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-semibold text-white shadow-brand">
-            <Play size={16} /> Mulai Lari
+            <Play size={16} /> Start Run
           </button>
-          <button onClick={() => openDetail({ kind: "workout", day: "Kamis", date: "8 Mei", type: "Tempo Run", miles: "12 km", pace: "Zone 4" })} className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
-            Lihat Detail
+          <button onClick={() => openDetail({ kind: "workout", day: "Thursday", date: "8 May", type: "Tempo Run", miles: "12 km", pace: "Zone 4" })} className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
+            View Details
           </button>
         </div>
       </Card>
@@ -652,7 +652,7 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
         <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
           <div className="flex items-center justify-between">
             <h3 className="font-bold">7-Day Readiness Trend</h3>
-            <span className="text-xs font-semibold text-emerald-400">↗ Membaik</span>
+            <span className="text-xs font-semibold text-emerald-400">↗ Improving</span>
           </div>
           <div className="mt-4 flex h-24 items-end justify-between gap-2">
             {trend.map((v, i) => (
@@ -674,7 +674,7 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
       {/* Friends Activity Strip */}
       {friends.length > 0 && (
         <section>
-          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Aktivitas Teman Hari Ini</h3>
+          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Friends Activity Today</h3>
           <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
             {friends.map((f) => (
               <button
@@ -695,12 +695,12 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
       <section className="grid grid-cols-2 gap-3">
         <button onClick={() => openDetail({ kind: "find-friend" })} className="flex flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500"><UserPlus size={16} className="text-white" /></div>
-          <div className="text-sm font-semibold">Cari Teman Runner</div>
+          <div className="text-sm font-semibold">Find Runner Friends</div>
           <div className="text-xs text-muted-foreground">Connect & follow</div>
         </button>
         <button onClick={() => openDetail({ kind: "find-community" })} className="flex flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500"><Users size={16} className="text-white" /></div>
-          <div className="text-sm font-semibold">Komunitas Lari</div>
+          <div className="text-sm font-semibold">Running Communities</div>
           <div className="text-xs text-muted-foreground">Join groups</div>
         </button>
       </section>
@@ -1817,21 +1817,21 @@ function CurrentProgressView() {
 function NotificationsView() {
   const groups = [
     {
-      label: "Hari Ini",
+      label: "Today",
       items: [
-        { title: "Sesi Tempo Run menanti", body: "12 km · Zone 4 · Tap untuk mulai", time: "08:12", icon: <Activity size={16} className="text-[#3b82f6]" /> },
-        { title: "Coach Andre mengirim pesan", body: "Fokus di pace, jangan over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-emerald-400" /> },
-        { title: "Readiness siap", body: "Skor 72 — Latihan Sedang", time: "06:30", icon: <Heart size={16} className="text-rose-400" /> },
+        { title: "Tempo Run session waiting", body: "12 km · Zone 4 · Tap to start", time: "08:12", icon: <Activity size={16} className="text-[#3b82f6]" /> },
+        { title: "Coach Andre sent a message", body: "Focus on pace, don't over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-emerald-400" /> },
+        { title: "Readiness ready", body: "Score 72 — Moderate Training", time: "06:30", icon: <Heart size={16} className="text-rose-400" /> },
       ],
     },
     {
-      label: "Kemarin",
+      label: "Yesterday",
       items: [
         { title: "Sarah selesai 5 km", body: "Pace 5:42/km · 28:30", time: "Kemarin", icon: <Footprints size={16} className="text-amber-400" /> },
       ],
     },
     {
-      label: "Minggu Lalu",
+      label: "Last Week",
       items: [
         { title: "Program plan diperbarui", body: "Week 8 of 16 · Base Building", time: "3 hari", icon: <Calendar size={16} className="text-purple-400" /> },
       ],
@@ -1840,7 +1840,7 @@ function NotificationsView() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Notifikasi terbaru</span>
+        <span className="text-xs text-muted-foreground">Latest notifications</span>
         <button className="text-xs font-semibold text-[#3b82f6]">Mark all read</button>
       </div>
       {groups.map((g) => (
@@ -1876,7 +1876,7 @@ function ReadinessBreakdownView() {
     <div className="space-y-4">
       <Card className="p-5 text-center">
         <div className="text-5xl font-black text-[#eab308]">72</div>
-        <div className="mt-1 text-sm text-muted-foreground">Composite harian · Latihan Sedang</div>
+        <div className="mt-1 text-sm text-muted-foreground">Daily composite · Moderate Training</div>
       </Card>
       {parts.map((p) => (
         <Card key={p.l} className="p-4">
@@ -1905,12 +1905,12 @@ function Trend28View() {
           ))}
         </div>
         <div className="mt-3 flex justify-between text-[10px] text-muted-foreground">
-          <span>4 minggu lalu</span><span>Hari ini</span>
+          <span>4 weeks ago</span><span>Today</span>
         </div>
       </Card>
       <Card className="p-4 text-sm">
         <div className="font-semibold">Insight</div>
-        <p className="mt-1 text-muted-foreground">Rata-rata 28 hari: 64. Trend 7 hari terakhir membaik (+8). Pertahankan tidur 7+ jam.</p>
+        <p className="mt-1 text-muted-foreground">28-day average: 64. Last 7-day trend improving (+8). Maintain 7+ hours of sleep.</p>
       </Card>
     </div>
   );
