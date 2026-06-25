@@ -554,7 +554,7 @@ function RoleCard({
 function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) => void; setScreen: (s: Screen) => void }) {
   const readiness = 72;
   const readinessColor = readiness >= 80 ? "#10b981" : readiness >= 60 ? "#eab308" : "#ef4444";
-  const readinessLabel = readiness >= 80 ? "Siap Berlatih Keras 💪" : readiness >= 60 ? "Latihan Sedang" : "Fokus Pemulihan 🛌";
+  const readinessLabel = readiness >= 80 ? "Ready to Train Hard 💪" : readiness >= 60 ? "Moderate Training" : "Recovery Focus 🛌";
   const trendUp = true;
 
   const trend = [62, 68, 58, 71, 65, 70, 72]; // Mon..Sun
