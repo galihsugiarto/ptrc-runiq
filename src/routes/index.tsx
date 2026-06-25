@@ -1332,6 +1332,9 @@ function detailTitle(d: Detail): string {
     case "connect-apps": return "Connect Apps";
     case "legal": return d.title;
     case "current-progress": return "Current Progress";
+    case "notifications": return "Notifications";
+    case "readiness-breakdown": return "Readiness Breakdown";
+    case "trend-28d": return "28-Day Trend";
   }
 }
 
