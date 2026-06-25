@@ -103,7 +103,10 @@ export type Detail =
   | { kind: "upgrade" }
   | { kind: "connect-apps" }
   | { kind: "legal"; doc: "tos" | "privacy" | "disclaimer"; title: string }
-  | { kind: "current-progress" };
+  | { kind: "current-progress" }
+  | { kind: "notifications" }
+  | { kind: "readiness-breakdown" }
+  | { kind: "trend-28d" };
 
 
 function Index() {
