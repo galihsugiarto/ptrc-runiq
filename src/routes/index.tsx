@@ -1626,6 +1626,9 @@ function DetailBody({ detail }: { detail: Detail }) {
     );
   }
   if (detail.kind === "current-progress") return <CurrentProgressView />;
+  if (detail.kind === "notifications") return <NotificationsView />;
+  if (detail.kind === "readiness-breakdown") return <ReadinessBreakdownView />;
+  if (detail.kind === "trend-28d") return <Trend28View />;
   if (detail.kind === "settings-item" || detail.kind === "profile-item") {
     const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
     return (
