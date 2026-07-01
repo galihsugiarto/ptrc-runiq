@@ -1532,29 +1532,29 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
         <span className="text-sm font-bold tracking-widest">MANUAL INPUT</span>
         <span className="w-5" />
       </div>
-      <Field label="Date & Start Time">
+      <FormField label="Date & Start Time">
         <input type="datetime-local" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
-      </Field>
-      <Field label="Activity Type">
+      </FormField>
+      <FormField label="Activity Type">
         <div className="flex flex-wrap gap-2">
           {types.map((t) => (
             <button key={t} onClick={() => setType(t)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${type === t ? "border-[#3b82f6] bg-[#3b82f6]/15 text-[#3b82f6]" : "border-white/10 bg-white/5 text-muted-foreground"}`}>{t}</button>
           ))}
         </div>
-      </Field>
+      </FormField>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Distance (km)"><input type="number" step="0.01" placeholder="0.00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></Field>
-        <Field label="Duration (HH:MM:SS)"><input type="text" placeholder="00:00:00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></Field>
+        <FormField label="Distance (km)"><input type="number" step="0.01" placeholder="0.00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+        <FormField label="Duration (HH:MM:SS)"><input type="text" placeholder="00:00:00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       </div>
-      <Field label="Avg HR (optional)"><input type="number" placeholder="bpm" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></Field>
-      <Field label="Feel">
+      <FormField label="Avg HR (optional)"><input type="number" placeholder="bpm" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      <FormField label="Feel">
         <div className="flex justify-between">
           {FEELS.map((f, i) => (
             <button key={i} onClick={() => setFeel(i)} className={`flex h-11 w-11 items-center justify-center rounded-full text-xl ${feel === i ? "bg-gradient-brand shadow-brand" : "bg-white/5"}`}>{f}</button>
           ))}
         </div>
-      </Field>
-      <Field label="Notes"><textarea rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></Field>
+      </FormField>
+      <FormField label="Notes"><textarea rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
         <span className="text-xs">Match with today's planned session</span>
         <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#3b82f6]" />
@@ -1567,7 +1567,7 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
       <div className="mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground">{label.toUpperCase()}</div>
