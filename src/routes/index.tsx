@@ -1154,94 +1154,117 @@ function BookSheet({ onClose }: { onClose: () => void }) {
 
 function ActivityScreen({ tab, setTab, openDetail }: { tab: "week" | "record"; setTab: (t: any) => void; openDetail: (d: Detail) => void }) {
   return (
-    <div className="space-y-6 px-5 pt-6">
+    <div className="space-y-5 px-5 pt-6">
       <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
         <div className="grid grid-cols-2 gap-1">
           <button onClick={() => setTab("week")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "week" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>This Week</button>
           <button onClick={() => setTab("record")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "record" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Record</button>
         </div>
       </div>
-      {tab === "week" ? <WeekActivity openDetail={openDetail} /> : <RecordView />}
+      {tab === "week" ? <WeekActivity openDetail={openDetail} goRecord={() => setTab("record")} /> : <RecordFlow goWeek={() => setTab("week")} />}
     </div>
   );
 }
 
-function WeekActivity({ openDetail }: { openDetail: (d: Detail) => void }) {
+type MatchStatus = "match" | "diff" | "extra";
+const MATCH_STYLE: Record<MatchStatus, { label: string; cls: string }> = {
+  match: { label: "✓ Matches Plan", cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" },
+  diff:  { label: "⚠ Differs from Plan", cls: "border-yellow-500/40 bg-yellow-500/10 text-yellow-400" },
+  extra: { label: "Extra Run", cls: "border-sky-500/40 bg-sky-500/10 text-sky-400" },
+};
+
+function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => void; goRecord: () => void }) {
+  const [manualOpen, setManualOpen] = useState(false);
+  const activities = [
+    { title: "Tempo Run", date: "Wed, May 7 · 6:12 AM", source: "Strava", feel: "💪", stats: ["12.1 km","54:22","4:29/km","162 bpm"], match: "match" as MatchStatus, color: "#f97316" },
+    { title: "Easy Recovery", date: "Tue, May 6 · 5:45 AM", source: "Garmin", feel: "🙂", stats: ["6.0 km","33:14","5:32/km","138 bpm"], match: "match" as MatchStatus, color: "#3b82f6" },
+    { title: "Long Run", date: "Sun, May 4 · 5:30 AM", source: "RUNIQ Record", feel: "😐", stats: ["18.4 km","1:38:02","5:19/km","149 bpm"], match: "diff" as MatchStatus, color: "#a855f7" },
+    { title: "Trail Adventure", date: "Sat, May 3 · 7:00 AM", source: "Strava", feel: "🔥", stats: ["8.2 km","52:11","6:22/km","155 bpm"], match: "extra" as MatchStatus, color: "#10b981" },
+  ];
   return (
     <>
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">May 5 – May 11, 2026</span>
-        <span className="text-sm font-semibold text-[#3b82f6]">5 activities · 34.8 mi</span>
+      {/* Quick Actions Row */}
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={goRecord} className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-white shadow-brand">
+          <Play size={16} className="fill-white" /> Record Run
+        </button>
+        <button onClick={() => setManualOpen(true)} className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-bold">
+          <Pencil size={16} /> Manual Input
+        </button>
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <SummaryCard icon={<MapPin size={14} />} label="Distance" value="34.8 mi" />
-        <SummaryCard icon={<Zap size={14} />} label="Avg Pace" value="8:02/mi" />
-        <SummaryCard icon={<Heart size={14} />} label="Avg HR" value="152 bpm" />
-      </div>
-      <button onClick={() => openDetail({ kind: "run", title: "Morning Easy Run", date: "Mon, May 5", stats: ["4.2 mi","37:42","8:58/mi","142 bpm"] })} className="block w-full text-left">
-        <RunCard title="Morning Easy Run" date="Mon, May 5" tag="Strava" badge="Great" badgeColor="emerald" stats={["4.2 mi","37:42","8:58/mi","142 bpm"]} routeColor="#f97316" />
-      </button>
-      <button onClick={() => openDetail({ kind: "run", title: "Interval Workout", date: "Tue, May 6", stats: ["6.1 mi","45:18","7:25/mi","168 bpm"] })} className="block w-full text-left">
-        <RunCard title="Interval Workout" date="Tue, May 6" tag="Garmin" badge="Hard" badgeColor="orange" stats={["6.1 mi","45:18","7:25/mi","168 bpm"]} routeColor="#3b82f6" />
-      </button>
+
+      {/* Week Summary Card */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">May 5 – May 11, 2026</span>
+          <span className="text-xs font-semibold text-[#3b82f6]">4 activities</span>
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          <Stat label="Distance" value="44.7 km" />
+          <Stat label="Time" value="3:57" />
+          <Stat label="Avg Pace" value="5:18/km" />
+          <Stat label="Avg HR" value="151 bpm" />
+        </div>
+        <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">vs weekly plan target</span>
+            <span className="font-semibold text-emerald-400">44.7 / 55 km</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full bg-gradient-brand" style={{ width: "81%" }} />
+          </div>
+        </div>
+      </Card>
+
+      {/* Activity Cards */}
+      {activities.map((a) => (
+        <button key={a.title + a.date} onClick={() => openDetail({ kind: "run", title: a.title, date: a.date, stats: a.stats })} className="block w-full text-left">
+          <ActivityCard {...a} />
+        </button>
+      ))}
+
+      {manualOpen && <ManualInputSheet onClose={() => setManualOpen(false)} />}
     </>
   );
 }
 
-function SummaryCard({ icon, label, value }: any) {
-  return (
-    <Card className="p-3">
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
-      <div className="mt-2 text-lg font-bold">{value}</div>
-    </Card>
-  );
-}
-
-function RunCard({ title, date, tag, badge, badgeColor, stats, routeColor }: any) {
+function ActivityCard({ title, date, source, feel, stats, match, color }: any) {
+  const m = MATCH_STYLE[match as MatchStatus];
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-brand shadow-brand">
             <Activity size={20} className="text-white" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-bold">{title}</div>
-                <div className="text-sm text-muted-foreground">{date}</div>
+                <div className="text-xs text-muted-foreground">{date}</div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-white/5 px-2 py-1 text-xs text-muted-foreground">{tag}</span>
-                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badgeColor === "emerald" ? "border border-emerald-500/40 text-emerald-400" : "border border-orange-500/40 text-orange-400"}`}>{badge}</span>
-              </div>
+              <span className="text-xl">{feel}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-muted-foreground">{source}</span>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${m.cls}`}>{m.label}</span>
             </div>
             <div className="mt-3 grid grid-cols-4">
               <Stat label="Distance" value={stats[0]} />
-              <Stat label="Duration" value={stats[1]} />
+              <Stat label="Time" value={stats[1]} />
               <Stat label="Pace" value={stats[2]} />
               <Stat label="Avg HR" value={stats[3]} />
             </div>
           </div>
         </div>
       </div>
-      <div className="relative h-40 bg-black/30">
-        <svg viewBox="0 0 300 140" className="h-full w-full">
-          <defs>
-            <pattern id={`g-${routeColor}`} width="30" height="30" patternUnits="userSpaceOnUse">
-              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="white" strokeOpacity="0.05" />
-            </pattern>
-          </defs>
-          <rect width="300" height="140" fill={`url(#g-${routeColor})`} />
-          {routeColor === "#f97316" ? (
-            <path d="M 60 110 L 90 80 L 150 60 L 200 70 L 180 100 L 100 115 Z" fill="none" stroke={routeColor} strokeWidth="3" />
-          ) : (
-            <polyline points="30,110 70,50 110,90 150,40 190,90 230,110" fill="none" stroke={routeColor} strokeWidth="3" />
-          )}
-          <circle cx={routeColor === "#f97316" ? 60 : 30} cy={110} r="5" fill="#10b981" />
-          <circle cx={routeColor === "#f97316" ? 90 : 150} cy={routeColor === "#f97316" ? 115 : 70} r="5" fill="#ef4444" />
+      <div className="relative h-32 bg-black/30">
+        <svg viewBox="0 0 300 120" className="h-full w-full">
+          <rect width="300" height="120" fill="rgba(255,255,255,0.02)" />
+          <polyline points="30,95 70,40 110,80 150,30 190,80 240,100" fill="none" stroke={color} strokeWidth="3" />
+          <circle cx="30" cy="95" r="5" fill="#10b981" />
+          <circle cx="240" cy="100" r="5" fill="#ef4444" />
         </svg>
-        <button className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-xs"><Camera size={12} /> Add photo</button>
       </div>
     </Card>
   );
@@ -1262,56 +1285,297 @@ function SignalIndicator({ state }: { state: SignalState }) {
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-end gap-[3px]">
         {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="rounded-sm transition-all duration-300"
-            style={{
-              width: 5,
-              height: 8 + i * 5,
-              backgroundColor: i < cfg.bars ? cfg.color : cfg.dim,
-              boxShadow: i < cfg.bars ? `0 0 8px ${cfg.color}` : "none",
-            }}
-          />
+          <div key={i} className="rounded-sm transition-all duration-300" style={{ width: 5, height: 8 + i * 5, backgroundColor: i < cfg.bars ? cfg.color : cfg.dim, boxShadow: i < cfg.bars ? `0 0 8px ${cfg.color}` : "none" }} />
         ))}
       </div>
-      <span className="text-[10px] font-semibold tracking-wide" style={{ color: cfg.color }}>
-        {cfg.label}
-      </span>
+      <span className="text-[10px] font-semibold tracking-wide" style={{ color: cfg.color }}>{cfg.label}</span>
     </div>
   );
 }
 
-function RecordView() {
+type RecPhase = "pre" | "active" | "post" | "manual";
+
+function RecordFlow({ goWeek }: { goWeek: () => void }) {
+  const [phase, setPhase] = useState<RecPhase>("pre");
   const [signal, setSignal] = useState<SignalState>("ready");
-  const cycle = () => {
-    const order: SignalState[] = ["searching", "low", "good", "ready"];
-    const idx = order.indexOf(signal);
-    setSignal(order[(idx + 1) % order.length]);
-  };
+  const [linkPlan, setLinkPlan] = useState(true);
+  const [locked, setLocked] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [seconds, setSeconds] = useState(0);
 
+  useEffect(() => {
+    if (phase !== "active" || paused) return;
+    const t = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [phase, paused]);
+
+  const fmt = (s: number) => {
+    const h = Math.floor(s / 3600).toString().padStart(2, "0");
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, "0");
+    const sec = (s % 60).toString().padStart(2, "0");
+    return `${h}:${m}:${sec}`;
+  };
+  const km = (seconds / 300).toFixed(2);
+
+  if (phase === "manual") return <ManualInputScreen onCancel={() => setPhase("pre")} onSave={goWeek} />;
+  if (phase === "post") return <PostRunSummary duration={fmt(seconds)} distance={km} onDiscard={() => { setPhase("pre"); setSeconds(0); }} onSave={goWeek} />;
+  if (phase === "active") {
+    return (
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]" />
+            <span className="text-xs font-bold tracking-widest text-red-400">RECORDING</span>
+          </div>
+          <SignalIndicator state={signal} />
+        </div>
+        <div className="flex flex-col items-center py-4" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.6))" }}>
+          <div className="text-6xl font-black text-emerald-400 tabular-nums">{fmt(seconds)}</div>
+          <div className="mt-1 text-[10px] tracking-[0.3em] text-muted-foreground">DURATION</div>
+        </div>
+        <Card className="p-5 text-center">
+          <div className="text-5xl font-black tabular-nums">{km}</div>
+          <div className="mt-1 text-[10px] tracking-widest text-muted-foreground">KILOMETERS</div>
+        </Card>
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="p-4 text-center"><div className="text-2xl font-bold">5:12</div><div className="text-[10px] tracking-widest text-muted-foreground">PACE /KM</div></Card>
+          <Card className="p-4 text-center"><div className="text-2xl font-bold">5:24</div><div className="text-[10px] tracking-widest text-muted-foreground">AVG PACE</div></Card>
+          <Card className="p-4 text-center"><div className="text-2xl font-bold">148</div><div className="text-[10px] tracking-widest text-muted-foreground">BPM · Z3</div></Card>
+          <Card className="p-4 text-center"><div className="text-2xl font-bold">42 m</div><div className="text-[10px] tracking-widest text-muted-foreground">ELEVATION</div></Card>
+        </div>
+        {!locked ? (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setPaused((p) => !p)} className="rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-bold">{paused ? "▶ Resume" : "⏸ Pause"}</button>
+              <button onClick={() => setPhase("post")} className="rounded-2xl bg-red-500 py-4 text-sm font-bold text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]">⏹ Stop</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button className="rounded-xl border border-white/10 py-3 text-xs font-semibold text-muted-foreground">＋ Lap</button>
+              <button onClick={() => setLocked(true)} className="rounded-xl border border-white/10 py-3 text-xs font-semibold text-muted-foreground flex items-center justify-center gap-1"><Lock size={12} /> Lock</button>
+            </div>
+          </>
+        ) : (
+          <button onClick={() => setLocked(false)} className="w-full rounded-2xl border border-yellow-500/40 bg-yellow-500/10 py-4 text-sm font-bold text-yellow-400 flex items-center justify-center gap-2"><Lock size={14} /> Screen Locked — tap to unlock</button>
+        )}
+      </div>
+    );
+  }
+
+  // Pre-record
+  const canStart = signal === "good" || signal === "ready";
   return (
-    <div className="flex flex-col items-center pt-4">
-      <div className="flex w-full items-center justify-between px-5">
-        <button onClick={cycle} className="text-muted-foreground hover:text-foreground"><ArrowLeft size={22} /></button>
+    <div className="space-y-4 pt-2">
+      <div className="flex items-center justify-between">
+        <button onClick={goWeek} className="text-muted-foreground hover:text-foreground"><ArrowLeft size={22} /></button>
         <span className="text-sm font-bold tracking-[0.3em]">RECORD</span>
-        <button onClick={cycle}><SignalIndicator state={signal} /></button>
+        <button onClick={() => { const o: SignalState[] = ["searching","low","good","ready"]; setSignal(o[(o.indexOf(signal)+1)%o.length]); }}><SignalIndicator state={signal} /></button>
       </div>
-      <div className="mt-12 flex flex-col items-center" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.7))" }}>
-        <div className="text-7xl font-black text-emerald-400">00:00</div>
-        <div className="mt-2 text-xs tracking-[0.3em] text-muted-foreground">DURATION</div>
-      </div>
-      <Card className="mt-8 grid w-full grid-cols-3 divide-x divide-white/5 p-5">
-        <div className="text-center"><div className="text-2xl font-bold">0.00</div><div className="text-xs text-muted-foreground tracking-wider">MILES</div></div>
-        <div className="text-center"><div className="text-2xl font-bold">--:--</div><div className="text-xs text-muted-foreground tracking-wider">PACE /MI</div></div>
-        <div className="text-center"><div className="text-2xl font-bold">--</div><div className="text-xs text-muted-foreground tracking-wider">BPM</div></div>
+
+      <Card className="p-4">
+        <div className="text-xs tracking-widest text-muted-foreground">GPS STATUS</div>
+        <div className="mt-2 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: SIGNAL_CONFIG[signal].dim }}>
+              <MapPin size={18} style={{ color: SIGNAL_CONFIG[signal].color }} />
+            </div>
+            <div>
+              <div className="font-bold" style={{ color: SIGNAL_CONFIG[signal].color }}>{SIGNAL_CONFIG[signal].label}</div>
+              <div className="text-[10px] text-muted-foreground">Tap indicator to simulate</div>
+            </div>
+          </div>
+        </div>
       </Card>
-      <button className="mt-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.6)]">
-        <Play size={36} className="ml-1 fill-black text-black" />
+
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] tracking-widest text-muted-foreground">TODAY'S SESSION</div>
+            <div className="mt-1 font-bold">Tempo · 12 km · Z3–4</div>
+          </div>
+          <span className="rounded-full border border-orange-500/40 bg-orange-500/10 px-2 py-1 text-[10px] font-semibold text-orange-400">Tempo</span>
+        </div>
+        <label className="mt-3 flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] p-3">
+          <span className="text-xs">Train for this session</span>
+          <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#3b82f6]" />
+        </label>
+      </Card>
+
+      <button
+        onClick={() => canStart && setPhase("active")}
+        disabled={!canStart}
+        className={`w-full rounded-2xl py-5 text-base font-bold flex items-center justify-center gap-2 ${canStart ? "bg-gradient-brand text-white shadow-brand" : "cursor-not-allowed bg-white/5 text-muted-foreground"}`}
+      >
+        <Play size={20} className={canStart ? "fill-white" : ""} /> {canStart ? "Start Run" : "Waiting for GPS lock…"}
       </button>
-      <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 py-4 text-sm font-semibold"><Pencil size={16} /> Manual Input</button>
+
+      <button onClick={() => setPhase("manual")} className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-semibold flex items-center justify-center gap-2">
+        <Pencil size={16} /> Manual Input (Treadmill / Fallback)
+      </button>
     </div>
   );
 }
+
+const FEELS = ["😩","😐","🙂","💪","🔥"];
+
+function PostRunSummary({ duration, distance, onDiscard, onSave }: { duration: string; distance: string; onDiscard: () => void; onSave: () => void }) {
+  const [feel, setFeel] = useState(2);
+  const [notes, setNotes] = useState("");
+  const [matchPlan, setMatchPlan] = useState<"yes"|"no"|null>(null);
+  return (
+    <div className="space-y-4 pt-2">
+      <div className="text-center">
+        <div className="text-xs tracking-widest text-emerald-400">RUN COMPLETE</div>
+        <div className="mt-1 text-3xl font-black">{distance} km · {duration}</div>
+      </div>
+      <Card className="overflow-hidden">
+        <div className="h-40 bg-black/30">
+          <svg viewBox="0 0 300 140" className="h-full w-full">
+            <rect width="300" height="140" fill="rgba(255,255,255,0.02)" />
+            <path d="M 40 110 Q 90 40, 150 70 T 260 100" fill="none" stroke="#3b82f6" strokeWidth="3" />
+            <circle cx="40" cy="110" r="5" fill="#10b981" />
+            <circle cx="260" cy="100" r="5" fill="#ef4444" />
+          </svg>
+        </div>
+      </Card>
+      <Card className="p-4">
+        <div className="grid grid-cols-3 gap-3">
+          <Stat label="Pace" value="5:18/km" />
+          <Stat label="Avg HR" value="151" />
+          <Stat label="Elev" value="128 m" />
+          <Stat label="Cal" value="642" />
+          <Stat label="Cadence" value="176" />
+          <Stat label="Max HR" value="172" />
+        </div>
+      </Card>
+      <Card className="p-4">
+        <div className="text-xs font-semibold tracking-widest text-muted-foreground">SPLITS (PACE /KM)</div>
+        <div className="mt-3 space-y-1.5">
+          {["5:32","5:24","5:18","5:12","5:08"].map((p, i) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              <span className="w-6 text-muted-foreground">{i+1}</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-gradient-brand" style={{ width: `${60 + i*7}%` }} /></div>
+              <span className="w-14 text-right font-mono">{p}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card className="p-4">
+        <div className="text-xs font-semibold tracking-widest text-muted-foreground">HR ZONE DISTRIBUTION</div>
+        <div className="mt-3 grid grid-cols-5 gap-1.5 text-center text-[10px]">
+          {[
+            { z: "Z1", pct: 8, color: "#3b82f6" },
+            { z: "Z2", pct: 22, color: "#10b981" },
+            { z: "Z3", pct: 41, color: "#f59e0b" },
+            { z: "Z4", pct: 24, color: "#f97316" },
+            { z: "Z5", pct: 5, color: "#ef4444" },
+          ].map((z) => (
+            <div key={z.z}>
+              <div className="h-16 flex items-end"><div className="w-full rounded-t" style={{ height: `${z.pct * 1.6}%`, backgroundColor: z.color }} /></div>
+              <div className="mt-1 font-bold">{z.z}</div>
+              <div className="text-muted-foreground">{z.pct}%</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card className="p-4">
+        <div className="text-xs font-semibold tracking-widest text-muted-foreground">HOW DID IT FEEL?</div>
+        <div className="mt-3 flex justify-between">
+          {FEELS.map((f, i) => (
+            <button key={i} onClick={() => setFeel(i)} className={`flex h-12 w-12 items-center justify-center rounded-full text-2xl transition ${feel === i ? "bg-gradient-brand shadow-brand scale-110" : "bg-white/5"}`}>{f}</button>
+          ))}
+        </div>
+      </Card>
+      <Card className="p-4 space-y-3">
+        <div className="text-xs font-semibold tracking-widest text-muted-foreground">MATCH TO PLAN</div>
+        <div className="text-sm">Was this your Tempo session for today?</div>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => setMatchPlan("yes")} className={`rounded-xl border py-3 text-sm font-semibold ${matchPlan === "yes" ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/5"}`}>✓ Yes, mark done</button>
+          <button onClick={() => setMatchPlan("no")} className={`rounded-xl border py-3 text-sm font-semibold ${matchPlan === "no" ? "border-sky-500/60 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5"}`}>Extra run</button>
+        </div>
+      </Card>
+      <Card className="p-4">
+        <div className="text-xs font-semibold tracking-widest text-muted-foreground">NOTES</div>
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Anything worth remembering?" className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none placeholder:text-muted-foreground/60" />
+      </Card>
+      <div className="grid grid-cols-2 gap-3 pb-2">
+        <button onClick={() => { if (confirm("Discard this run? This cannot be undone.")) onDiscard(); }} className="rounded-2xl border border-white/10 py-4 text-sm font-semibold text-muted-foreground">Discard</button>
+        <button onClick={onSave} className="rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-white shadow-brand">Save Activity</button>
+      </div>
+    </div>
+  );
+}
+
+function ManualInputScreen({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) {
+  return <ManualInputBody onCancel={onCancel} onSave={onSave} />;
+}
+
+function ManualInputSheet({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0a0f24] p-5 pb-8">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" />
+        <ManualInputBody onCancel={onClose} onSave={onClose} />
+      </div>
+    </div>
+  );
+}
+
+function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) {
+  const [type, setType] = useState("Easy");
+  const [feel, setFeel] = useState(2);
+  const [linkPlan, setLinkPlan] = useState(false);
+  const types = ["Easy","Tempo","Long Run","Intervals","Strength","Other"];
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <button onClick={onCancel} className="text-muted-foreground"><ArrowLeft size={20} /></button>
+        <span className="text-sm font-bold tracking-widest">MANUAL INPUT</span>
+        <span className="w-5" />
+      </div>
+      <FormField label="Date & Start Time">
+        <input type="datetime-local" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
+      </FormField>
+      <FormField label="Activity Type">
+        <div className="flex flex-wrap gap-2">
+          {types.map((t) => (
+            <button key={t} onClick={() => setType(t)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${type === t ? "border-[#3b82f6] bg-[#3b82f6]/15 text-[#3b82f6]" : "border-white/10 bg-white/5 text-muted-foreground"}`}>{t}</button>
+          ))}
+        </div>
+      </FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Distance (km)"><input type="number" step="0.01" placeholder="0.00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+        <FormField label="Duration (HH:MM:SS)"><input type="text" placeholder="00:00:00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      </div>
+      <FormField label="Avg HR (optional)"><input type="number" placeholder="bpm" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      <FormField label="Feel">
+        <div className="flex justify-between">
+          {FEELS.map((f, i) => (
+            <button key={i} onClick={() => setFeel(i)} className={`flex h-11 w-11 items-center justify-center rounded-full text-xl ${feel === i ? "bg-gradient-brand shadow-brand" : "bg-white/5"}`}>{f}</button>
+          ))}
+        </div>
+      </FormField>
+      <FormField label="Notes"><textarea rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
+        <span className="text-xs">Match with today's planned session</span>
+        <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#3b82f6]" />
+      </label>
+      <div className="grid grid-cols-2 gap-3 pt-1">
+        <button onClick={onCancel} className="rounded-2xl border border-white/10 py-3.5 text-sm font-semibold text-muted-foreground">Cancel</button>
+        <button onClick={onSave} className="rounded-2xl bg-gradient-brand py-3.5 text-sm font-bold text-white shadow-brand">Save Activity</button>
+      </div>
+    </div>
+  );
+}
+
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground">{label.toUpperCase()}</div>
+      {children}
+    </div>
+  );
+}
+
 
 function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   const convos = [
