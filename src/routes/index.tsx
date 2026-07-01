@@ -114,7 +114,7 @@ function Index() {
   const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot">("login");
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [coachTab, setCoachTab] = useState<"plan" | "find">("plan");
+  const [coachTab, setCoachTab] = useState<"week" | "program">("week");
   const [bookOpen, setBookOpen] = useState(false);
   const [activityTab, setActivityTab] = useState<"week" | "record">("week");
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -142,7 +142,7 @@ function Index() {
               <main className="pb-28">
                 {screen === "dashboard" && <DashboardScreen openDetail={openDetail} setScreen={setScreen} />}
                 {screen === "plan" && (
-                  <PlanScreen tab={coachTab} setTab={setCoachTab} onBook={() => setBookOpen(true)} openDetail={openDetail} />
+                  <PlanScreen tab={coachTab} setTab={setCoachTab} openDetail={openDetail} />
                 )}
                 {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} openDetail={openDetail} />}
                 {screen === "messages" && <MessagesScreen openDetail={openDetail} />}
@@ -751,42 +751,83 @@ function Sparkline() {
   );
 }
 
-function PlanScreen({ tab, setTab, onBook, openDetail }: { tab: "plan" | "find"; setTab: (t: any) => void; onBook: () => void; openDetail: (d: Detail) => void }) {
+function PlanScreen({ tab, setTab, openDetail }: { tab: "week" | "program"; setTab: (t: any) => void; openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-6 px-5 pt-6">
+      <div>
+        <h2 className="text-3xl font-bold leading-tight">Plan</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Your weekly plan and program journey</p>
+      </div>
       <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
         <div className="grid grid-cols-2 gap-1">
-          <button onClick={() => setTab("plan")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "plan" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>My Plan</button>
-          <button onClick={() => setTab("find")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "find" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Find Coach</button>
+          <button onClick={() => setTab("week")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "week" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>This Week</button>
+          <button onClick={() => setTab("program")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "program" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Program</button>
         </div>
       </div>
-      {tab === "plan" ? <MyPlan openDetail={openDetail} /> : <FindCoach onBook={onBook} openDetail={openDetail} />}
+      {tab === "week" ? <ThisWeekView openDetail={openDetail} /> : <ProgramView />}
     </div>
   );
 }
 
-function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
-  const days = [
-    { day: "Monday", date: "May 5", type: "Easy Run", miles: "5 miles", pace: "8:30/mi", done: true },
-    { day: "Tuesday", date: "May 6", type: "Intervals", miles: "6 miles", pace: "6x800m @ 6:45", done: true },
-    { day: "Wednesday", date: "May 7", type: "Recovery", miles: "4 miles", pace: "9:00/mi", done: true },
-    { day: "Thursday", date: "May 8", type: "Tempo", miles: "5 miles", pace: "7:30/mi", done: false },
+const SESSION_COLORS: Record<string, string> = {
+  "Easy Run": "#3B82F6",
+  "Intervals": "#7C3AED",
+  "Recovery": "#10B981",
+  "Tempo": "#F97316",
+  "Long Run": "#EF4444",
+  "Strength": "#EAB308",
+};
+
+function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
+  const [noteGenerated, setNoteGenerated] = useState(true);
+  const sessions = [
+    { day: "Monday", date: "May 5", type: "Easy Run", dist: "8 km", zone: "Z2", detail: "Conversational pace, focus on form", done: true },
+    { day: "Tuesday", date: "May 6", type: "Intervals", dist: "10 km", zone: "Z4", detail: "6×800m @ 4:10/km, 2min recovery jog", done: true },
+    { day: "Wednesday", date: "May 7", type: "Recovery", dist: "6 km", zone: "Z1", detail: "Very easy shakeout, HR under 140", done: true },
+    { day: "Thursday", date: "May 8", type: "Tempo", dist: "10 km", zone: "Z3", detail: "20 min @ 4:45/km threshold effort", done: false },
+    { day: "Saturday", date: "May 10", type: "Long Run", dist: "24 km", zone: "Z2", detail: "Steady long run, last 5km slightly faster", done: false },
+    { day: "Sunday", date: "May 11", type: "Strength", dist: "45 min", zone: "—", detail: "Runner-specific strength: single-leg work + core", done: false },
   ];
-  const total = days.length;
-  const completed = days.filter((d) => d.done).length;
+  const total = sessions.length;
+  const completed = sessions.filter((s) => s.done).length;
   const pct = Math.round((completed / total) * 100);
+  const kmDone = 24;
+  const kmTarget = 58;
 
   return (
     <>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold leading-tight">This Week's<br />Plan</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Week 8 of 16 · Base Building Phase</p>
-        </div>
-        <button onClick={() => openDetail({ kind: "ai-notes" })} className="flex items-center gap-2 rounded-2xl bg-gradient-brand px-4 py-3 text-xs font-semibold text-white shadow-brand">
-          <Sparkles size={16} /> AI Coach<br />Notes
+      {/* AI Coaching Notes Card */}
+      {!noteGenerated ? (
+        <button onClick={() => setNoteGenerated(true)} className="w-full rounded-2xl bg-gradient-brand p-5 text-left shadow-brand">
+          <div className="flex items-center gap-2 text-white"><Sparkles size={18} /><span className="text-sm font-semibold">AI Coaching Notes</span></div>
+          <p className="mt-2 text-sm text-white/90">Get personalised insights on this week's plan based on your HRV, sleep and training load.</p>
+          <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-semibold text-white">✦ Generate Now</div>
         </button>
-      </div>
+      ) : (
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[#3b82f6]"><Sparkles size={18} /><span className="text-sm font-bold">AI Coaching Notes</span></div>
+            <button onClick={() => {}} className="text-xs text-muted-foreground hover:text-white flex items-center gap-1"><RefreshCw size={12} /> Refresh</button>
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+            Your HRV is 8% below baseline this week — I've kept intensity moderate. Prioritise sleep before Thursday's tempo…
+          </p>
+          <div className="mt-3 flex items-center justify-between">
+            <button onClick={() => openDetail({ kind: "ai-notes" })} className="text-xs font-semibold text-[#3b82f6]">Read More →</button>
+            <span className="text-[10px] text-muted-foreground">Generated 2h ago</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Coach Approval Banner */}
+      <button onClick={() => openDetail({ kind: "ai-notes" })} className="w-full rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-left">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-emerald-400 font-semibold">✓ Approved by Coach Sarah</span>
+          <span className="text-muted-foreground text-xs ml-auto">2h ago</span>
+        </div>
+      </button>
+
+      {/* Weekly Progress */}
       <Card className="p-5">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Weekly Progress</span>
@@ -795,61 +836,184 @@ function MyPlan({ openDetail }: { openDetail: (d: Detail) => void }) {
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
           <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#3b82f6)" }} />
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Sessions auto-fill when synced from Strava, Garmin, or Health apps.</p>
+        <div className="mt-3 flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Volume</span>
+          <span className="font-semibold">{kmDone} km <span className="text-muted-foreground">of {kmTarget} km target</span></span>
+        </div>
+        <p className="mt-3 text-[11px] text-muted-foreground">Sessions auto-fill when activities sync from Strava/Garmin ✓</p>
       </Card>
 
-      <Card className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold">Program Plan</h3>
-            <p className="text-sm text-muted-foreground">Sub 3:30 Marathon · October 2026</p>
-          </div>
-          <div className="text-2xl font-black text-[#3b82f6]">65%</div>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full bg-gradient-brand" style={{ width: "65%" }} />
-        </div>
-        <div className="mt-5 grid grid-cols-3 text-center">
-          <div><div className="text-xl font-bold">142</div><div className="text-xs text-muted-foreground">Total KM</div></div>
-          <div><div className="text-xl font-bold">12</div><div className="text-xs text-muted-foreground">Long Runs</div></div>
-          <div><div className="text-xl font-bold">7:45</div><div className="text-xs text-muted-foreground">Avg Pace</div></div>
-        </div>
-        <div className="mt-5 border-t border-white/5 pt-4">
-          <p className="text-xs text-muted-foreground mb-3">Sync this program as a structured workout plan to:</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => alert("Syncing program to Strava…\n\nWorkouts will appear in your Strava Training Plan.")} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold hover:bg-white/10">
-              <RefreshCw size={14} className="text-orange-500" /> Sync to Strava
-            </button>
-            <button onClick={() => alert("Syncing program to Garmin Connect…\n\nWorkouts will appear on your Garmin device.")} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold hover:bg-white/10">
-              <RefreshCw size={14} className="text-[#3b82f6]" /> Sync to Garmin
-            </button>
-          </div>
-        </div>
-      </Card>
-
+      {/* Session Cards */}
       <div className="space-y-3">
-        {days.map((d) => (
-          <button key={d.day} onClick={() => openDetail({ kind: "workout", day: d.day, date: d.date, type: d.type, miles: d.miles, pace: d.pace })} className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left ${d.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
-            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${d.done ? "bg-emerald-500" : "border border-white/15"}`}>
-              {d.done && <Check size={16} className="text-white" />}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2"><span className="font-bold">{d.day}</span><span className="text-sm text-muted-foreground">{d.date}</span></div>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm">
-                <span className="font-semibold text-[#3b82f6]">{d.type}</span>
-                <span className="text-muted-foreground">·</span>
-                <span>{d.miles}</span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">{d.pace}</span>
+        {sessions.map((s) => {
+          const color = SESSION_COLORS[s.type] ?? "#3B82F6";
+          return (
+            <button key={s.day} onClick={() => openDetail({ kind: "workout", day: s.day, date: s.date, type: s.type, miles: s.dist, pace: s.detail })} className={`flex w-full items-stretch overflow-hidden rounded-2xl border text-left ${s.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
+              <div className="w-1.5 shrink-0" style={{ background: color }} />
+              <div className="flex flex-1 items-center gap-3 p-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2"><span className="font-bold">{s.day}</span><span className="text-xs text-muted-foreground">{s.date}</span></div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
+                    <span className="font-semibold" style={{ color }}>{s.type}</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span>{s.dist}</span>
+                    <span className="rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] text-muted-foreground">{s.zone}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground truncate">{s.detail}</p>
+                </div>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${s.done ? "bg-emerald-500" : "border border-white/15"}`}>
+                  {s.done && <Check size={16} className="text-white" />}
+                </div>
               </div>
-            </div>
-            <ChevronRight size={18} className="text-muted-foreground" />
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Legend */}
+      <Card className="p-4">
+        <div className="text-xs font-semibold text-muted-foreground mb-3">Session Types</div>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {Object.entries(SESSION_COLORS).map(([name, c]) => (
+            <div key={name} className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
+              <span>{name}</span>
+            </div>
+          ))}
+          <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/50" /><span className="text-muted-foreground">Rest</span></div>
+        </div>
+      </Card>
     </>
   );
 }
+
+function ProgramView() {
+  const phases = [
+    { name: "Base", weeks: "Week 1–8", focus: "Aerobic foundation", status: "done" as const },
+    { name: "Build", weeks: "Week 9–16", focus: "Threshold + volume", status: "active" as const },
+    { name: "Peak", weeks: "Week 17–20", focus: "Race-specific intensity", status: "locked" as const },
+    { name: "Taper", weeks: "Week 21–23", focus: "Recover & sharpen", status: "locked" as const },
+    { name: "Race", weeks: "Week 24", focus: "Race day", status: "locked" as const },
+  ];
+  const overallPct = 45;
+  const volumes = [30, 35, 40, 38, 45, 50, 48, 55, 60, 62, 65, 60, 70, 72, 68, 75, 80, 78, 70, 65, 55, 45, 30, 42];
+
+  return (
+    <>
+      {/* Program Overview */}
+      <Card className="p-5">
+        <div className="text-xs font-semibold uppercase tracking-wider text-[#3b82f6]">Marathon Program</div>
+        <h3 className="mt-1 text-xl font-bold">Sub-3:30 Marathon Program</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Jakarta Marathon · October 26, 2026</p>
+        <div className="mt-4 flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Overall progress</span>
+          <span className="font-bold">{overallPct}%</span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
+          <div className="h-full rounded-full bg-gradient-brand" style={{ width: `${overallPct}%` }} />
+        </div>
+        <div className="mt-4">
+          <div className="text-[11px] text-muted-foreground mb-2">Current phase: <span className="text-white font-semibold">Build</span></div>
+          <div className="flex h-2 gap-1 overflow-hidden rounded-full">
+            <div className="flex-[8] rounded-l-full bg-emerald-500/60" />
+            <div className="flex-[8] bg-[#3b82f6]" />
+            <div className="flex-[4] bg-white/10" />
+            <div className="flex-[3] bg-white/10" />
+            <div className="flex-[1] rounded-r-full bg-white/10" />
+          </div>
+          <div className="mt-1 flex justify-between text-[9px] text-muted-foreground">
+            <span>Base</span><span>Build</span><span>Peak</span><span>Taper</span><span>Race</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Program Stats */}
+      <Card className="p-5">
+        <div className="text-sm font-bold mb-4">Program Stats</div>
+        <div className="grid grid-cols-2 gap-4">
+          <StatBox label="Total KM" value="428" />
+          <StatBox label="Sessions Completed" value="52" />
+          <StatBox label="Avg Pace" value="5:12/km" />
+          <StatBox label="Longest Run" value="28 km" />
+          <div className="col-span-2">
+            <StatBox label="Adherence Rate" value="92%" />
+          </div>
+        </div>
+      </Card>
+
+      {/* Phase Breakdown */}
+      <Card className="p-5">
+        <div className="text-sm font-bold mb-3">Phase Breakdown</div>
+        <div className="space-y-2">
+          {phases.map((p) => (
+            <div key={p.name} className={`rounded-xl border p-3 ${p.status === "active" ? "border-[#3b82f6]/50 bg-[#3b82f6]/10" : p.status === "done" ? "border-white/5 bg-white/[0.02] opacity-60" : "border-white/5 bg-white/[0.02]"}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">{p.name}</span>
+                  {p.status === "done" && <Check size={14} className="text-emerald-400" />}
+                  {p.status === "active" && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-[9px] font-bold text-white">ACTIVE</span>}
+                  {p.status === "locked" && <span className="text-xs text-muted-foreground">🔒</span>}
+                </div>
+                <span className="text-xs text-muted-foreground">{p.weeks}</span>
+              </div>
+              {p.status === "active" && <div className="mt-1 text-xs text-muted-foreground">{p.focus}</div>}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Weekly Volume Chart */}
+      <Card className="p-5">
+        <div className="text-sm font-bold mb-1">Weekly Volume</div>
+        <div className="text-xs text-muted-foreground mb-4">24-week taper visualisation (km)</div>
+        <div className="-mx-1 overflow-x-auto scrollbar-hide">
+          <div className="flex items-end gap-1 px-1" style={{ minWidth: 24 * 14 }}>
+            {volumes.map((v, i) => {
+              const isActive = i === 10;
+              let color = "#10B981";
+              if (i >= 8 && i < 16) color = "#3B82F6";
+              else if (i >= 16 && i < 20) color = "#F97316";
+              else if (i >= 20 && i < 23) color = "#EAB308";
+              else if (i >= 23) color = "#EF4444";
+              return (
+                <div key={i} className="flex flex-col items-center gap-1" style={{ width: 12 }}>
+                  <div className="w-full rounded-t" style={{ height: v * 1.2, background: color, opacity: isActive ? 1 : 0.7, outline: isActive ? "1px solid white" : "none" }} />
+                  <div className="text-[8px] text-muted-foreground">{i + 1}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3 text-[10px]">
+          <LegendDot color="#10B981" label="Base" />
+          <LegendDot color="#3B82F6" label="Build" />
+          <LegendDot color="#F97316" label="Peak" />
+          <LegendDot color="#EAB308" label="Taper" />
+          <LegendDot color="#EF4444" label="Race" />
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-lg font-bold">{value}</div>
+    </div>
+  );
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+      <span className="text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
 
 function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
   const filters = ["All", "Marathon", "Speed", "Beginner", "Ultra"];
