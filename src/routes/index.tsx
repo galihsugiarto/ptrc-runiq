@@ -2053,26 +2053,7 @@ function detailTitle(d: Detail): string {
 
 
 function DetailBody({ detail }: { detail: Detail }) {
-  if (detail.kind === "chat") {
-    const msgs = [
-      { me: false, t: "Great job on today's tempo run! Keep the effort dialed in." },
-      { me: true, t: "Thanks coach — legs felt strong today." },
-      { me: false, t: "Recovery jog tomorrow. Keep HR under 140." },
-    ];
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex-1 space-y-3">
-          {msgs.map((m, i) => (
-            <div key={i} className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${m.me ? "ml-auto bg-[#3b82f6] text-white" : "bg-white/5"}`}>{m.t}</div>
-          ))}
-        </div>
-        <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3">
-          <input placeholder="Type a message…" className="w-full bg-transparent text-sm outline-none" />
-          <button className="rounded-full bg-gradient-brand px-4 py-1.5 text-sm font-semibold text-white">Send</button>
-        </div>
-      </div>
-    );
-  }
+  if (detail.kind === "chat") return <ChatDetailView chat={detail} />;
   if (detail.kind === "coach") {
     return (
       <div className="space-y-5">
