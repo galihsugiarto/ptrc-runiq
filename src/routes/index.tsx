@@ -7,7 +7,7 @@ import {
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
   Footprints, Award, Send, Mail, AlertTriangle, Smartphone, Watch,
-  Apple, Utensils, ChevronLeft, RefreshCw,
+  Apple, Utensils, ChevronLeft, RefreshCw, Mic, Paperclip, Pin, Crown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
