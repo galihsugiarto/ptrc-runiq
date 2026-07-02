@@ -7,7 +7,7 @@ import {
   MessageSquare, ArrowLeft, Play, Search, Users, UserPlus, Check,
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
   Footprints, Award, Send, Mail, AlertTriangle, Smartphone, Watch,
-  Apple, Utensils, ChevronLeft, RefreshCw,
+  Apple, Utensils, ChevronLeft, RefreshCw, Mic, Paperclip, Pin, Crown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
@@ -91,7 +91,7 @@ function connectGarmin() {
 type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
 
 export type Detail =
-  | { kind: "chat"; name: string; initials?: string; color: string; icon?: boolean }
+  | { kind: "chat"; name: string; initials?: string; color: string; icon?: boolean; isCoach?: boolean; isGroup?: boolean; members?: number }
   | { kind: "coach"; name: string; specialty: string; initials: string; price: string }
   | { kind: "workout"; day: string; date: string; type: string; miles: string; pace: string }
   | { kind: "run"; title: string; date: string; stats: string[] }
@@ -99,9 +99,14 @@ export type Detail =
   | { kind: "settings-item"; label: string }
   | { kind: "find-friend" }
   | { kind: "find-community" }
+  | { kind: "find-coach" }
   | { kind: "ai-notes" }
   | { kind: "upgrade" }
   | { kind: "connect-apps" }
+  | { kind: "subscription" }
+  | { kind: "notif-prefs" }
+  | { kind: "privacy-settings" }
+  | { kind: "help" }
   | { kind: "legal"; doc: "tos" | "privacy" | "disclaimer"; title: string }
   | { kind: "current-progress" }
   | { kind: "notifications" }
@@ -1578,47 +1583,127 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 
 
 function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
-  const convos = [
-    { name: "Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", time: "2m", timeBlue: true, preview: "Great job on today's tempo run! Keep the effor…", unread: 2, online: true },
-    { name: "Alex Thompson", initials: "AT", color: "from-orange-500 to-red-500", time: "1h", preview: "Thanks for the plan adjustments, feeling much bett…" },
-    { name: "Jamie Chen", initials: "JC", color: "from-emerald-400 to-teal-500", time: "3h", timeBlue: true, preview: "Readiness score looking good this week!", unread: 1, online: true },
-    { name: "Morning Runners Club", icon: true, color: "from-pink-500 to-fuchsia-500", time: "Yesterday", timeBlue: true, preview: "Ryan: See you all at 6am Saturday!", unread: 5 },
-    { name: "Marcus Lee", initials: "ML", color: "from-orange-400 to-amber-500", time: "Yesterday", preview: "That trail route you shared looks epic" },
-    { name: "RUNIQ Coaches", icon: true, color: "from-cyan-400 to-blue-500", time: "Mon", preview: "Coach Dana: New HRV protocols drop Monday" },
-  ] as const;
+  const [q, setQ] = useState("");
+  const coach = { name: "Coach Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", time: "2m", preview: "Great job on today's tempo run! Keep the effort dialed in.", unread: 2, online: true };
+  const runners = [
+    { name: "Alex Thompson", initials: "AT", color: "from-orange-500 to-red-500", time: "1h", preview: "Thanks for the plan tweaks — feeling better." },
+    { name: "Jamie Chen", initials: "JC", color: "from-emerald-400 to-teal-500", time: "3h", preview: "Readiness looks good this week!", unread: 1, online: true },
+    { name: "Marcus Lee", initials: "ML", color: "from-orange-400 to-amber-500", time: "Yesterday", preview: "That trail route looks epic" },
+  ];
+  const communities = [
+    { name: "Morning Runners Club", color: "from-pink-500 to-fuchsia-500", time: "Yesterday", preview: "Ryan: See you all at 6am Saturday!", unread: 5, members: 128 },
+    { name: "Jakarta Trail Pack", color: "from-cyan-400 to-blue-500", time: "Mon", preview: "New route added for weekend LSD", members: 64 },
+  ];
+  const match = (s: string) => s.toLowerCase().includes(q.toLowerCase());
+  const showCoach = !q || match(coach.name) || match(coach.preview);
+  const runnersF = runners.filter((r) => !q || match(r.name) || match(r.preview));
+  const commF = communities.filter((c) => !q || match(c.name) || match(c.preview));
+
   return (
-    <div className="space-y-4 px-5 pt-6">
+    <div className="space-y-5 px-5 pt-6">
       <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
         <Search size={18} className="text-muted-foreground" />
-        <input placeholder="Search messages…" className="w-full bg-transparent text-sm outline-none" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search messages…" className="w-full bg-transparent text-sm outline-none" />
       </div>
-      <div className="space-y-4">
-        {convos.map((c) => (
-          <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: (c as any).initials, color: c.color, icon: (c as any).icon })} className="flex w-full items-center gap-3 text-left">
+
+      {/* YOUR COACH — pinned */}
+      <section>
+        <div className="mb-2 flex items-center gap-2">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#3b82f6]">Your Coach</h4>
+          <span className="rounded-full bg-[#3b82f6]/15 px-2 py-0.5 text-[9px] font-semibold text-[#3b82f6]">Pinned</span>
+        </div>
+        {showCoach ? (
+          <button
+            onClick={() => openDetail({ kind: "chat", name: coach.name, initials: coach.initials, color: coach.color, isCoach: true })}
+            className="flex w-full items-center gap-3 rounded-2xl border border-[#3b82f6]/25 bg-gradient-to-r from-[#3b82f6]/10 to-purple-500/10 p-3 text-left"
+          >
             <div className="relative">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>
-                {(c as any).icon ? <Users size={20} /> : (c as any).initials}
-              </div>
-              {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${coach.color} text-sm font-bold text-white`}>{coach.initials}</div>
+              {coach.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <div className="truncate font-bold">{c.name}</div>
-                <div className={`text-xs ${(c as any).timeBlue ? "text-[#3b82f6] font-semibold" : "text-muted-foreground"}`}>{c.time}</div>
+                <div>
+                  <div className="truncate font-bold">{coach.name}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#3b82f6]">Your Coach</div>
+                </div>
+                <div className="text-xs font-semibold text-[#3b82f6]">{coach.time}</div>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
-                {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <div className="truncate text-sm text-muted-foreground">{coach.preview}</div>
+                <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{coach.unread}</span>
               </div>
             </div>
           </button>
-        ))}
-      </div>
-      <div className="my-4 border-t border-white/5" />
+        ) : (
+          <Card className="p-4 text-center">
+            <div className="font-bold">No coach yet</div>
+            <p className="mt-1 text-xs text-muted-foreground">Coach will review and approve every plan for you.</p>
+            <button onClick={() => openDetail({ kind: "find-coach" })} className="mt-3 rounded-full bg-gradient-brand px-4 py-2 text-xs font-semibold text-white shadow-brand">Find a Coach</button>
+          </Card>
+        )}
+      </section>
+
+      {/* RUNNERS */}
+      {runnersF.length > 0 && (
+        <section>
+          <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Fellow Runners</h4>
+          <div className="space-y-3">
+            {runnersF.map((c) => (
+              <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: c.initials, color: c.color })} className="flex w-full items-center gap-3 text-left">
+                <div className="relative">
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>{c.initials}</div>
+                  {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="truncate font-semibold">{c.name}</div>
+                    <div className="text-xs text-muted-foreground">{c.time}</div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
+                    {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* COMMUNITY */}
+      {commF.length > 0 && (
+        <section>
+          <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Community</h4>
+          <div className="space-y-3">
+            {commF.map((c) => (
+              <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, color: c.color, icon: true, isGroup: true, members: c.members })} className="flex w-full items-center gap-3 text-left">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-white`}><Users size={18} /></div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="truncate font-semibold">{c.name}</div>
+                    <div className="text-xs text-muted-foreground">{c.time}</div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
+                    {c.unread ? (
+                      <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{c.unread}</span>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">{c.members} members</span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="my-2 border-t border-white/5" />
       <button onClick={() => openDetail({ kind: "find-friend" })} className="w-full text-left">
         <Card className="flex items-center gap-3 p-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
-          <div><div className="font-bold">Find a Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
+          <div><div className="font-bold">Find a Runner Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
         </Card>
       </button>
       <button onClick={() => openDetail({ kind: "find-community" })} className="w-full text-left">
@@ -1632,13 +1717,6 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
 }
 
 function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
-  const items = [
-    { icon: User, title: "Edit Profile", sub: "Name, bio, personal info" },
-    { icon: Bell, title: "Notifications", sub: "Alerts & reminders" },
-    { icon: FileText, title: "Subscription", sub: "Free plan · Upgrade to Pro" },
-    { icon: Shield, title: "Privacy", sub: "Data & visibility settings" },
-    { icon: HelpCircle, title: "Help & Support", sub: "FAQ, contact, feedback" },
-  ];
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -1655,8 +1733,16 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
 
   return (
     <div className="space-y-6 px-5 pt-6">
+      {/* Header with gear icon (only entry point to Settings Drawer) */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Profile</h2>
+        <button onClick={onSettings} aria-label="Settings" className="rounded-full border border-white/10 bg-white/5 p-2.5">
+          <Settings size={18} />
+        </button>
+      </div>
+
       <Card className="overflow-hidden p-0">
-        {/* Background avatar (editable) */}
+        {/* Background banner (editable) */}
         <div className="relative h-28 w-full" style={{ background: bg }}>
           <button
             onClick={() => bgInput.current?.click()}
@@ -1665,6 +1751,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           >
             <Pencil size={14} className="text-white" />
           </button>
+          <span className="absolute bottom-2 right-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur">Tap to change background</span>
           <input ref={bgInput} type="file" accept="image/*" hidden onChange={onBg} />
         </div>
         <div className="px-6 pb-6 text-center">
@@ -1684,45 +1771,94 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </button>
             <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
           </div>
-          <div className="mt-3 text-2xl font-bold">A</div>
+          <div className="mt-3 text-xl font-bold">Andi Pratama</div>
           <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
             <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
-            <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Runs</div></div>
-            <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Weeks</div></div>
+            <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Total Runs</div></div>
+            <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Active Weeks</div></div>
           </div>
         </div>
       </Card>
 
+      {/* MY COACH */}
       <section>
         <h3 className="mb-3 font-bold">My Coach</h3>
-        <Card className="flex items-center gap-3 p-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-brand text-lg">👩</div>
-          <div className="flex-1">
-            <div className="font-bold">Sarah Mitchell</div>
-            <div className="text-sm text-muted-foreground">Marathon Specialist</div>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold">SM</div>
+            <div className="flex-1">
+              <div className="font-bold">Sarah Mitchell</div>
+              <div className="text-xs text-muted-foreground">Marathon Specialist</div>
+              <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                <Check size={10} /> Plan approved
+              </div>
+            </div>
           </div>
-          <button className="flex items-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs"><MessageSquare size={14} /> Message</button>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <button
+              onClick={() => openDetail({ kind: "chat", name: "Coach Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", isCoach: true })}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-brand py-2.5 text-xs font-semibold text-white shadow-brand"
+            >
+              <MessageSquare size={14} /> Message
+            </button>
+            <button
+              onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 850k" })}
+              className="rounded-xl border border-white/15 py-2.5 text-xs font-semibold"
+            >
+              View Profile
+            </button>
+            <button
+              onClick={() => openDetail({ kind: "find-coach" })}
+              className="rounded-xl border border-white/15 py-2.5 text-xs font-semibold"
+            >
+              Change
+            </button>
+          </div>
         </Card>
       </section>
 
+      {/* FIND COACH marketplace entry */}
+      <section>
+        <h3 className="mb-3 font-bold">Find Coach</h3>
+        <button onClick={() => openDetail({ kind: "find-coach" })} className="w-full text-left">
+          <Card className="flex items-center gap-3 p-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-white shadow-brand"><Search size={18} /></div>
+            <div className="flex-1">
+              <div className="font-bold">Browse Coach Marketplace</div>
+              <div className="text-xs text-muted-foreground">Marathon · Speed · Trail · Ultra</div>
+            </div>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Card>
+        </button>
+      </section>
+
+      {/* CURRENT PROGRESS (collapsed) */}
       <section>
         <h3 className="mb-3 font-bold">Current Progress</h3>
         <button onClick={() => openDetail({ kind: "current-progress" })} className="w-full text-left">
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-bold">Training Consistency</div>
-                <div className="text-sm text-muted-foreground">Tap to view weekly & monthly summary</div>
+                <div className="font-bold">Jakarta Marathon 2026</div>
+                <div className="text-xs text-muted-foreground">Target: 15 Nov 2026 · Week 8 of 16</div>
               </div>
               <ChevronRight size={20} className="text-muted-foreground" />
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+              <div className="h-full rounded-full bg-gradient-brand" style={{ width: "50%" }} />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">50% complete</span>
+              <span className="font-semibold text-[#3b82f6]">See calendar →</span>
             </div>
             <ProgressGridMini />
           </Card>
         </button>
       </section>
 
+      {/* DAILY READINESS metrics */}
       <section>
         <h3 className="mb-3 font-bold">Daily Readiness</h3>
         <div className="grid grid-cols-3 gap-3">
@@ -1730,32 +1866,18 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
           <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
         </div>
-        <Card className="mt-3 p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">7-Day Trend</h3>
-            <TrendingUp size={18} className="text-green-400" />
-          </div>
-          <Sparkline />
-          <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-            {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
-          </div>
-        </Card>
-      </section>
-
-      <section>
-        <h3 className="mb-3 font-bold">Account</h3>
-        <Card className="divide-y divide-white/5">
-          {items.map((it) => (
-            <button key={it.title} onClick={() => openDetail({ kind: "profile-item", title: it.title, sub: it.sub })} className="flex w-full items-center gap-4 p-4 text-left">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground"><it.icon size={18} /></div>
-              <div className="flex-1">
-                <div className="font-semibold">{it.title}</div>
-                <div className="text-xs text-muted-foreground">{it.sub}</div>
-              </div>
-              <ChevronRight size={18} className="text-muted-foreground" />
-            </button>
-          ))}
-        </Card>
+        <button onClick={() => openDetail({ kind: "trend-28d" })} className="mt-3 w-full text-left">
+          <Card className="p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold">7-Day Trend</h3>
+              <TrendingUp size={18} className="text-green-400" />
+            </div>
+            <Sparkline />
+            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+              {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
+            </div>
+          </Card>
+        </button>
       </section>
     </div>
   );
@@ -1809,41 +1931,71 @@ function ProgressGridMini() {
 
 
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
-  type Item = { icon: any; label: string; onClick: () => void };
-  const items: Item[] = [
-    { icon: LinkIcon, label: "Connect Apps", onClick: () => openDetail({ kind: "connect-apps" }) },
-    { icon: Shield, label: "Privacy Settings", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Settings" }) },
-    { icon: Bell, label: "Notifications", onClick: () => openDetail({ kind: "settings-item", label: "Notifications" }) },
+  type Item = { icon: any; label: string; sub?: string; badge?: string; onClick: () => void };
+  const account: Item[] = [
+    { icon: User, label: "Edit Profile", sub: "Name, bio, personal info", onClick: () => openDetail({ kind: "profile-item", title: "Edit Profile", sub: "Name, bio, personal info" }) },
+    { icon: LinkIcon, label: "Connect Apps", sub: "Garmin, Strava, Apple Health, MFP, Whoop", onClick: () => openDetail({ kind: "connect-apps" }) },
+    { icon: Shield, label: "Privacy Settings", sub: "Data sharing & visibility", onClick: () => openDetail({ kind: "privacy-settings" }) },
+    { icon: Bell, label: "Notifications", sub: "Alerts, reminders, HRV pings", onClick: () => openDetail({ kind: "notif-prefs" }) },
   ];
-  const more: Item[] = [
-    { icon: HelpCircle, label: "Support", onClick: () => openDetail({ kind: "settings-item", label: "Support" }) },
+  const billing: Item[] = [
+    { icon: FileText, label: "Subscription", sub: "RUNIQ Pro · Rp 180k/mo", badge: "Free", onClick: () => openDetail({ kind: "subscription" }) },
+  ];
+  const help: Item[] = [
+    { icon: HelpCircle, label: "Help & Support", sub: "FAQ, contact, feedback", onClick: () => openDetail({ kind: "help" }) },
+  ];
+  const legal: Item[] = [
     { icon: FileText, label: "Terms of Service", onClick: () => openDetail({ kind: "legal", doc: "tos", title: "Terms of Service" }) },
     { icon: Shield, label: "Privacy Policy", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Policy" }) },
     { icon: AlertTriangle, label: "Medical & Fitness Disclaimer", onClick: () => openDetail({ kind: "legal", doc: "disclaimer", title: "Medical & Fitness Disclaimer" }) },
   ];
+
+  function Group({ title, items }: { title: string; items: Item[] }) {
+    return (
+      <div className="mt-5">
+        <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h4>
+        <Card className="divide-y divide-white/5 p-0">
+          {items.map((it) => (
+            <button key={it.label} onClick={() => { onClose(); it.onClick(); }} className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><it.icon size={16} /></span>
+              <span className="flex-1">
+                <span className="block text-sm font-semibold">{it.label}</span>
+                {it.sub && <span className="block text-[11px] text-muted-foreground">{it.sub}</span>}
+              </span>
+              {it.badge && <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">{it.badge}</span>}
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </button>
+          ))}
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-0 z-50 bg-black/60" onClick={onClose}>
       <div className="absolute right-0 top-0 h-full w-[88%] overflow-y-auto bg-[#0f1530] p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <h2 className="text-2xl font-bold">Settings</h2>
-          <button onClick={onClose}><X /></button>
+          <button onClick={onClose} aria-label="Close"><X /></button>
         </div>
         <div className="mt-6 flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
-          <div><div className="font-bold">A</div><div className="text-sm text-muted-foreground">Athlete</div></div>
-        </div>
-        <div className="mt-6 space-y-1">
-          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
-        </div>
-        <div className="my-5 h-px bg-white/5" />
-        <div className="space-y-1">
-          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
+          <div>
+            <div className="font-bold">Andi Pratama</div>
+            <div className="text-xs text-muted-foreground">Athlete · andi@example.com</div>
+          </div>
         </div>
 
-        <div className="my-5 h-px bg-white/5" />
-        <button onClick={onLogout} className="flex w-full items-center gap-4 rounded-xl py-3 text-left text-rose-400">
-          <LogOut size={20} /> <span className="font-bold">Log Out</span>
+        <Group title="Account" items={account} />
+        <Group title="Billing" items={billing} />
+        <Group title="Support" items={help} />
+        <Group title="Legal" items={legal} />
+
+        <div className="my-6 h-px bg-white/5" />
+        <button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-left text-rose-400">
+          <LogOut size={18} /> <span className="font-bold">Log Out</span>
         </button>
+        <div className="mt-4 text-center text-[10px] text-muted-foreground">RUNIQ v1.0.0 · Made in Jakarta 🇮🇩</div>
       </div>
     </div>
   );
@@ -1883,9 +2035,14 @@ function detailTitle(d: Detail): string {
     case "settings-item": return d.label;
     case "find-friend": return "Find a Friend";
     case "find-community": return "Find a Community";
+    case "find-coach": return "Find Coach";
     case "ai-notes": return "AI Coach Notes";
     case "upgrade": return "Upgrade to Pro";
     case "connect-apps": return "Connect Apps";
+    case "subscription": return "Subscription";
+    case "notif-prefs": return "Notifications";
+    case "privacy-settings": return "Privacy Settings";
+    case "help": return "Help & Support";
     case "legal": return d.title;
     case "current-progress": return "Current Progress";
     case "notifications": return "Notifications";
@@ -1896,26 +2053,7 @@ function detailTitle(d: Detail): string {
 
 
 function DetailBody({ detail }: { detail: Detail }) {
-  if (detail.kind === "chat") {
-    const msgs = [
-      { me: false, t: "Great job on today's tempo run! Keep the effort dialed in." },
-      { me: true, t: "Thanks coach — legs felt strong today." },
-      { me: false, t: "Recovery jog tomorrow. Keep HR under 140." },
-    ];
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex-1 space-y-3">
-          {msgs.map((m, i) => (
-            <div key={i} className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${m.me ? "ml-auto bg-[#3b82f6] text-white" : "bg-white/5"}`}>{m.t}</div>
-          ))}
-        </div>
-        <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3">
-          <input placeholder="Type a message…" className="w-full bg-transparent text-sm outline-none" />
-          <button className="rounded-full bg-gradient-brand px-4 py-1.5 text-sm font-semibold text-white">Send</button>
-        </div>
-      </div>
-    );
-  }
+  if (detail.kind === "chat") return <ChatDetailView chat={detail} />;
   if (detail.kind === "coach") {
     return (
       <div className="space-y-5">
@@ -2057,6 +2195,11 @@ function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "notifications") return <NotificationsView />;
   if (detail.kind === "readiness-breakdown") return <ReadinessBreakdownView />;
   if (detail.kind === "trend-28d") return <Trend28View />;
+  if (detail.kind === "find-coach") return <FindCoachView />;
+  if (detail.kind === "subscription") return <SubscriptionView />;
+  if (detail.kind === "notif-prefs") return <NotifPrefsView />;
+  if (detail.kind === "privacy-settings") return <PrivacySettingsView />;
+  if (detail.kind === "help") return <HelpSupportView />;
   if (detail.kind === "settings-item" || detail.kind === "profile-item") {
     const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
     return (
@@ -2339,6 +2482,363 @@ function Trend28View() {
       <Card className="p-4 text-sm">
         <div className="font-semibold">Insight</div>
         <p className="mt-1 text-muted-foreground">28-day average: 64. Last 7-day trend improving (+8). Maintain 7+ hours of sleep.</p>
+      </Card>
+    </div>
+  );
+}
+
+// ================= Chat Detail =================
+function ChatDetailView({ chat }: { chat: Extract<Detail, { kind: "chat" }> }) {
+  type Msg = { me: boolean; t: string; time?: string; voice?: boolean; sec?: number; card?: { title: string; sub: string; icon: React.ReactNode } };
+  const isCoach = !!chat.isCoach;
+  const isGroup = !!chat.isGroup;
+
+  const coachMsgs: Msg[] = [
+    { me: false, t: "Great job on today's tempo run! Keep the effort dialed in.", time: "09:12" },
+    { me: false, t: "", voice: true, sec: 32, time: "09:13" },
+    { me: true, t: "Thanks coach — legs felt strong today.", time: "09:20" },
+    { me: false, t: "", time: "09:22", card: { title: "Tomorrow · Recovery Jog", sub: "5 km · HR < 140 · Zone 1–2", icon: <Footprints size={18} className="text-[#3b82f6]" /> } },
+    { me: false, t: "Keep HR under 140 and hydrate well before bed.", time: "09:22" },
+  ];
+  const runnerMsgs: Msg[] = [
+    { me: false, t: "Ready for Saturday LSD? 🏃", time: "16:04" },
+    { me: true, t: "Ya, jam 6 pagi ya", time: "16:10" },
+  ];
+  const groupMsgs: Msg[] = [
+    { me: false, t: "Ryan: See you all at 6am Saturday!", time: "Yesterday" },
+    { me: false, t: "Dita: I'll bring bananas 🍌", time: "Yesterday" },
+    { me: true, t: "Count me in!", time: "08:02" },
+  ];
+  const msgs = isCoach ? coachMsgs : isGroup ? groupMsgs : runnerMsgs;
+
+  return (
+    <div className="-mx-5 -my-6 flex h-[calc(100%+3rem)] flex-col">
+      {/* Pinned plan banner — coach only */}
+      {isCoach && (
+        <div className="border-b border-[#3b82f6]/25 bg-gradient-to-r from-[#3b82f6]/15 to-purple-500/10 px-5 py-3">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#3b82f6]">
+            <Pin size={12} /> Pinned Plan
+          </div>
+          <div className="mt-1 flex items-center justify-between">
+            <div>
+              <div className="text-sm font-bold">This Week — Marathon Base Wk 8</div>
+              <div className="text-[11px] text-muted-foreground">6 sessions · Approved · Last updated 2h ago</div>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+              <Check size={10} /> Approved
+            </span>
+          </div>
+        </div>
+      )}
+      {isGroup && (
+        <div className="border-b border-white/5 px-5 py-2 text-center text-[11px] text-muted-foreground">
+          <Users size={12} className="mr-1 inline" /> {chat.members ?? 42} members
+        </div>
+      )}
+
+      {/* Messages */}
+      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
+        {msgs.map((m, i) => (
+          <div key={i} className={`flex ${m.me ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                m.me
+                  ? "bg-gradient-brand text-white shadow-brand"
+                  : "border border-white/10 bg-white/5"
+              }`}
+            >
+              {m.card ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">{m.card.icon}</div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-[#3b82f6]">Session Card</div>
+                    <div className="font-bold">{m.card.title}</div>
+                    <div className="text-[11px] text-muted-foreground">{m.card.sub}</div>
+                  </div>
+                </div>
+              ) : m.voice ? (
+                <div className="flex items-center gap-3">
+                  <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20"><Play size={14} /></button>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 18 }).map((_, k) => (
+                      <span key={k} className="block w-0.5 rounded-full bg-white/70" style={{ height: `${6 + Math.abs(Math.sin(k)) * 14}px` }} />
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">0:{String(m.sec ?? 0).padStart(2, "0")}</span>
+                </div>
+              ) : (
+                <div>{m.t}</div>
+              )}
+              {m.time && <div className={`mt-1 text-[10px] ${m.me ? "text-white/70" : "text-muted-foreground"}`}>{m.time}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Input bar */}
+      <div className="border-t border-white/5 bg-[#0a0f24] px-4 py-3">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1.5">
+          <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-white" aria-label="Attach">
+            <Paperclip size={16} />
+          </button>
+          <input placeholder="Type a message…" className="w-full bg-transparent text-sm outline-none" />
+          <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-white" aria-label="Voice note">
+            <Mic size={16} />
+          </button>
+          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-brand shadow-brand" aria-label="Send">
+            <Send size={15} className="text-white" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= Find Coach =================
+function FindCoachView() {
+  const [filter, setFilter] = useState("All");
+  const chips = ["All", "Marathon", "Speed", "Trail", "Ultra", "Beginner"];
+  const coaches = [
+    { name: "Sarah Mitchell", initials: "SM", specialty: "Marathon Specialist", price: "Rp 850k", rating: 4.9, reviews: 127, certs: ["USATF L2", "RRCA"], color: "from-indigo-500 to-purple-500" },
+    { name: "Dana Wijaya", initials: "DW", specialty: "Trail & Ultra", price: "Rp 950k", rating: 4.8, reviews: 84, certs: ["UESCA", "ACE"], color: "from-emerald-500 to-teal-500" },
+    { name: "Rio Hidayat", initials: "RH", specialty: "Speed & 5k–10k", price: "Rp 650k", rating: 4.7, reviews: 56, certs: ["USATF L1"], color: "from-orange-500 to-red-500" },
+    { name: "Mira Santoso", initials: "MS", specialty: "Beginner Friendly", price: "Rp 550k", rating: 4.9, reviews: 210, certs: ["RRCA"], color: "from-pink-500 to-fuchsia-500" },
+  ];
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+        <Search size={16} className="text-muted-foreground" />
+        <input placeholder="Search coaches…" className="w-full bg-transparent text-sm outline-none" />
+      </div>
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        {chips.map((c) => (
+          <button
+            key={c}
+            onClick={() => setFilter(c)}
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${filter === c ? "border-[#3b82f6] bg-[#3b82f6]/20 text-[#3b82f6]" : "border-white/10 bg-white/5 text-muted-foreground"}`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-3">
+        {coaches.map((c) => (
+          <Card key={c.name} className="p-4">
+            <div className="flex items-start gap-3">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${c.color} font-bold text-white`}>{c.initials}</div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold">{c.name}</div>
+                  <div className="text-sm font-bold">{c.price}<span className="text-[10px] font-normal text-muted-foreground">/mo</span></div>
+                </div>
+                <div className="text-xs text-muted-foreground">{c.specialty}</div>
+                <div className="mt-1 flex items-center gap-2 text-xs">
+                  <Star size={12} className="fill-yellow-400 text-yellow-400" />
+                  <span className="font-semibold">{c.rating}</span>
+                  <span className="text-muted-foreground">({c.reviews})</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {c.certs.map((cert) => (
+                    <span key={cert} className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-[10px] text-[#3b82f6]">{cert}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button className="rounded-xl border border-white/15 py-2 text-xs font-semibold">View Profile</button>
+              <button className="rounded-xl bg-gradient-brand py-2 text-xs font-semibold text-white shadow-brand">Book</button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ================= Subscription =================
+function SubscriptionView() {
+  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const perks = [
+    "Unlimited AI training plans",
+    "Coach-approved sessions",
+    "Advanced HRV & load analytics",
+    "Priority chat with your coach",
+    "Custom race calendar & taper",
+    "Export to Garmin, Strava, Apple Health",
+  ];
+  return (
+    <div className="space-y-5">
+      <Card className="overflow-hidden p-0">
+        <div className="bg-gradient-brand p-5 text-white">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/80"><Crown size={12} /> RUNIQ Pro</div>
+          <div className="mt-2 text-3xl font-black">
+            {billing === "monthly" ? "Rp 180,000" : "Rp 1,800,000"}
+            <span className="ml-1 text-sm font-normal text-white/70">/ {billing === "monthly" ? "month" : "year"}</span>
+          </div>
+          {billing === "yearly" && <div className="text-xs text-white/80">Save Rp 360,000 · 2 months free</div>}
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-white/5 p-1">
+            {(["monthly", "yearly"] as const).map((b) => (
+              <button key={b} onClick={() => setBilling(b)} className={`rounded-lg py-2 text-xs font-semibold ${billing === b ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>
+                {b === "monthly" ? "Monthly" : "Yearly · -17%"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <div className="font-bold">What you get</div>
+        <ul className="mt-3 space-y-2 text-sm">
+          {perks.map((p) => (
+            <li key={p} className="flex items-start gap-2"><Check size={16} className="mt-0.5 text-emerald-400" /><span>{p}</span></li>
+          ))}
+        </ul>
+      </Card>
+
+      <Card className="p-4 text-xs text-muted-foreground">
+        Current plan: <span className="font-semibold text-foreground">Free</span> · Renews automatically. Cancel anytime from Settings.
+      </Card>
+
+      <button className="w-full rounded-2xl bg-gradient-brand py-4 font-bold text-white shadow-brand">
+        Upgrade to Pro
+      </button>
+      <button className="w-full rounded-2xl border border-white/10 py-3 text-sm font-semibold text-muted-foreground">Restore Purchase</button>
+    </div>
+  );
+}
+
+// ================= Notification Preferences =================
+function NotifPrefsView() {
+  const groups = [
+    { title: "Training", items: ["Daily plan reminder", "Coach approved plan", "Session start reminder"] },
+    { title: "Health", items: ["Low HRV alert", "Poor sleep detected", "High training load"] },
+    { title: "Social", items: ["Friend activity", "Community messages", "Coach message"] },
+    { title: "System", items: ["App updates", "Promotions & tips"] },
+  ];
+  const [state, setState] = useState<Record<string, boolean>>({});
+  const toggle = (k: string) => setState((s) => ({ ...s, [k]: !(s[k] ?? true) }));
+  return (
+    <div className="space-y-5">
+      {groups.map((g) => (
+        <section key={g.title}>
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{g.title}</h4>
+          <Card className="divide-y divide-white/5 p-0">
+            {g.items.map((it) => {
+              const on = state[it] ?? true;
+              return (
+                <div key={it} className="flex items-center justify-between p-4">
+                  <span className="text-sm">{it}</span>
+                  <button
+                    onClick={() => toggle(it)}
+                    className={`relative h-6 w-11 rounded-full transition ${on ? "bg-gradient-brand" : "bg-white/10"}`}
+                    aria-pressed={on}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+                  </button>
+                </div>
+              );
+            })}
+          </Card>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+// ================= Privacy Settings =================
+function PrivacySettingsView() {
+  const groups = [
+    { title: "Data Sharing", items: ["Share activities with coach", "Share HRV & sleep with coach", "Anonymous analytics"] },
+    { title: "Visibility", items: ["Show profile in community", "Discoverable by friends", "Share workouts to feed"] },
+    { title: "Third-party Sync", items: ["Sync to Strava", "Sync to Garmin", "Sync to Apple Health"] },
+  ];
+  const [state, setState] = useState<Record<string, boolean>>({ "Share activities with coach": true, "Share HRV & sleep with coach": true });
+  const toggle = (k: string) => setState((s) => ({ ...s, [k]: !s[k] }));
+  return (
+    <div className="space-y-5">
+      <Card className="border border-[#3b82f6]/25 bg-[#3b82f6]/10 p-4 text-xs text-muted-foreground">
+        <div className="flex items-start gap-2 text-foreground"><Shield size={14} className="mt-0.5 text-[#3b82f6]" /><span className="font-semibold">Your data is yours.</span></div>
+        <p className="mt-1">Manage what RUNIQ, your coach, and connected apps can see. Changes take effect immediately.</p>
+      </Card>
+      {groups.map((g) => (
+        <section key={g.title}>
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{g.title}</h4>
+          <Card className="divide-y divide-white/5 p-0">
+            {g.items.map((it) => {
+              const on = !!state[it];
+              return (
+                <div key={it} className="flex items-center justify-between p-4">
+                  <span className="text-sm">{it}</span>
+                  <button
+                    onClick={() => toggle(it)}
+                    className={`relative h-6 w-11 rounded-full transition ${on ? "bg-gradient-brand" : "bg-white/10"}`}
+                    aria-pressed={on}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+                  </button>
+                </div>
+              );
+            })}
+          </Card>
+        </section>
+      ))}
+      <Card className="divide-y divide-white/5 p-0">
+        <button className="flex w-full items-center justify-between p-4 text-left text-sm">
+          <span>Download my data</span>
+          <ChevronRight size={16} className="text-muted-foreground" />
+        </button>
+        <button className="flex w-full items-center justify-between p-4 text-left text-sm text-rose-400">
+          <span>Delete account</span>
+          <ChevronRight size={16} className="text-rose-400/60" />
+        </button>
+      </Card>
+    </div>
+  );
+}
+
+// ================= Help & Support =================
+function HelpSupportView() {
+  const faqs = [
+    { q: "How does coach approval work?", a: "AI drafts your plan based on HRV, sleep and load. Your coach reviews, tweaks and approves before you train." },
+    { q: "Can I sync with Garmin & Strava?", a: "Yes. Go to Settings → Connect Apps and authorize each provider. Activities sync both ways." },
+    { q: "How is Readiness calculated?", a: "A blend of HRV, resting HR, sleep quality, prior load and subjective feel — scored 0–100." },
+    { q: "Cancel my Pro subscription?", a: "Settings → Subscription → Cancel. You keep Pro until the end of the billing period." },
+  ];
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <div className="space-y-5">
+      <Card className="p-5">
+        <div className="text-sm font-bold">Need a human?</div>
+        <p className="mt-1 text-xs text-muted-foreground">Our team replies in under 24 hours (Mon–Fri, WIB).</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-brand py-2.5 text-xs font-semibold text-white shadow-brand">
+            <Mail size={14} /> Email us
+          </button>
+          <button className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 py-2.5 text-xs font-semibold">
+            <MessageSquare size={14} /> Live chat
+          </button>
+        </div>
+      </Card>
+
+      <section>
+        <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Frequently Asked</h4>
+        <Card className="divide-y divide-white/5 p-0">
+          {faqs.map((f, i) => (
+            <div key={f.q}>
+              <button onClick={() => setOpen(open === i ? null : i)} className="flex w-full items-center justify-between p-4 text-left">
+                <span className="text-sm font-semibold">{f.q}</span>
+                <ChevronRight size={16} className={`text-muted-foreground transition-transform ${open === i ? "rotate-90" : ""}`} />
+              </button>
+              {open === i && <div className="px-4 pb-4 text-xs text-muted-foreground">{f.a}</div>}
+            </div>
+          ))}
+        </Card>
+      </section>
+
+      <Card className="p-4 text-xs text-muted-foreground">
+        App version <span className="font-semibold text-foreground">1.0.0</span> · Build 2025.05
       </Card>
     </div>
   );
