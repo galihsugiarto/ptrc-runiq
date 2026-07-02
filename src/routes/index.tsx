@@ -1931,41 +1931,71 @@ function ProgressGridMini() {
 
 
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
-  type Item = { icon: any; label: string; onClick: () => void };
-  const items: Item[] = [
-    { icon: LinkIcon, label: "Connect Apps", onClick: () => openDetail({ kind: "connect-apps" }) },
-    { icon: Shield, label: "Privacy Settings", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Settings" }) },
-    { icon: Bell, label: "Notifications", onClick: () => openDetail({ kind: "settings-item", label: "Notifications" }) },
+  type Item = { icon: any; label: string; sub?: string; badge?: string; onClick: () => void };
+  const account: Item[] = [
+    { icon: User, label: "Edit Profile", sub: "Name, bio, personal info", onClick: () => openDetail({ kind: "profile-item", title: "Edit Profile", sub: "Name, bio, personal info" }) },
+    { icon: LinkIcon, label: "Connect Apps", sub: "Garmin, Strava, Apple Health, MFP, Whoop", onClick: () => openDetail({ kind: "connect-apps" }) },
+    { icon: Shield, label: "Privacy Settings", sub: "Data sharing & visibility", onClick: () => openDetail({ kind: "privacy-settings" }) },
+    { icon: Bell, label: "Notifications", sub: "Alerts, reminders, HRV pings", onClick: () => openDetail({ kind: "notif-prefs" }) },
   ];
-  const more: Item[] = [
-    { icon: HelpCircle, label: "Support", onClick: () => openDetail({ kind: "settings-item", label: "Support" }) },
+  const billing: Item[] = [
+    { icon: FileText, label: "Subscription", sub: "RUNIQ Pro · Rp 180k/mo", badge: "Free", onClick: () => openDetail({ kind: "subscription" }) },
+  ];
+  const help: Item[] = [
+    { icon: HelpCircle, label: "Help & Support", sub: "FAQ, contact, feedback", onClick: () => openDetail({ kind: "help" }) },
+  ];
+  const legal: Item[] = [
     { icon: FileText, label: "Terms of Service", onClick: () => openDetail({ kind: "legal", doc: "tos", title: "Terms of Service" }) },
     { icon: Shield, label: "Privacy Policy", onClick: () => openDetail({ kind: "legal", doc: "privacy", title: "Privacy Policy" }) },
     { icon: AlertTriangle, label: "Medical & Fitness Disclaimer", onClick: () => openDetail({ kind: "legal", doc: "disclaimer", title: "Medical & Fitness Disclaimer" }) },
   ];
+
+  function Group({ title, items }: { title: string; items: Item[] }) {
+    return (
+      <div className="mt-5">
+        <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h4>
+        <Card className="divide-y divide-white/5 p-0">
+          {items.map((it) => (
+            <button key={it.label} onClick={() => { onClose(); it.onClick(); }} className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><it.icon size={16} /></span>
+              <span className="flex-1">
+                <span className="block text-sm font-semibold">{it.label}</span>
+                {it.sub && <span className="block text-[11px] text-muted-foreground">{it.sub}</span>}
+              </span>
+              {it.badge && <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">{it.badge}</span>}
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </button>
+          ))}
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-0 z-50 bg-black/60" onClick={onClose}>
       <div className="absolute right-0 top-0 h-full w-[88%] overflow-y-auto bg-[#0f1530] p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <h2 className="text-2xl font-bold">Settings</h2>
-          <button onClick={onClose}><X /></button>
+          <button onClick={onClose} aria-label="Close"><X /></button>
         </div>
         <div className="mt-6 flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
-          <div><div className="font-bold">A</div><div className="text-sm text-muted-foreground">Athlete</div></div>
-        </div>
-        <div className="mt-6 space-y-1">
-          {items.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
-        </div>
-        <div className="my-5 h-px bg-white/5" />
-        <div className="space-y-1">
-          {more.map((it) => <Row key={it.label} icon={<it.icon size={20} />} label={it.label} onClick={() => { onClose(); it.onClick(); }} />)}
+          <div>
+            <div className="font-bold">Andi Pratama</div>
+            <div className="text-xs text-muted-foreground">Athlete · andi@example.com</div>
+          </div>
         </div>
 
-        <div className="my-5 h-px bg-white/5" />
-        <button onClick={onLogout} className="flex w-full items-center gap-4 rounded-xl py-3 text-left text-rose-400">
-          <LogOut size={20} /> <span className="font-bold">Log Out</span>
+        <Group title="Account" items={account} />
+        <Group title="Billing" items={billing} />
+        <Group title="Support" items={help} />
+        <Group title="Legal" items={legal} />
+
+        <div className="my-6 h-px bg-white/5" />
+        <button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-left text-rose-400">
+          <LogOut size={18} /> <span className="font-bold">Log Out</span>
         </button>
+        <div className="mt-4 text-center text-[10px] text-muted-foreground">RUNIQ v1.0.0 · Made in Jakarta 🇮🇩</div>
       </div>
     </div>
   );
