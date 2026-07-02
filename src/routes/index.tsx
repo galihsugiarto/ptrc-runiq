@@ -1717,13 +1717,6 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
 }
 
 function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
-  const items = [
-    { icon: User, title: "Edit Profile", sub: "Name, bio, personal info" },
-    { icon: Bell, title: "Notifications", sub: "Alerts & reminders" },
-    { icon: FileText, title: "Subscription", sub: "Free plan · Upgrade to Pro" },
-    { icon: Shield, title: "Privacy", sub: "Data & visibility settings" },
-    { icon: HelpCircle, title: "Help & Support", sub: "FAQ, contact, feedback" },
-  ];
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -1740,8 +1733,16 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
 
   return (
     <div className="space-y-6 px-5 pt-6">
+      {/* Header with gear icon (only entry point to Settings Drawer) */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Profile</h2>
+        <button onClick={onSettings} aria-label="Settings" className="rounded-full border border-white/10 bg-white/5 p-2.5">
+          <Settings size={18} />
+        </button>
+      </div>
+
       <Card className="overflow-hidden p-0">
-        {/* Background avatar (editable) */}
+        {/* Background banner (editable) */}
         <div className="relative h-28 w-full" style={{ background: bg }}>
           <button
             onClick={() => bgInput.current?.click()}
@@ -1750,6 +1751,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           >
             <Pencil size={14} className="text-white" />
           </button>
+          <span className="absolute bottom-2 right-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur">Tap to change background</span>
           <input ref={bgInput} type="file" accept="image/*" hidden onChange={onBg} />
         </div>
         <div className="px-6 pb-6 text-center">
@@ -1769,45 +1771,94 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </button>
             <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
           </div>
-          <div className="mt-3 text-2xl font-bold">A</div>
+          <div className="mt-3 text-xl font-bold">Andi Pratama</div>
           <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
             <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
-            <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Runs</div></div>
-            <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Weeks</div></div>
+            <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Total Runs</div></div>
+            <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Active Weeks</div></div>
           </div>
         </div>
       </Card>
 
+      {/* MY COACH */}
       <section>
         <h3 className="mb-3 font-bold">My Coach</h3>
-        <Card className="flex items-center gap-3 p-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-brand text-lg">👩</div>
-          <div className="flex-1">
-            <div className="font-bold">Sarah Mitchell</div>
-            <div className="text-sm text-muted-foreground">Marathon Specialist</div>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold">SM</div>
+            <div className="flex-1">
+              <div className="font-bold">Sarah Mitchell</div>
+              <div className="text-xs text-muted-foreground">Marathon Specialist</div>
+              <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                <Check size={10} /> Plan approved
+              </div>
+            </div>
           </div>
-          <button className="flex items-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs"><MessageSquare size={14} /> Message</button>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <button
+              onClick={() => openDetail({ kind: "chat", name: "Coach Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", isCoach: true })}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-brand py-2.5 text-xs font-semibold text-white shadow-brand"
+            >
+              <MessageSquare size={14} /> Message
+            </button>
+            <button
+              onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 850k" })}
+              className="rounded-xl border border-white/15 py-2.5 text-xs font-semibold"
+            >
+              View Profile
+            </button>
+            <button
+              onClick={() => openDetail({ kind: "find-coach" })}
+              className="rounded-xl border border-white/15 py-2.5 text-xs font-semibold"
+            >
+              Change
+            </button>
+          </div>
         </Card>
       </section>
 
+      {/* FIND COACH marketplace entry */}
+      <section>
+        <h3 className="mb-3 font-bold">Find Coach</h3>
+        <button onClick={() => openDetail({ kind: "find-coach" })} className="w-full text-left">
+          <Card className="flex items-center gap-3 p-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-white shadow-brand"><Search size={18} /></div>
+            <div className="flex-1">
+              <div className="font-bold">Browse Coach Marketplace</div>
+              <div className="text-xs text-muted-foreground">Marathon · Speed · Trail · Ultra</div>
+            </div>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Card>
+        </button>
+      </section>
+
+      {/* CURRENT PROGRESS (collapsed) */}
       <section>
         <h3 className="mb-3 font-bold">Current Progress</h3>
         <button onClick={() => openDetail({ kind: "current-progress" })} className="w-full text-left">
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-bold">Training Consistency</div>
-                <div className="text-sm text-muted-foreground">Tap to view weekly & monthly summary</div>
+                <div className="font-bold">Jakarta Marathon 2026</div>
+                <div className="text-xs text-muted-foreground">Target: 15 Nov 2026 · Week 8 of 16</div>
               </div>
               <ChevronRight size={20} className="text-muted-foreground" />
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+              <div className="h-full rounded-full bg-gradient-brand" style={{ width: "50%" }} />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">50% complete</span>
+              <span className="font-semibold text-[#3b82f6]">See calendar →</span>
             </div>
             <ProgressGridMini />
           </Card>
         </button>
       </section>
 
+      {/* DAILY READINESS metrics */}
       <section>
         <h3 className="mb-3 font-bold">Daily Readiness</h3>
         <div className="grid grid-cols-3 gap-3">
@@ -1815,32 +1866,18 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
           <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
         </div>
-        <Card className="mt-3 p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">7-Day Trend</h3>
-            <TrendingUp size={18} className="text-green-400" />
-          </div>
-          <Sparkline />
-          <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-            {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
-          </div>
-        </Card>
-      </section>
-
-      <section>
-        <h3 className="mb-3 font-bold">Account</h3>
-        <Card className="divide-y divide-white/5">
-          {items.map((it) => (
-            <button key={it.title} onClick={() => openDetail({ kind: "profile-item", title: it.title, sub: it.sub })} className="flex w-full items-center gap-4 p-4 text-left">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-muted-foreground"><it.icon size={18} /></div>
-              <div className="flex-1">
-                <div className="font-semibold">{it.title}</div>
-                <div className="text-xs text-muted-foreground">{it.sub}</div>
-              </div>
-              <ChevronRight size={18} className="text-muted-foreground" />
-            </button>
-          ))}
-        </Card>
+        <button onClick={() => openDetail({ kind: "trend-28d" })} className="mt-3 w-full text-left">
+          <Card className="p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold">7-Day Trend</h3>
+              <TrendingUp size={18} className="text-green-400" />
+            </div>
+            <Sparkline />
+            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+              {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
+            </div>
+          </Card>
+        </button>
       </section>
     </div>
   );
