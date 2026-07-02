@@ -1583,47 +1583,127 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 
 
 function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
-  const convos = [
-    { name: "Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", time: "2m", timeBlue: true, preview: "Great job on today's tempo run! Keep the effor…", unread: 2, online: true },
-    { name: "Alex Thompson", initials: "AT", color: "from-orange-500 to-red-500", time: "1h", preview: "Thanks for the plan adjustments, feeling much bett…" },
-    { name: "Jamie Chen", initials: "JC", color: "from-emerald-400 to-teal-500", time: "3h", timeBlue: true, preview: "Readiness score looking good this week!", unread: 1, online: true },
-    { name: "Morning Runners Club", icon: true, color: "from-pink-500 to-fuchsia-500", time: "Yesterday", timeBlue: true, preview: "Ryan: See you all at 6am Saturday!", unread: 5 },
-    { name: "Marcus Lee", initials: "ML", color: "from-orange-400 to-amber-500", time: "Yesterday", preview: "That trail route you shared looks epic" },
-    { name: "RUNIQ Coaches", icon: true, color: "from-cyan-400 to-blue-500", time: "Mon", preview: "Coach Dana: New HRV protocols drop Monday" },
-  ] as const;
+  const [q, setQ] = useState("");
+  const coach = { name: "Coach Sarah Mitchell", initials: "SM", color: "from-indigo-500 to-purple-500", time: "2m", preview: "Great job on today's tempo run! Keep the effort dialed in.", unread: 2, online: true };
+  const runners = [
+    { name: "Alex Thompson", initials: "AT", color: "from-orange-500 to-red-500", time: "1h", preview: "Thanks for the plan tweaks — feeling better." },
+    { name: "Jamie Chen", initials: "JC", color: "from-emerald-400 to-teal-500", time: "3h", preview: "Readiness looks good this week!", unread: 1, online: true },
+    { name: "Marcus Lee", initials: "ML", color: "from-orange-400 to-amber-500", time: "Yesterday", preview: "That trail route looks epic" },
+  ];
+  const communities = [
+    { name: "Morning Runners Club", color: "from-pink-500 to-fuchsia-500", time: "Yesterday", preview: "Ryan: See you all at 6am Saturday!", unread: 5, members: 128 },
+    { name: "Jakarta Trail Pack", color: "from-cyan-400 to-blue-500", time: "Mon", preview: "New route added for weekend LSD", members: 64 },
+  ];
+  const match = (s: string) => s.toLowerCase().includes(q.toLowerCase());
+  const showCoach = !q || match(coach.name) || match(coach.preview);
+  const runnersF = runners.filter((r) => !q || match(r.name) || match(r.preview));
+  const commF = communities.filter((c) => !q || match(c.name) || match(c.preview));
+
   return (
-    <div className="space-y-4 px-5 pt-6">
+    <div className="space-y-5 px-5 pt-6">
       <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
         <Search size={18} className="text-muted-foreground" />
-        <input placeholder="Search messages…" className="w-full bg-transparent text-sm outline-none" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search messages…" className="w-full bg-transparent text-sm outline-none" />
       </div>
-      <div className="space-y-4">
-        {convos.map((c) => (
-          <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: (c as any).initials, color: c.color, icon: (c as any).icon })} className="flex w-full items-center gap-3 text-left">
+
+      {/* YOUR COACH — pinned */}
+      <section>
+        <div className="mb-2 flex items-center gap-2">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#3b82f6]">Your Coach</h4>
+          <span className="rounded-full bg-[#3b82f6]/15 px-2 py-0.5 text-[9px] font-semibold text-[#3b82f6]">Pinned</span>
+        </div>
+        {showCoach ? (
+          <button
+            onClick={() => openDetail({ kind: "chat", name: coach.name, initials: coach.initials, color: coach.color, isCoach: true })}
+            className="flex w-full items-center gap-3 rounded-2xl border border-[#3b82f6]/25 bg-gradient-to-r from-[#3b82f6]/10 to-purple-500/10 p-3 text-left"
+          >
             <div className="relative">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>
-                {(c as any).icon ? <Users size={20} /> : (c as any).initials}
-              </div>
-              {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${coach.color} text-sm font-bold text-white`}>{coach.initials}</div>
+              {coach.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <div className="truncate font-bold">{c.name}</div>
-                <div className={`text-xs ${(c as any).timeBlue ? "text-[#3b82f6] font-semibold" : "text-muted-foreground"}`}>{c.time}</div>
+                <div>
+                  <div className="truncate font-bold">{coach.name}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#3b82f6]">Your Coach</div>
+                </div>
+                <div className="text-xs font-semibold text-[#3b82f6]">{coach.time}</div>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
-                {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <div className="truncate text-sm text-muted-foreground">{coach.preview}</div>
+                <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{coach.unread}</span>
               </div>
             </div>
           </button>
-        ))}
-      </div>
-      <div className="my-4 border-t border-white/5" />
+        ) : (
+          <Card className="p-4 text-center">
+            <div className="font-bold">No coach yet</div>
+            <p className="mt-1 text-xs text-muted-foreground">Coach will review and approve every plan for you.</p>
+            <button onClick={() => openDetail({ kind: "find-coach" })} className="mt-3 rounded-full bg-gradient-brand px-4 py-2 text-xs font-semibold text-white shadow-brand">Find a Coach</button>
+          </Card>
+        )}
+      </section>
+
+      {/* RUNNERS */}
+      {runnersF.length > 0 && (
+        <section>
+          <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Fellow Runners</h4>
+          <div className="space-y-3">
+            {runnersF.map((c) => (
+              <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: c.initials, color: c.color })} className="flex w-full items-center gap-3 text-left">
+                <div className="relative">
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>{c.initials}</div>
+                  {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="truncate font-semibold">{c.name}</div>
+                    <div className="text-xs text-muted-foreground">{c.time}</div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
+                    {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* COMMUNITY */}
+      {commF.length > 0 && (
+        <section>
+          <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Community</h4>
+          <div className="space-y-3">
+            {commF.map((c) => (
+              <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, color: c.color, icon: true, isGroup: true, members: c.members })} className="flex w-full items-center gap-3 text-left">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-white`}><Users size={18} /></div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="truncate font-semibold">{c.name}</div>
+                    <div className="text-xs text-muted-foreground">{c.time}</div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
+                    {c.unread ? (
+                      <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{c.unread}</span>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">{c.members} members</span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="my-2 border-t border-white/5" />
       <button onClick={() => openDetail({ kind: "find-friend" })} className="w-full text-left">
         <Card className="flex items-center gap-3 p-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
-          <div><div className="font-bold">Find a Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
+          <div><div className="font-bold">Find a Runner Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
         </Card>
       </button>
       <button onClick={() => openDetail({ kind: "find-community" })} className="w-full text-left">
