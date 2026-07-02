@@ -2486,3 +2486,360 @@ function Trend28View() {
     </div>
   );
 }
+
+// ================= Chat Detail =================
+function ChatDetailView({ chat }: { chat: Extract<Detail, { kind: "chat" }> }) {
+  type Msg = { me: boolean; t: string; time?: string; voice?: boolean; sec?: number; card?: { title: string; sub: string; icon: React.ReactNode } };
+  const isCoach = !!chat.isCoach;
+  const isGroup = !!chat.isGroup;
+
+  const coachMsgs: Msg[] = [
+    { me: false, t: "Great job on today's tempo run! Keep the effort dialed in.", time: "09:12" },
+    { me: false, t: "", voice: true, sec: 32, time: "09:13" },
+    { me: true, t: "Thanks coach — legs felt strong today.", time: "09:20" },
+    { me: false, t: "", time: "09:22", card: { title: "Tomorrow · Recovery Jog", sub: "5 km · HR < 140 · Zone 1–2", icon: <Footprints size={18} className="text-[#3b82f6]" /> } },
+    { me: false, t: "Keep HR under 140 and hydrate well before bed.", time: "09:22" },
+  ];
+  const runnerMsgs: Msg[] = [
+    { me: false, t: "Ready for Saturday LSD? 🏃", time: "16:04" },
+    { me: true, t: "Ya, jam 6 pagi ya", time: "16:10" },
+  ];
+  const groupMsgs: Msg[] = [
+    { me: false, t: "Ryan: See you all at 6am Saturday!", time: "Yesterday" },
+    { me: false, t: "Dita: I'll bring bananas 🍌", time: "Yesterday" },
+    { me: true, t: "Count me in!", time: "08:02" },
+  ];
+  const msgs = isCoach ? coachMsgs : isGroup ? groupMsgs : runnerMsgs;
+
+  return (
+    <div className="-mx-5 -my-6 flex h-[calc(100%+3rem)] flex-col">
+      {/* Pinned plan banner — coach only */}
+      {isCoach && (
+        <div className="border-b border-[#3b82f6]/25 bg-gradient-to-r from-[#3b82f6]/15 to-purple-500/10 px-5 py-3">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#3b82f6]">
+            <Pin size={12} /> Pinned Plan
+          </div>
+          <div className="mt-1 flex items-center justify-between">
+            <div>
+              <div className="text-sm font-bold">This Week — Marathon Base Wk 8</div>
+              <div className="text-[11px] text-muted-foreground">6 sessions · Approved · Last updated 2h ago</div>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+              <Check size={10} /> Approved
+            </span>
+          </div>
+        </div>
+      )}
+      {isGroup && (
+        <div className="border-b border-white/5 px-5 py-2 text-center text-[11px] text-muted-foreground">
+          <Users size={12} className="mr-1 inline" /> {chat.members ?? 42} members
+        </div>
+      )}
+
+      {/* Messages */}
+      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
+        {msgs.map((m, i) => (
+          <div key={i} className={`flex ${m.me ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                m.me
+                  ? "bg-gradient-brand text-white shadow-brand"
+                  : "border border-white/10 bg-white/5"
+              }`}
+            >
+              {m.card ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">{m.card.icon}</div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-[#3b82f6]">Session Card</div>
+                    <div className="font-bold">{m.card.title}</div>
+                    <div className="text-[11px] text-muted-foreground">{m.card.sub}</div>
+                  </div>
+                </div>
+              ) : m.voice ? (
+                <div className="flex items-center gap-3">
+                  <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20"><Play size={14} /></button>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 18 }).map((_, k) => (
+                      <span key={k} className="block w-0.5 rounded-full bg-white/70" style={{ height: `${6 + Math.abs(Math.sin(k)) * 14}px` }} />
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">0:{String(m.sec ?? 0).padStart(2, "0")}</span>
+                </div>
+              ) : (
+                <div>{m.t}</div>
+              )}
+              {m.time && <div className={`mt-1 text-[10px] ${m.me ? "text-white/70" : "text-muted-foreground"}`}>{m.time}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Input bar */}
+      <div className="border-t border-white/5 bg-[#0a0f24] px-4 py-3">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1.5">
+          <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-white" aria-label="Attach">
+            <Paperclip size={16} />
+          </button>
+          <input placeholder="Type a message…" className="w-full bg-transparent text-sm outline-none" />
+          <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-white" aria-label="Voice note">
+            <Mic size={16} />
+          </button>
+          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-brand shadow-brand" aria-label="Send">
+            <Send size={15} className="text-white" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= Find Coach =================
+function FindCoachView() {
+  const [filter, setFilter] = useState("All");
+  const chips = ["All", "Marathon", "Speed", "Trail", "Ultra", "Beginner"];
+  const coaches = [
+    { name: "Sarah Mitchell", initials: "SM", specialty: "Marathon Specialist", price: "Rp 850k", rating: 4.9, reviews: 127, certs: ["USATF L2", "RRCA"], color: "from-indigo-500 to-purple-500" },
+    { name: "Dana Wijaya", initials: "DW", specialty: "Trail & Ultra", price: "Rp 950k", rating: 4.8, reviews: 84, certs: ["UESCA", "ACE"], color: "from-emerald-500 to-teal-500" },
+    { name: "Rio Hidayat", initials: "RH", specialty: "Speed & 5k–10k", price: "Rp 650k", rating: 4.7, reviews: 56, certs: ["USATF L1"], color: "from-orange-500 to-red-500" },
+    { name: "Mira Santoso", initials: "MS", specialty: "Beginner Friendly", price: "Rp 550k", rating: 4.9, reviews: 210, certs: ["RRCA"], color: "from-pink-500 to-fuchsia-500" },
+  ];
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+        <Search size={16} className="text-muted-foreground" />
+        <input placeholder="Search coaches…" className="w-full bg-transparent text-sm outline-none" />
+      </div>
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        {chips.map((c) => (
+          <button
+            key={c}
+            onClick={() => setFilter(c)}
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${filter === c ? "border-[#3b82f6] bg-[#3b82f6]/20 text-[#3b82f6]" : "border-white/10 bg-white/5 text-muted-foreground"}`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-3">
+        {coaches.map((c) => (
+          <Card key={c.name} className="p-4">
+            <div className="flex items-start gap-3">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${c.color} font-bold text-white`}>{c.initials}</div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold">{c.name}</div>
+                  <div className="text-sm font-bold">{c.price}<span className="text-[10px] font-normal text-muted-foreground">/mo</span></div>
+                </div>
+                <div className="text-xs text-muted-foreground">{c.specialty}</div>
+                <div className="mt-1 flex items-center gap-2 text-xs">
+                  <Star size={12} className="fill-yellow-400 text-yellow-400" />
+                  <span className="font-semibold">{c.rating}</span>
+                  <span className="text-muted-foreground">({c.reviews})</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {c.certs.map((cert) => (
+                    <span key={cert} className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-[10px] text-[#3b82f6]">{cert}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button className="rounded-xl border border-white/15 py-2 text-xs font-semibold">View Profile</button>
+              <button className="rounded-xl bg-gradient-brand py-2 text-xs font-semibold text-white shadow-brand">Book</button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ================= Subscription =================
+function SubscriptionView() {
+  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const perks = [
+    "Unlimited AI training plans",
+    "Coach-approved sessions",
+    "Advanced HRV & load analytics",
+    "Priority chat with your coach",
+    "Custom race calendar & taper",
+    "Export to Garmin, Strava, Apple Health",
+  ];
+  return (
+    <div className="space-y-5">
+      <Card className="overflow-hidden p-0">
+        <div className="bg-gradient-brand p-5 text-white">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/80"><Crown size={12} /> RUNIQ Pro</div>
+          <div className="mt-2 text-3xl font-black">
+            {billing === "monthly" ? "Rp 180,000" : "Rp 1,800,000"}
+            <span className="ml-1 text-sm font-normal text-white/70">/ {billing === "monthly" ? "month" : "year"}</span>
+          </div>
+          {billing === "yearly" && <div className="text-xs text-white/80">Save Rp 360,000 · 2 months free</div>}
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-white/5 p-1">
+            {(["monthly", "yearly"] as const).map((b) => (
+              <button key={b} onClick={() => setBilling(b)} className={`rounded-lg py-2 text-xs font-semibold ${billing === b ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>
+                {b === "monthly" ? "Monthly" : "Yearly · -17%"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <div className="font-bold">What you get</div>
+        <ul className="mt-3 space-y-2 text-sm">
+          {perks.map((p) => (
+            <li key={p} className="flex items-start gap-2"><Check size={16} className="mt-0.5 text-emerald-400" /><span>{p}</span></li>
+          ))}
+        </ul>
+      </Card>
+
+      <Card className="p-4 text-xs text-muted-foreground">
+        Current plan: <span className="font-semibold text-foreground">Free</span> · Renews automatically. Cancel anytime from Settings.
+      </Card>
+
+      <button className="w-full rounded-2xl bg-gradient-brand py-4 font-bold text-white shadow-brand">
+        Upgrade to Pro
+      </button>
+      <button className="w-full rounded-2xl border border-white/10 py-3 text-sm font-semibold text-muted-foreground">Restore Purchase</button>
+    </div>
+  );
+}
+
+// ================= Notification Preferences =================
+function NotifPrefsView() {
+  const groups = [
+    { title: "Training", items: ["Daily plan reminder", "Coach approved plan", "Session start reminder"] },
+    { title: "Health", items: ["Low HRV alert", "Poor sleep detected", "High training load"] },
+    { title: "Social", items: ["Friend activity", "Community messages", "Coach message"] },
+    { title: "System", items: ["App updates", "Promotions & tips"] },
+  ];
+  const [state, setState] = useState<Record<string, boolean>>({});
+  const toggle = (k: string) => setState((s) => ({ ...s, [k]: !(s[k] ?? true) }));
+  return (
+    <div className="space-y-5">
+      {groups.map((g) => (
+        <section key={g.title}>
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{g.title}</h4>
+          <Card className="divide-y divide-white/5 p-0">
+            {g.items.map((it) => {
+              const on = state[it] ?? true;
+              return (
+                <div key={it} className="flex items-center justify-between p-4">
+                  <span className="text-sm">{it}</span>
+                  <button
+                    onClick={() => toggle(it)}
+                    className={`relative h-6 w-11 rounded-full transition ${on ? "bg-gradient-brand" : "bg-white/10"}`}
+                    aria-pressed={on}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+                  </button>
+                </div>
+              );
+            })}
+          </Card>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+// ================= Privacy Settings =================
+function PrivacySettingsView() {
+  const groups = [
+    { title: "Data Sharing", items: ["Share activities with coach", "Share HRV & sleep with coach", "Anonymous analytics"] },
+    { title: "Visibility", items: ["Show profile in community", "Discoverable by friends", "Share workouts to feed"] },
+    { title: "Third-party Sync", items: ["Sync to Strava", "Sync to Garmin", "Sync to Apple Health"] },
+  ];
+  const [state, setState] = useState<Record<string, boolean>>({ "Share activities with coach": true, "Share HRV & sleep with coach": true });
+  const toggle = (k: string) => setState((s) => ({ ...s, [k]: !s[k] }));
+  return (
+    <div className="space-y-5">
+      <Card className="border border-[#3b82f6]/25 bg-[#3b82f6]/10 p-4 text-xs text-muted-foreground">
+        <div className="flex items-start gap-2 text-foreground"><Shield size={14} className="mt-0.5 text-[#3b82f6]" /><span className="font-semibold">Your data is yours.</span></div>
+        <p className="mt-1">Manage what RUNIQ, your coach, and connected apps can see. Changes take effect immediately.</p>
+      </Card>
+      {groups.map((g) => (
+        <section key={g.title}>
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{g.title}</h4>
+          <Card className="divide-y divide-white/5 p-0">
+            {g.items.map((it) => {
+              const on = !!state[it];
+              return (
+                <div key={it} className="flex items-center justify-between p-4">
+                  <span className="text-sm">{it}</span>
+                  <button
+                    onClick={() => toggle(it)}
+                    className={`relative h-6 w-11 rounded-full transition ${on ? "bg-gradient-brand" : "bg-white/10"}`}
+                    aria-pressed={on}
+                  >
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+                  </button>
+                </div>
+              );
+            })}
+          </Card>
+        </section>
+      ))}
+      <Card className="divide-y divide-white/5 p-0">
+        <button className="flex w-full items-center justify-between p-4 text-left text-sm">
+          <span>Download my data</span>
+          <ChevronRight size={16} className="text-muted-foreground" />
+        </button>
+        <button className="flex w-full items-center justify-between p-4 text-left text-sm text-rose-400">
+          <span>Delete account</span>
+          <ChevronRight size={16} className="text-rose-400/60" />
+        </button>
+      </Card>
+    </div>
+  );
+}
+
+// ================= Help & Support =================
+function HelpSupportView() {
+  const faqs = [
+    { q: "How does coach approval work?", a: "AI drafts your plan based on HRV, sleep and load. Your coach reviews, tweaks and approves before you train." },
+    { q: "Can I sync with Garmin & Strava?", a: "Yes. Go to Settings → Connect Apps and authorize each provider. Activities sync both ways." },
+    { q: "How is Readiness calculated?", a: "A blend of HRV, resting HR, sleep quality, prior load and subjective feel — scored 0–100." },
+    { q: "Cancel my Pro subscription?", a: "Settings → Subscription → Cancel. You keep Pro until the end of the billing period." },
+  ];
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <div className="space-y-5">
+      <Card className="p-5">
+        <div className="text-sm font-bold">Need a human?</div>
+        <p className="mt-1 text-xs text-muted-foreground">Our team replies in under 24 hours (Mon–Fri, WIB).</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-brand py-2.5 text-xs font-semibold text-white shadow-brand">
+            <Mail size={14} /> Email us
+          </button>
+          <button className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 py-2.5 text-xs font-semibold">
+            <MessageSquare size={14} /> Live chat
+          </button>
+        </div>
+      </Card>
+
+      <section>
+        <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Frequently Asked</h4>
+        <Card className="divide-y divide-white/5 p-0">
+          {faqs.map((f, i) => (
+            <div key={f.q}>
+              <button onClick={() => setOpen(open === i ? null : i)} className="flex w-full items-center justify-between p-4 text-left">
+                <span className="text-sm font-semibold">{f.q}</span>
+                <ChevronRight size={16} className={`text-muted-foreground transition-transform ${open === i ? "rotate-90" : ""}`} />
+              </button>
+              {open === i && <div className="px-4 pb-4 text-xs text-muted-foreground">{f.a}</div>}
+            </div>
+          ))}
+        </Card>
+      </section>
+
+      <Card className="p-4 text-xs text-muted-foreground">
+        App version <span className="font-semibold text-foreground">1.0.0</span> · Build 2025.05
+      </Card>
+    </div>
+  );
+}
