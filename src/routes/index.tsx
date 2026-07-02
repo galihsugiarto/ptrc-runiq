@@ -1888,9 +1888,14 @@ function detailTitle(d: Detail): string {
     case "settings-item": return d.label;
     case "find-friend": return "Find a Friend";
     case "find-community": return "Find a Community";
+    case "find-coach": return "Find Coach";
     case "ai-notes": return "AI Coach Notes";
     case "upgrade": return "Upgrade to Pro";
     case "connect-apps": return "Connect Apps";
+    case "subscription": return "Subscription";
+    case "notif-prefs": return "Notifications";
+    case "privacy-settings": return "Privacy Settings";
+    case "help": return "Help & Support";
     case "legal": return d.title;
     case "current-progress": return "Current Progress";
     case "notifications": return "Notifications";
