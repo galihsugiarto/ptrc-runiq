@@ -2195,6 +2195,11 @@ function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "notifications") return <NotificationsView />;
   if (detail.kind === "readiness-breakdown") return <ReadinessBreakdownView />;
   if (detail.kind === "trend-28d") return <Trend28View />;
+  if (detail.kind === "find-coach") return <FindCoachView />;
+  if (detail.kind === "subscription") return <SubscriptionView />;
+  if (detail.kind === "notif-prefs") return <NotifPrefsView />;
+  if (detail.kind === "privacy-settings") return <PrivacySettingsView />;
+  if (detail.kind === "help") return <HelpSupportView />;
   if (detail.kind === "settings-item" || detail.kind === "profile-item") {
     const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
     return (
