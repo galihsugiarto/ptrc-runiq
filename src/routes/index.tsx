@@ -91,7 +91,7 @@ function connectGarmin() {
 type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
 
 export type Detail =
-  | { kind: "chat"; name: string; initials?: string; color: string; icon?: boolean }
+  | { kind: "chat"; name: string; initials?: string; color: string; icon?: boolean; isCoach?: boolean; isGroup?: boolean; members?: number }
   | { kind: "coach"; name: string; specialty: string; initials: string; price: string }
   | { kind: "workout"; day: string; date: string; type: string; miles: string; pace: string }
   | { kind: "run"; title: string; date: string; stats: string[] }
@@ -99,9 +99,14 @@ export type Detail =
   | { kind: "settings-item"; label: string }
   | { kind: "find-friend" }
   | { kind: "find-community" }
+  | { kind: "find-coach" }
   | { kind: "ai-notes" }
   | { kind: "upgrade" }
   | { kind: "connect-apps" }
+  | { kind: "subscription" }
+  | { kind: "notif-prefs" }
+  | { kind: "privacy-settings" }
+  | { kind: "help" }
   | { kind: "legal"; doc: "tos" | "privacy" | "disclaimer"; title: string }
   | { kind: "current-progress" }
   | { kind: "notifications" }
