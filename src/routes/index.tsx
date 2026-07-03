@@ -1957,6 +1957,27 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
         <Group title="Support" items={help} />
         <Group title="Legal" items={legal} />
 
+        <div className="mt-5">
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Explore (Scaffold)</h4>
+          <Card className="divide-y divide-white/5 p-0">
+            <a href="/onboarding" className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Sparkles size={16} /></span>
+              <span className="flex-1"><span className="block text-sm font-semibold">Onboarding Flow</span><span className="block text-[11px] text-muted-foreground">Goal → Baseline → Devices → Coach</span></span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </a>
+            <a href="/coach" className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Users size={16} /></span>
+              <span className="flex-1"><span className="block text-sm font-semibold">Coach Console</span><span className="block text-[11px] text-muted-foreground">Athletes, plan review, squad insights</span></span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </a>
+            <a href="/admin" className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Shield size={16} /></span>
+              <span className="flex-1"><span className="block text-sm font-semibold">Admin Dashboard</span><span className="block text-[11px] text-muted-foreground">Super Admin, Coach Head, Sales, Analytics</span></span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </a>
+          </Card>
+        </div>
+
         <div className="my-6 h-px bg-white/5" />
         <button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-left text-rose-400">
           <LogOut size={18} /> <span className="font-bold">Log Out</span>
