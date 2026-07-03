@@ -99,7 +99,7 @@ function Index() {
             authMode === "login" ? (
               <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
             ) : authMode === "signup" ? (
-              <SignupScreen onSignup={() => { window.location.href = "/onboarding"; }} onBack={() => setAuthMode("login")} />)
+              <SignupScreen onSignup={() => { window.location.href = "/onboarding"; }} onBack={() => setAuthMode("login")} />
             ) : (
               <ForgotPasswordScreen onBack={() => setAuthMode("login")} />
             )
