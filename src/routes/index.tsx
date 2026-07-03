@@ -28,65 +28,31 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// ---------- OAuth helpers ----------
-// Build provider authorize URLs. The redirect_uri must be whitelisted in each
-// provider's developer console and the access-token exchange must run on a
-// backend (client_secret cannot ship in the browser).
-function connectStrava() {
-  const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID as string | undefined;
-  const redirectUri = `${window.location.origin}/api/public/strava/callback`;
-  if (!clientId) {
-    alert(
-      "Strava not configured.\n\n" +
-      "1) Create an app at https://www.strava.com/settings/api\n" +
-      "2) Set Authorization Callback Domain to this app's host\n" +
-      "3) Add VITE_STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET as project secrets\n" +
-      "4) Implement /api/public/strava/callback to exchange the code for tokens"
-    );
+// ---------- Integration connect (MOCK) ----------
+// Scaffolded mock: pretends the OAuth round-trip succeeded and stores a flag
+// in localStorage. Real OAuth (Strava/Garmin/MFP/Whoop/Health) will be wired
+// once provider credentials are available — swap this for the authorize URL
+// + `/api/public/<provider>/callback` token exchange.
+export type Provider = "strava" | "garmin" | "apple-health" | "google-fit" | "huawei-health" | "myfitnesspal" | "whoop";
+export function mockConnect(provider: Provider, label: string) {
+  const key = `runiq.connected.${provider}`;
+  const already = typeof window !== "undefined" && localStorage.getItem(key) === "1";
+  if (already) {
+    if (confirm(`${label} is connected. Disconnect?`)) localStorage.removeItem(key);
     return;
   }
-  const url = new URL("https://www.strava.com/oauth/authorize");
-  url.searchParams.set("client_id", clientId);
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("approval_prompt", "auto");
-  url.searchParams.set("scope", "read,activity:read_all,profile:read_all");
-  window.location.href = url.toString();
+  // Simulate provider round-trip
+  setTimeout(() => {
+    localStorage.setItem(key, "1");
+    alert(`${label} connected (mock).\nReal OAuth will be wired when credentials are provided.`);
+  }, 400);
 }
-
-function connectGarmin() {
-  // Garmin Connect uses OAuth 2.0 + PKCE (Health/Activity API).
-  // The authorize URL is hosted by Garmin; token exchange needs a backend.
-  const clientId = import.meta.env.VITE_GARMIN_CLIENT_ID as string | undefined;
-  const redirectUri = `${window.location.origin}/api/public/garmin/callback`;
-  if (!clientId) {
-    alert(
-      "Garmin not configured.\n\n" +
-      "1) Request access at https://developer.garmin.com/gc-developer-program/\n" +
-      "2) Register the redirect URI: " + redirectUri + "\n" +
-      "3) Add VITE_GARMIN_CLIENT_ID and GARMIN_CLIENT_SECRET as project secrets\n" +
-      "4) Implement PKCE token exchange on /api/public/garmin/callback"
-    );
-    return;
-  }
-  // Generate PKCE verifier/challenge
-  const verifier = crypto.getRandomValues(new Uint8Array(32))
-    .reduce((s, b) => s + b.toString(16).padStart(2, "0"), "");
-  sessionStorage.setItem("garmin_pkce_verifier", verifier);
-  crypto.subtle
-    .digest("SHA-256", new TextEncoder().encode(verifier))
-    .then((buf) => {
-      const challenge = btoa(String.fromCharCode(...new Uint8Array(buf)))
-        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-      const url = new URL("https://connect.garmin.com/oauth2Confirm");
-      url.searchParams.set("client_id", clientId);
-      url.searchParams.set("response_type", "code");
-      url.searchParams.set("redirect_uri", redirectUri);
-      url.searchParams.set("code_challenge", challenge);
-      url.searchParams.set("code_challenge_method", "S256");
-      window.location.href = url.toString();
-    });
+export function isConnected(provider: Provider) {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(`runiq.connected.${provider}`) === "1";
 }
+function connectStrava() { mockConnect("strava", "Strava"); }
+function connectGarmin() { mockConnect("garmin", "Garmin"); }
 
 type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
 
@@ -133,7 +99,7 @@ function Index() {
             authMode === "login" ? (
               <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
             ) : authMode === "signup" ? (
-              <SignupScreen onSignup={() => setAuthed(true)} onBack={() => setAuthMode("login")} />
+              <SignupScreen onSignup={() => { window.location.href = "/onboarding"; }} onBack={() => setAuthMode("login")} />
             ) : (
               <ForgotPasswordScreen onBack={() => setAuthMode("login")} />
             )
@@ -1990,6 +1956,27 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
         <Group title="Billing" items={billing} />
         <Group title="Support" items={help} />
         <Group title="Legal" items={legal} />
+
+        <div className="mt-5">
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Explore (Scaffold)</h4>
+          <Card className="divide-y divide-white/5 p-0">
+            <a href="/onboarding" className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Sparkles size={16} /></span>
+              <span className="flex-1"><span className="block text-sm font-semibold">Onboarding Flow</span><span className="block text-[11px] text-muted-foreground">Goal → Baseline → Devices → Coach</span></span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </a>
+            <a href="/coach" className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Users size={16} /></span>
+              <span className="flex-1"><span className="block text-sm font-semibold">Coach Console</span><span className="block text-[11px] text-muted-foreground">Athletes, plan review, squad insights</span></span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </a>
+            <a href="/admin" className="flex w-full items-center gap-3 p-3.5 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Shield size={16} /></span>
+              <span className="flex-1"><span className="block text-sm font-semibold">Admin Dashboard</span><span className="block text-[11px] text-muted-foreground">Super Admin, Coach Head, Sales, Analytics</span></span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </a>
+          </Card>
+        </div>
 
         <div className="my-6 h-px bg-white/5" />
         <button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-left text-rose-400">
