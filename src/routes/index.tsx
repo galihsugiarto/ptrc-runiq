@@ -2839,3 +2839,182 @@ function HelpSupportView() {
     </div>
   );
 }
+
+// ================= Edit Profile =================
+function EditProfileView() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [remote, setRemote] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [form, setForm] = useState<ProfileRow>({});
+
+  useEffect(() => {
+    (async () => {
+      const p = await fetchProfile();
+      setForm(p);
+      setLoading(false);
+    })();
+  }, []);
+
+  async function save(patch: ProfileRow) {
+    setSaving(true);
+    const merged = { ...form, ...patch };
+    setForm(merged);
+    const res = await upsertProfile(patch);
+    setRemote(res.remote);
+    setSaving(false);
+    if (res.ok) setSavedAt(new Date().toLocaleTimeString());
+  }
+
+  function field<K extends keyof ProfileRow>(key: K, value: ProfileRow[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading profile…</div>;
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="text-sm font-semibold">Personal details</div>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] ${remote ? "bg-emerald-500/20 text-emerald-300" : "bg-white/5 text-muted-foreground"}`}>
+            {remote ? "Synced to cloud" : "Local (sign in to sync)"}
+          </span>
+        </div>
+        <div className="space-y-3">
+          <Field label="Full name">
+            <input value={form.full_name || ""} onChange={(e) => field("full_name", e.target.value)} onBlur={(e) => save({ full_name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="Andi Pratama" />
+          </Field>
+          <Field label="Email address">
+            <input type="email" value={form.email || ""} onChange={(e) => field("email", e.target.value)} onBlur={(e) => save({ email: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="you@example.com" />
+          </Field>
+          <Field label="Goal">
+            <select value={form.goal || ""} onChange={(e) => { field("goal", e.target.value); save({ goal: e.target.value }); }} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm">
+              <option value="">Select goal</option>
+              <option value="race">Train for a race</option>
+              <option value="fitness">General fitness</option>
+              <option value="weight">Lose weight</option>
+              <option value="return">Return to running</option>
+            </select>
+          </Field>
+          <Field label="Fitness level">
+            <div className="grid grid-cols-3 gap-2">
+              {["beginner","intermediate","advanced"].map((l) => (
+                <button key={l} onClick={() => save({ fitness_level: l })} className={`rounded-xl border py-2 text-xs capitalize ${form.fitness_level === l ? "border-indigo-500 bg-indigo-500/10 text-white" : "border-white/10 bg-white/5 text-muted-foreground"}`}>{l}</button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Language">
+            <div className="grid grid-cols-2 gap-2">
+              {[["en","English"],["id","Bahasa Indonesia"]].map(([id,label]) => (
+                <button key={id} onClick={() => save({ language: id })} className={`rounded-xl border py-2 text-xs ${form.language === id ? "border-indigo-500 bg-indigo-500/10 text-white" : "border-white/10 bg-white/5 text-muted-foreground"}`}>{label}</button>
+              ))}
+            </div>
+          </Field>
+        </div>
+      </Card>
+      <div className="text-center text-[11px] text-muted-foreground">
+        {saving ? "Saving…" : savedAt ? `Saved at ${savedAt}` : "Changes save automatically"}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+// ================= Wallet & Payments =================
+function WalletView() {
+  const [wallets, setWallets] = useState<WalletRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState<string | null>(null);
+
+  async function refresh() { setWallets(await listWallets()); }
+  useEffect(() => { (async () => { await refresh(); setLoading(false); })(); }, []);
+
+  const options = [
+    { provider: "midtrans", method: "qris", label: "QRIS (via Midtrans)", desc: "Scan-to-pay from any Indonesian bank/e-wallet" },
+    { provider: "midtrans", method: "gopay", label: "GoPay", desc: "Midtrans" },
+    { provider: "xendit", method: "shopeepay", label: "ShopeePay", desc: "Xendit" },
+    { provider: "xendit", method: "ovo", label: "OVO", desc: "Xendit" },
+    { provider: "xendit", method: "dana", label: "DANA", desc: "Xendit" },
+    { provider: "googlepay", method: "card", label: "Google Pay", desc: "Cards via Google Wallet" },
+    { provider: "card", method: "card", label: "Credit / Debit Card", desc: "Visa · Mastercard · JCB" },
+    { provider: "paypal", method: "paypal", label: "PayPal", desc: "International accounts" },
+  ];
+
+  async function connect(o: typeof options[number]) {
+    setConnecting(o.label);
+    // Mock provider handshake — real Midtrans/Xendit OAuth wired when keys provided.
+    await new Promise((r) => setTimeout(r, 700));
+    await addWallet({ provider: o.provider, method: o.method, label: o.label, is_default: wallets.length === 0 });
+    await refresh();
+    setConnecting(null);
+  }
+
+  async function detach(id: string) {
+    await removeWallet(id);
+    await refresh();
+  }
+
+  return (
+    <div className="space-y-5">
+      <Card className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-500/20 text-indigo-300"><Wallet size={20} /></div>
+          <div>
+            <div className="text-sm font-semibold">RUNIQ Wallet</div>
+            <div className="text-[11px] text-muted-foreground">Used to pay subscription and coach fees.</div>
+          </div>
+        </div>
+      </Card>
+
+      <section>
+        <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Your payment methods</h4>
+        {loading ? (
+          <div className="text-xs text-muted-foreground">Loading…</div>
+        ) : wallets.length === 0 ? (
+          <Card className="p-4 text-xs text-muted-foreground">No payment methods connected yet.</Card>
+        ) : (
+          <Card className="divide-y divide-white/5 p-0">
+            {wallets.map((w) => (
+              <div key={w.id} className="flex items-center gap-3 p-3.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><CreditCard size={16} /></span>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">{w.label}</div>
+                  <div className="text-[11px] text-muted-foreground">{w.provider}{w.is_default ? " · Default" : ""}</div>
+                </div>
+                <button onClick={() => w.id && detach(w.id)} aria-label="Remove" className="rounded-lg p-2 text-muted-foreground hover:text-rose-400"><Trash2 size={16} /></button>
+              </div>
+            ))}
+          </Card>
+        )}
+      </section>
+
+      <section>
+        <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Add a method</h4>
+        <Card className="divide-y divide-white/5 p-0">
+          {options.map((o) => (
+            <button key={o.label} disabled={connecting === o.label} onClick={() => connect(o)} className="flex w-full items-center gap-3 p-3.5 text-left disabled:opacity-60">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Plus size={16} /></span>
+              <span className="flex-1">
+                <span className="block text-sm font-semibold">{o.label}</span>
+                <span className="block text-[11px] text-muted-foreground">{o.desc}</span>
+              </span>
+              <span className="text-[10px] text-muted-foreground">{connecting === o.label ? "Connecting…" : "Connect"}</span>
+            </button>
+          ))}
+        </Card>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Payment gateways (Midtrans/Xendit) use a mock handshake here. Real OAuth is wired once merchant credentials are provided.
+        </p>
+      </section>
+    </div>
+  );
+}
