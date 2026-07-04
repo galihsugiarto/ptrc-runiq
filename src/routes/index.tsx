@@ -8,7 +8,9 @@ import {
   Sparkles, Zap, MapPin, Camera, Star, Lock, Eye, ArrowRight,
   Footprints, Award, Send, Mail, AlertTriangle, Smartphone, Watch,
   Apple, Utensils, ChevronLeft, RefreshCw, Mic, Paperclip, Pin, Crown,
+  Wallet, CreditCard, Plus, Trash2,
 } from "lucide-react";
+import { fetchProfile, upsertProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
 import privacyMd from "@/content/legal/privacy.md?raw";
@@ -77,7 +79,9 @@ export type Detail =
   | { kind: "current-progress" }
   | { kind: "notifications" }
   | { kind: "readiness-breakdown" }
-  | { kind: "trend-28d" };
+  | { kind: "trend-28d" }
+  | { kind: "edit-profile" }
+  | { kind: "wallet" };
 
 
 function Index() {
@@ -1899,13 +1903,14 @@ function ProgressGridMini() {
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
   type Item = { icon: any; label: string; sub?: string; badge?: string; onClick: () => void };
   const account: Item[] = [
-    { icon: User, label: "Edit Profile", sub: "Name, bio, personal info", onClick: () => openDetail({ kind: "profile-item", title: "Edit Profile", sub: "Name, bio, personal info" }) },
+    { icon: User, label: "Edit Profile", sub: "Name, email, goal, fitness level", onClick: () => openDetail({ kind: "edit-profile" }) },
     { icon: LinkIcon, label: "Connect Apps", sub: "Garmin, Strava, Apple Health, MFP, Whoop", onClick: () => openDetail({ kind: "connect-apps" }) },
     { icon: Shield, label: "Privacy Settings", sub: "Data sharing & visibility", onClick: () => openDetail({ kind: "privacy-settings" }) },
     { icon: Bell, label: "Notifications", sub: "Alerts, reminders, HRV pings", onClick: () => openDetail({ kind: "notif-prefs" }) },
   ];
   const billing: Item[] = [
     { icon: FileText, label: "Subscription", sub: "RUNIQ Pro · Rp 180k/mo", badge: "Free", onClick: () => openDetail({ kind: "subscription" }) },
+    { icon: Wallet, label: "Wallet & Payments", sub: "e-wallet, QRIS, card, PayPal, Google Pay", onClick: () => openDetail({ kind: "wallet" }) },
   ];
   const help: Item[] = [
     { icon: HelpCircle, label: "Help & Support", sub: "FAQ, contact, feedback", onClick: () => openDetail({ kind: "help" }) },
@@ -2035,6 +2040,8 @@ function detailTitle(d: Detail): string {
     case "notifications": return "Notifications";
     case "readiness-breakdown": return "Readiness Breakdown";
     case "trend-28d": return "28-Day Trend";
+    case "edit-profile": return "Edit Profile";
+    case "wallet": return "Wallet & Payments";
   }
 }
 
@@ -2187,6 +2194,8 @@ function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "notif-prefs") return <NotifPrefsView />;
   if (detail.kind === "privacy-settings") return <PrivacySettingsView />;
   if (detail.kind === "help") return <HelpSupportView />;
+  if (detail.kind === "edit-profile") return <EditProfileView />;
+  if (detail.kind === "wallet") return <WalletView />;
   if (detail.kind === "settings-item" || detail.kind === "profile-item") {
     const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
     return (
