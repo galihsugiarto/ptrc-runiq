@@ -1,27 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Users, Calendar, MessageSquare, TrendingUp, CheckCircle2, Clock, AlertTriangle,
-  ChevronRight, ArrowLeft, Search, Star, Activity, BarChart3,
+  Users, MessageSquare, CheckCircle2, Clock, AlertTriangle,
+  ChevronRight, ArrowLeft, Search, BarChart3, ClipboardList, User,
 } from "lucide-react";
 
 export const Route = createFileRoute("/coach")({
   head: () => ({
     meta: [
       { title: "Coach Console — RUNIQ" },
-      { name: "description", content: "Review AI plans, message athletes, monitor squad progress." },
+      { name: "description", content: "Review AI plans, message runners, monitor squad progress." },
     ],
   }),
   component: CoachApp,
 });
 
-type Tab = "athletes" | "review" | "squad" | "messages";
+type Tab = "runners" | "review" | "chat" | "squad";
 
 function CoachApp() {
-  const [tab, setTab] = useState<Tab>("athletes");
+  const [tab, setTab] = useState<Tab>("runners");
   return (
     <div className="min-h-screen w-full bg-[#050816] text-foreground">
-      <div className="mx-auto min-h-screen max-w-[420px] bg-[#0a0f24] pb-24">
+      <div className="relative mx-auto min-h-screen max-w-[420px] bg-[#0a0f24] pb-24">
         <header className="flex items-center gap-3 px-5 pb-4 pt-6">
           <Link to="/" className="rounded-full p-1 text-muted-foreground hover:text-white"><ArrowLeft className="h-5 w-5" /></Link>
           <div>
@@ -32,23 +32,37 @@ function CoachApp() {
         </header>
 
         <div className="grid grid-cols-3 gap-2 px-5 pb-4">
-          <Stat label="Athletes" value="24" icon={Users} />
+          <Stat label="Runners" value="24" icon={Users} />
           <Stat label="Pending" value="6" icon={Clock} accent="text-amber-300" />
           <Stat label="Alerts" value="2" icon={AlertTriangle} accent="text-rose-300" />
         </div>
 
-        <nav className="mx-5 mb-4 flex gap-1 rounded-full border border-white/10 bg-card/60 p-1 text-xs">
-          {(["athletes", "review", "squad", "messages"] as Tab[]).map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`flex-1 rounded-full py-2 capitalize ${tab === t ? "bg-gradient-to-r from-indigo-500 to-blue-500 font-semibold text-white" : "text-muted-foreground"}`}>{t}</button>
-          ))}
-        </nav>
-
         <main className="px-5">
-          {tab === "athletes" && <Athletes />}
+          {tab === "runners" && <Runners />}
           {tab === "review" && <ReviewQueue />}
+          {tab === "chat" && <CoachChat />}
           {tab === "squad" && <SquadInsights />}
-          {tab === "messages" && <CoachMessages />}
         </main>
+
+        {/* Bottom navigation */}
+        <nav className="fixed inset-x-0 bottom-0 mx-auto max-w-[420px] border-t border-white/10 bg-[#0a0f24]/95 backdrop-blur">
+          <div className="grid grid-cols-4">
+            {([
+              ["runners", "Runners", User],
+              ["review", "Review", ClipboardList],
+              ["chat", "Chat", MessageSquare],
+              ["squad", "Squad", BarChart3],
+            ] as [Tab, string, any][]).map(([id, label, Icon]) => {
+              const on = tab === id;
+              return (
+                <button key={id} onClick={() => setTab(id)} className={`flex flex-col items-center gap-1 py-3 text-[10px] ${on ? "text-white" : "text-muted-foreground"}`}>
+                  <Icon className={`h-5 w-5 ${on ? "text-indigo-400" : ""}`} />
+                  <span className={on ? "font-semibold" : ""}>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </div>
   );
@@ -66,7 +80,7 @@ function Stat({ label, value, icon: Icon, accent = "text-indigo-300" }: any) {
   );
 }
 
-function Athletes() {
+function Runners() {
   const list = [
     { name: "Andi Pratama", plan: "Sub-4 Marathon", adherence: 92, status: "on-track" },
     { name: "Rina Wijaya", plan: "First 10K", adherence: 78, status: "on-track" },
@@ -78,7 +92,7 @@ function Athletes() {
     <div className="space-y-3">
       <div className="flex items-center gap-2 rounded-full border border-white/10 bg-card/60 px-4 py-2">
         <Search className="h-4 w-4 text-muted-foreground" />
-        <input placeholder="Search athletes" className="flex-1 bg-transparent text-sm outline-none" />
+        <input placeholder="Search runners" className="flex-1 bg-transparent text-sm outline-none" />
       </div>
       {list.map((a) => (
         <div key={a.name} className="rounded-2xl border border-white/10 bg-card/60 p-4">
@@ -154,18 +168,18 @@ function SquadInsights() {
         <div className="rounded-2xl border border-white/10 bg-card/60 p-4">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Total Volume</div>
           <div className="mt-1 text-2xl font-bold">1,240 km</div>
-          <div className="text-xs text-muted-foreground">24 athletes</div>
+          <div className="text-xs text-muted-foreground">24 runners</div>
         </div>
       </div>
       <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
-        <div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-rose-300" /><div className="text-sm font-semibold">2 athletes flagged</div></div>
+        <div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-rose-300" /><div className="text-sm font-semibold">2 runners flagged</div></div>
         <div className="mt-2 text-xs text-muted-foreground">Missed 3+ sessions or elevated HRV drop.</div>
       </div>
     </div>
   );
 }
 
-function CoachMessages() {
+function CoachChat() {
   const threads = [
     { name: "Andi Pratama", last: "Thanks coach! Feeling great today.", unread: 0 },
     { name: "Rina Wijaya", last: "Should I add stretching?", unread: 2 },
