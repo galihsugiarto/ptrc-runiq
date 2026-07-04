@@ -14,7 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          coach_id: string | null
+          created_at: string
+          email: string | null
+          fitness_level: string | null
+          full_name: string | null
+          goal: string | null
+          id: string
+          language: string | null
+          onboarded: boolean
+          pace_5k: string | null
+          race_distance: string | null
+          runs_per_week: number | null
+          updated_at: string
+          user_id: string
+          weekly_distance_km: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          coach_id?: string | null
+          created_at?: string
+          email?: string | null
+          fitness_level?: string | null
+          full_name?: string | null
+          goal?: string | null
+          id?: string
+          language?: string | null
+          onboarded?: boolean
+          pace_5k?: string | null
+          race_distance?: string | null
+          runs_per_week?: number | null
+          updated_at?: string
+          user_id: string
+          weekly_distance_km?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          coach_id?: string | null
+          created_at?: string
+          email?: string | null
+          fitness_level?: string | null
+          full_name?: string | null
+          goal?: string | null
+          id?: string
+          language?: string | null
+          onboarded?: boolean
+          pace_5k?: string | null
+          race_distance?: string | null
+          runs_per_week?: number | null
+          updated_at?: string
+          user_id?: string
+          weekly_distance_km?: number | null
+        }
+        Relationships: []
+      }
+      wallets: {
+        Row: {
+          account_ref: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string | null
+          method: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_ref?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          method?: string | null
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_ref?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          method?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

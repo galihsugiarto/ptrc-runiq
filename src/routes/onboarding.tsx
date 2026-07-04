@@ -1,45 +1,63 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, Target, Activity, Watch, UserCheck, ChevronRight, ArrowLeft } from "lucide-react";
+import { Check, Target, Activity, Watch, UserCheck, ChevronRight, ArrowLeft, Languages } from "lucide-react";
 import { mockConnect, isConnected, type Provider } from "./index";
+import { upsertProfile } from "@/lib/profile";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
       { title: "Get Started — RUNIQ" },
-      { name: "description", content: "Set your goal, baseline, devices and coach." },
+      { name: "description", content: "Language, goal, baseline, devices and coach." },
     ],
   }),
   component: Onboarding,
 });
 
-type Step = 0 | 1 | 2 | 3;
-const STEPS = ["Goal", "Baseline", "Devices", "Coach"] as const;
+type Step = 0 | 1 | 2 | 3 | 4;
+const STEPS = ["Language", "Goal", "Baseline", "Devices", "Coach"] as const;
 
 function Onboarding() {
   const nav = useNavigate();
   const [step, setStep] = useState<Step>(0);
+  const [saving, setSaving] = useState(false);
+  const [language, setLanguage] = useState<string>("en");
   const [goal, setGoal] = useState<string>("");
   const [distance, setDistance] = useState<string>("");
   const [race, setRace] = useState<string>("");
   const [freq, setFreq] = useState<number>(3);
   const [pace, setPace] = useState<string>("");
+  const [fitness, setFitness] = useState<string>("");
   const [coach, setCoach] = useState<string>("");
 
-  const next = () => (step < 3 ? setStep((s) => (s + 1) as Step) : finish());
+  const next = () => (step < 4 ? setStep((s) => (s + 1) as Step) : finish());
   const back = () => (step > 0 ? setStep((s) => (s - 1) as Step) : nav({ to: "/" }));
-  const finish = () => {
+
+  async function finish() {
+    setSaving(true);
     localStorage.setItem("runiq.onboarding.done", "1");
-    localStorage.setItem("runiq.onboarding.data", JSON.stringify({ goal, distance, race, freq, pace, coach }));
+    const payload = {
+      language,
+      goal,
+      race_distance: race || null,
+      weekly_distance_km: distance ? Number(distance) : null,
+      runs_per_week: freq,
+      pace_5k: pace || null,
+      fitness_level: fitness || null,
+      coach_id: coach || null,
+      onboarded: true,
+    };
+    await upsertProfile(payload);
+    setSaving(false);
     nav({ to: "/" });
-  };
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#050816] text-foreground">
       <div className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-[#0a0f24] px-5 pb-24 pt-6">
         <div className="mb-6 flex items-center gap-3">
           <button onClick={back} className="rounded-full p-1 text-muted-foreground hover:text-white"><ArrowLeft className="h-5 w-5" /></button>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Step {step + 1} of 4</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Step {step + 1} of 5</div>
         </div>
 
         <div className="mb-6 flex gap-1.5">
@@ -48,8 +66,15 @@ function Onboarding() {
           ))}
         </div>
 
-        <h1 className="mb-1 text-2xl font-bold">{["What's your goal?", "Baseline fitness", "Connect your devices", "Choose a coach"][step]}</h1>
+        <h1 className="mb-1 text-2xl font-bold">{[
+          "Choose your language",
+          "What's your goal?",
+          "Baseline fitness",
+          "Connect your devices",
+          "Choose a coach",
+        ][step]}</h1>
         <p className="mb-6 text-sm text-muted-foreground">{[
+          "You can change this later in Settings.",
           "We'll shape your plan around this.",
           "Helps us calibrate paces and volume.",
           "Sync runs automatically from your watch or phone.",
@@ -57,6 +82,28 @@ function Onboarding() {
         ][step]}</p>
 
         {step === 0 && (
+          <div className="space-y-3">
+            {[
+              { id: "en", label: "English", sub: "English" },
+              { id: "id", label: "Bahasa Indonesia", sub: "Indonesian" },
+            ].map((o) => (
+              <button
+                key={o.id}
+                onClick={() => setLanguage(o.id)}
+                className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left ${language === o.id ? "border-indigo-500 bg-indigo-500/10" : "border-white/10 bg-card/60"}`}
+              >
+                <Languages className="h-5 w-5 text-indigo-400" />
+                <span className="flex-1">
+                  <span className="block font-medium">{o.label}</span>
+                  <span className="block text-xs text-muted-foreground">{o.sub}</span>
+                </span>
+                {language === o.id && <Check className="h-5 w-5 text-indigo-400" />}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {step === 1 && (
           <div className="space-y-3">
             {[
               { id: "race", label: "Train for a race", icon: Target },
@@ -87,8 +134,16 @@ function Onboarding() {
           </div>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <div className="space-y-4">
+            <div>
+              <label className="mb-2 block text-xs text-muted-foreground">Fitness level</label>
+              <div className="grid grid-cols-3 gap-2">
+                {["beginner", "intermediate", "advanced"].map((l) => (
+                  <button key={l} onClick={() => setFitness(l)} className={`rounded-xl border py-2 text-sm capitalize ${fitness === l ? "border-indigo-500 bg-indigo-500/10" : "border-white/10 bg-card/60"}`}>{l}</button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="mb-2 block text-xs text-muted-foreground">Current weekly distance (km)</label>
               <input value={distance} onChange={(e) => setDistance(e.target.value)} placeholder="e.g. 25" className="w-full rounded-xl border border-white/10 bg-card/60 px-4 py-3 text-sm" />
@@ -108,7 +163,7 @@ function Onboarding() {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="space-y-2">
             {(
               [
@@ -134,12 +189,13 @@ function Onboarding() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div className="space-y-3">
             {[
               { id: "sarah", name: "Sarah Mitchell", specialty: "Marathon Specialist", price: "Rp 850k/mo" },
               { id: "marcus", name: "Marcus Chen", specialty: "Speed & Track", price: "Rp 1.1jt/mo" },
               { id: "ai", name: "AI Coach only", specialty: "Auto-generated plans", price: "Free with Pro" },
+              { id: "skip", name: "Skip for now", specialty: "Decide later from Settings", price: "—" },
             ].map((c) => (
               <button key={c.id} onClick={() => setCoach(c.id)} className={`w-full rounded-2xl border p-4 text-left ${coach === c.id ? "border-indigo-500 bg-indigo-500/10" : "border-white/10 bg-card/60"}`}>
                 <div className="flex items-center justify-between">
@@ -157,13 +213,13 @@ function Onboarding() {
         <div className="mt-auto pt-6">
           <button
             onClick={next}
-            disabled={(step === 0 && !goal) || (step === 3 && !coach)}
+            disabled={saving || (step === 1 && !goal) || (step === 4 && !coach)}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 px-6 py-3 text-sm font-semibold shadow-lg disabled:opacity-40"
           >
-            {step === 3 ? "Finish" : "Continue"} <ChevronRight className="h-4 w-4" />
+            {saving ? "Saving…" : step === 4 ? "Finish" : "Continue"} <ChevronRight className="h-4 w-4" />
           </button>
-          {step === 2 && (
-            <Link to="/onboarding" onClick={() => setStep(3)} className="mt-3 block text-center text-xs text-muted-foreground">Skip for now</Link>
+          {step === 3 && (
+            <Link to="/onboarding" onClick={() => setStep(4)} className="mt-3 block text-center text-xs text-muted-foreground">Skip for now</Link>
           )}
         </div>
       </div>
