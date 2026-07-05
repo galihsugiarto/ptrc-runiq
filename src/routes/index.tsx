@@ -753,6 +753,88 @@ const SESSION_COLORS: Record<string, string> = {
   "Strength": "#EAB308",
 };
 
+function AiCoachNotesCard() {
+  const [note, setNote] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [generated, setGenerated] = useState(false);
+  const [streaming, setStreaming] = useState(false);
+
+  async function generate() {
+    setLoading(true);
+    setNote("");
+    setGenerated(false);
+    setStreaming(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 300,
+          messages: [{
+            role: "user",
+            content: `Kamu adalah RUNIQ, AI coach lari untuk runner Indonesia. Tulis catatan coaching mingguan yang hangat dan personal dalam Bahasa Indonesia (2 paragraf pendek, maks 80 kata total) untuk runner Alex. Goal: Sub-4hr Marathon Oktober 2026. Data: HRV 68ms (baseline 72ms, sedikit di bawah), Tidur 7.2jam (kualitas 78%), Training Load 45 (ACWR 1.1), Minggu ke-8 dari 24 base building. Minggu ini: Easy 8km Sen ✓, Intervals 10km Sel ✓, Recovery 6km Rab ✓. Ke depan: Tempo 12km Kam, Long Run 22km Sab. Spesifik, hangat, sebut penurunan HRV. Gunakan "kamu". Seperti coach sungguhan, bukan robot.`
+          }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.[0]?.text ?? "Catatan coaching tidak tersedia saat ini.";
+      let i = 0;
+      const interval = setInterval(() => {
+        i += 4;
+        setNote(text.slice(0, i));
+        if (i >= text.length) {
+          clearInterval(interval);
+          setStreaming(false);
+          setGenerated(true);
+        }
+      }, 16);
+    } catch {
+      setNote("Tidak dapat terhubung ke AI Coach. Coba lagi nanti.");
+      setStreaming(false);
+      setGenerated(true);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#3b82f6]/30 bg-[#3b82f6]/10 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-[#3b82f6]">
+          <Sparkles size={16} />
+          <span className="text-sm font-bold">AI Coach Notes</span>
+        </div>
+        {generated && (
+          <button onClick={generate} className="flex items-center gap-1 rounded-full border border-white/10 px-2 py-1 text-xs text-muted-foreground">
+            <RefreshCw size={10} /> Refresh
+          </button>
+        )}
+      </div>
+      {!generated && !loading && (
+        <button onClick={generate} className="w-full rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#7c3aed] py-3 text-sm font-bold text-white">
+          ✦ Generate Catatan Coach Minggu Ini
+        </button>
+      )}
+      {loading && !note && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+          <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#3b82f6] border-t-transparent" />
+          Menganalisis data latihanmu...
+        </div>
+      )}
+      {note && (
+        <div className="text-sm text-muted-foreground leading-relaxed">
+          {note}{streaming && <span className="animate-pulse opacity-50">▋</span>}
+        </div>
+      )}
+      {generated && (
+        <div className="text-xs text-muted-foreground/50">
+          Digenerate {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long" })} · RUNIQ AI
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
   const [noteGenerated, setNoteGenerated] = useState(true);
   const sessions = [
@@ -2112,18 +2194,7 @@ function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "ai-notes") {
     return (
       <div className="space-y-4">
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-[#3b82f6]"><Sparkles size={18} /><span className="font-bold">This Week</span></div>
-          <p className="mt-3 text-sm text-muted-foreground">Your HRV is trending up. We've increased Thursday's tempo by 0.5 mi. Coach Sarah reviewed and approved on May 6.</p>
-        </Card>
-        <Card className="p-5">
-          <div className="font-bold">Why this week</div>
-          <ul className="mt-3 space-y-2 text-sm text-muted-foreground list-disc pl-5">
-            <li>Readiness 72 (up from 65)</li>
-            <li>Sleep avg 7.2 hrs</li>
-            <li>Load below CTL target</li>
-          </ul>
-        </Card>
+        <AiCoachNotesCard />
       </div>
     );
   }
