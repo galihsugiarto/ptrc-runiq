@@ -2277,6 +2277,19 @@ function DetailBody({ detail }: { detail: Detail }) {
   return null;
 }
 
+function SettingsItemView({ label }: { label: string }) {
+  if (label === "Subscription") return <SubscriptionView />;
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+      <div className="rounded-full bg-white/5 p-5">
+        <Settings size={28} className="text-muted-foreground" />
+      </div>
+      <div className="font-bold">{label}</div>
+      <div className="text-sm text-muted-foreground max-w-[200px]">Fitur ini sedang dalam pengembangan. Akan segera hadir!</div>
+    </div>
+  );
+}
+
 function ConnectAppsView() {
   const [connected, setConnected] = useState<Record<string, boolean>>({});
   const apps = [
