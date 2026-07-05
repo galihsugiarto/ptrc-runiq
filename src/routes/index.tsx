@@ -2267,27 +2267,27 @@ function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "help") return <HelpSupportView />;
   if (detail.kind === "edit-profile") return <EditProfileView />;
   if (detail.kind === "wallet") return <WalletView />;
-  if (detail.kind === "settings-item" || detail.kind === "profile-item") {
-    const sub = detail.kind === "profile-item" ? detail.sub : "Manage your preferences";
-    return (
-      <div className="space-y-4">
-        <Card className="p-5">
-          <div className="font-bold">{(detail as any).title ?? (detail as any).label}</div>
-          <div className="mt-1 text-sm text-muted-foreground">{sub}</div>
-        </Card>
-        <Card className="divide-y divide-white/5">
-          {["Option A","Option B","Option C"].map(o => (
-            <div key={o} className="flex items-center justify-between p-4">
-              <span className="text-sm">{o}</span>
-              <span className="h-5 w-9 rounded-full bg-white/10 p-0.5"><span className="block h-4 w-4 rounded-full bg-white" /></span>
-            </div>
-          ))}
-        </Card>
-      </div>
-    );
+  if (detail.kind === "profile-item") {
+    return <EditProfileView />;
+  }
 
+  if (detail.kind === "settings-item") {
+    return <SettingsItemView label={(detail as any).label} />;
   }
   return null;
+}
+
+function SettingsItemView({ label }: { label: string }) {
+  if (label === "Subscription") return <SubscriptionView />;
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+      <div className="rounded-full bg-white/5 p-5">
+        <Settings size={28} className="text-muted-foreground" />
+      </div>
+      <div className="font-bold">{label}</div>
+      <div className="text-sm text-muted-foreground max-w-[200px]">Fitur ini sedang dalam pengembangan. Akan segera hadir!</div>
+    </div>
+  );
 }
 
 function ConnectAppsView() {
