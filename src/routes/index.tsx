@@ -1119,7 +1119,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
 function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
   return (
     <Card className="p-5">
-      <button onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "$149" })} className="w-full text-left">
+      <button onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 350.000" })} className="w-full text-left">
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-brand font-bold text-white shadow-brand">SM</div>
         <div className="flex-1">
@@ -1129,7 +1129,7 @@ function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
               <div className="text-sm text-muted-foreground">Marathon Specialist</div>
             </div>
             <div className="text-right">
-              <div className="font-bold">$149<span className="text-xs text-muted-foreground">/mo</span></div>
+              <div className="font-bold">Rp 350.000<span className="text-xs text-muted-foreground">/bulan</span></div>
               <span className="mt-1 inline-block rounded-full border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-400">Available</span>
             </div>
           </div>
