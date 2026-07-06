@@ -1990,7 +1990,7 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
     { icon: Bell, label: "Notifications", sub: "Alerts, reminders, HRV pings", onClick: () => openDetail({ kind: "notif-prefs" }) },
   ];
   const billing: Item[] = [
-    { icon: FileText, label: "Subscription", sub: "RUNIQ Pro · Rp 180k/mo", badge: "Free", onClick: () => openDetail({ kind: "subscription" }) },
+    { icon: FileText, label: "Subscription", sub: "RUNIQ Pro · Rp 35.000/bulan", badge: "Free", onClick: () => openDetail({ kind: "subscription" }) },
     { icon: Wallet, label: "Wallet & Payments", sub: "e-wallet, QRIS, card, PayPal, Google Pay", onClick: () => openDetail({ kind: "wallet" }) },
   ];
   const help: Item[] = [
