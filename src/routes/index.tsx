@@ -2212,7 +2212,7 @@ function DetailBody({ detail }: { detail: Detail }) {
       <div className="space-y-4">
         <Card className="p-5 text-center">
           <div className="text-3xl font-black">Pro</div>
-          <div className="text-2xl font-bold">Rp 149k<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+          <div className="text-2xl font-bold">Rp 35.000<span className="text-sm font-normal text-muted-foreground">/bulan</span></div>
         </Card>
         <ul className="space-y-3">
           {["Unlimited AI plan rewrites","Coach-validated workouts","Advanced HRV insights","Priority messaging"].map(f => (
