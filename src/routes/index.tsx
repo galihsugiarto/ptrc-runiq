@@ -1855,7 +1855,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
               <MessageSquare size={14} /> Message
             </button>
             <button
-              onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 850k" })}
+              onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 350.000" })}
               className="rounded-xl border border-white/15 py-2.5 text-xs font-semibold"
             >
               View Profile
