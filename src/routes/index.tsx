@@ -1092,7 +1092,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
       </div>
       <p className="text-sm text-muted-foreground">4 coaches found</p>
       <CoachCard onBook={onBook} openDetail={openDetail} />
-      <button onClick={() => openDetail({ kind: "coach", name: "Marcus Chen", specialty: "Speed & Track", initials: "MC", price: "$199" })} className="w-full text-left">
+      <button onClick={() => openDetail({ kind: "coach", name: "Marcus Chen", specialty: "Speed & Track", initials: "MC", price: "Rp 500.000" })} className="w-full text-left">
       <Card className="p-5">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 font-bold text-white">MC</div>
@@ -1103,7 +1103,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
                 <div className="text-sm text-muted-foreground">Speed & Track</div>
               </div>
               <div className="text-right">
-                <div className="font-bold">$199<span className="text-xs text-muted-foreground">/mo</span></div>
+                <div className="font-bold">Rp 500.000<span className="text-xs text-muted-foreground">/bulan</span></div>
                 <span className="mt-1 inline-block rounded-full border border-orange-500/40 px-2 py-0.5 text-xs text-orange-400">Waitlist</span>
               </div>
             </div>
@@ -1119,7 +1119,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
 function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d: Detail) => void }) {
   return (
     <Card className="p-5">
-      <button onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "$149" })} className="w-full text-left">
+      <button onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 350.000" })} className="w-full text-left">
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-brand font-bold text-white shadow-brand">SM</div>
         <div className="flex-1">
@@ -1129,7 +1129,7 @@ function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
               <div className="text-sm text-muted-foreground">Marathon Specialist</div>
             </div>
             <div className="text-right">
-              <div className="font-bold">$149<span className="text-xs text-muted-foreground">/mo</span></div>
+              <div className="font-bold">Rp 350.000<span className="text-xs text-muted-foreground">/bulan</span></div>
               <span className="mt-1 inline-block rounded-full border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-400">Available</span>
             </div>
           </div>
@@ -1191,13 +1191,19 @@ function BookSheet({ onClose }: { onClose: () => void }) {
         <div className="mt-6 rounded-2xl border border-white/5 bg-white/5 p-4">
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-2xl font-bold">$149<span className="text-sm font-normal text-muted-foreground">/month</span></div>
+              <div className="text-2xl font-bold">Rp 350.000<span className="text-sm font-normal text-muted-foreground">/bulan</span></div>
               <div className="text-xs text-muted-foreground">Cancel anytime · No setup fee</div>
             </div>
             <div className="text-right text-xs">
               <div className="text-muted-foreground">Responds in</div>
               <div className="font-bold">&lt; 1 hour</div>
             </div>
+          </div>
+          <div className="mt-3 border-t border-white/10 pt-3 text-[11px] text-muted-foreground">
+            Harga sudah termasuk 20% platform fee RUNIQ
+            <div className="mt-1 flex justify-between"><span>Coach rate</span><span>Rp 291.667</span></div>
+            <div className="flex justify-between"><span>Platform fee (20%)</span><span>Rp 58.333</span></div>
+            <div className="mt-1 flex justify-between font-semibold text-foreground"><span>Total</span><span>Rp 350.000</span></div>
           </div>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -1212,13 +1218,9 @@ function BookSheet({ onClose }: { onClose: () => void }) {
 function ActivityScreen({ tab, setTab, openDetail }: { tab: "week" | "record"; setTab: (t: any) => void; openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-5 px-5 pt-6">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
-        <div className="grid grid-cols-2 gap-1">
-          <button onClick={() => setTab("week")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "week" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>This Week</button>
-          <button onClick={() => setTab("record")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "record" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Record</button>
-        </div>
-      </div>
-      {tab === "week" ? <WeekActivity openDetail={openDetail} goRecord={() => setTab("record")} /> : <RecordFlow goWeek={() => setTab("week")} />}
+      {tab === "record"
+        ? <RecordFlow goWeek={() => setTab("week")} />
+        : <WeekActivity openDetail={openDetail} goRecord={() => setTab("record")} />}
     </div>
   );
 }
@@ -1785,12 +1787,9 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
 
   return (
     <div className="space-y-6 px-5 pt-6">
-      {/* Header with gear icon (only entry point to Settings Drawer) */}
+      {/* Profile header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Profile</h2>
-        <button onClick={onSettings} aria-label="Settings" className="rounded-full border border-white/10 bg-white/5 p-2.5">
-          <Settings size={18} />
-        </button>
       </div>
 
       <Card className="overflow-hidden p-0">
@@ -1856,7 +1855,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
               <MessageSquare size={14} /> Message
             </button>
             <button
-              onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 850k" })}
+              onClick={() => openDetail({ kind: "coach", name: "Sarah Mitchell", specialty: "Marathon Specialist", initials: "SM", price: "Rp 350.000" })}
               className="rounded-xl border border-white/15 py-2.5 text-xs font-semibold"
             >
               View Profile
@@ -1991,7 +1990,7 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
     { icon: Bell, label: "Notifications", sub: "Alerts, reminders, HRV pings", onClick: () => openDetail({ kind: "notif-prefs" }) },
   ];
   const billing: Item[] = [
-    { icon: FileText, label: "Subscription", sub: "RUNIQ Pro · Rp 180k/mo", badge: "Free", onClick: () => openDetail({ kind: "subscription" }) },
+    { icon: FileText, label: "Subscription", sub: "RUNIQ Pro · Rp 35.000/bulan", badge: "Free", onClick: () => openDetail({ kind: "subscription" }) },
     { icon: Wallet, label: "Wallet & Payments", sub: "e-wallet, QRIS, card, PayPal, Google Pay", onClick: () => openDetail({ kind: "wallet" }) },
   ];
   const help: Item[] = [
@@ -2044,26 +2043,6 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
         <Group title="Support" items={help} />
         <Group title="Legal" items={legal} />
 
-        <div className="mt-5">
-          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Explore (Scaffold)</h4>
-          <Card className="divide-y divide-white/5 p-0">
-            <a href="/onboarding" className="flex w-full items-center gap-3 p-3.5 text-left">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Sparkles size={16} /></span>
-              <span className="flex-1"><span className="block text-sm font-semibold">Onboarding Flow</span><span className="block text-[11px] text-muted-foreground">Goal → Baseline → Devices → Coach</span></span>
-              <ChevronRight size={16} className="text-muted-foreground" />
-            </a>
-            <a href="/coach" className="flex w-full items-center gap-3 p-3.5 text-left">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Users size={16} /></span>
-              <span className="flex-1"><span className="block text-sm font-semibold">Coach Console</span><span className="block text-[11px] text-muted-foreground">Athletes, plan review, squad insights</span></span>
-              <ChevronRight size={16} className="text-muted-foreground" />
-            </a>
-            <a href="/admin" className="flex w-full items-center gap-3 p-3.5 text-left">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-muted-foreground"><Shield size={16} /></span>
-              <span className="flex-1"><span className="block text-sm font-semibold">Admin Dashboard</span><span className="block text-[11px] text-muted-foreground">Super Admin, Coach Head, Sales, Analytics</span></span>
-              <ChevronRight size={16} className="text-muted-foreground" />
-            </a>
-          </Card>
-        </div>
 
         <div className="my-6 h-px bg-white/5" />
         <button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-left text-rose-400">
@@ -2142,7 +2121,23 @@ function DetailBody({ detail }: { detail: Detail }) {
         </div>
         <Card className="p-5">
           <div className="text-sm text-muted-foreground">Monthly subscription</div>
-          <div className="text-3xl font-black">{detail.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+          <div className="text-3xl font-black">{detail.price}<span className="text-sm font-normal text-muted-foreground">/bulan</span></div>
+          {(() => {
+            const digits = (detail.price || "").replace(/[^0-9]/g, "");
+            const total = parseInt(digits || "0", 10);
+            if (!total) return null;
+            const rate = Math.round(total / 1.2);
+            const fee = total - rate;
+            const fmt = (n: number) => "Rp " + n.toLocaleString("id-ID");
+            return (
+              <div className="mt-3 border-t border-white/10 pt-3 text-xs text-muted-foreground">
+                Harga sudah termasuk 20% platform fee RUNIQ
+                <div className="mt-1 flex justify-between"><span>Coach rate</span><span>{fmt(rate)}</span></div>
+                <div className="flex justify-between"><span>Platform fee (20%)</span><span>{fmt(fee)}</span></div>
+                <div className="mt-1 flex justify-between font-semibold text-foreground"><span>Total</span><span>{fmt(total)}</span></div>
+              </div>
+            );
+          })()}
         </Card>
         <div>
           <h3 className="mb-2 font-bold">About</h3>
@@ -2233,7 +2228,7 @@ function DetailBody({ detail }: { detail: Detail }) {
       <div className="space-y-4">
         <Card className="p-5 text-center">
           <div className="text-3xl font-black">Pro</div>
-          <div className="text-2xl font-bold">Rp 149k<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+          <div className="text-2xl font-bold">Rp 35.000<span className="text-sm font-normal text-muted-foreground">/bulan</span></div>
         </Card>
         <ul className="space-y-3">
           {["Unlimited AI plan rewrites","Coach-validated workouts","Advanced HRV insights","Priority messaging"].map(f => (
@@ -2666,13 +2661,18 @@ function FindCoachView() {
   const [filter, setFilter] = useState("All");
   const chips = ["All", "Marathon", "Speed", "Trail", "Ultra", "Beginner"];
   const coaches = [
-    { name: "Sarah Mitchell", initials: "SM", specialty: "Marathon Specialist", price: "Rp 850k", rating: 4.9, reviews: 127, certs: ["USATF L2", "RRCA"], color: "from-indigo-500 to-purple-500" },
-    { name: "Dana Wijaya", initials: "DW", specialty: "Trail & Ultra", price: "Rp 950k", rating: 4.8, reviews: 84, certs: ["UESCA", "ACE"], color: "from-emerald-500 to-teal-500" },
-    { name: "Rio Hidayat", initials: "RH", specialty: "Speed & 5k–10k", price: "Rp 650k", rating: 4.7, reviews: 56, certs: ["USATF L1"], color: "from-orange-500 to-red-500" },
-    { name: "Mira Santoso", initials: "MS", specialty: "Beginner Friendly", price: "Rp 550k", rating: 4.9, reviews: 210, certs: ["RRCA"], color: "from-pink-500 to-fuchsia-500" },
+    { name: "Sarah Mitchell", initials: "SM", specialty: "Marathon Specialist", price: "Rp 350.000", rating: 4.9, reviews: 127, certs: ["USATF L2", "RRCA"], color: "from-indigo-500 to-purple-500" },
+    { name: "Marcus Chen", initials: "MC", specialty: "Speed & Track", price: "Rp 500.000", rating: 4.8, reviews: 92, certs: ["USATF L3"], color: "from-orange-500 to-red-500" },
+    { name: "Jamie Lee", initials: "JL", specialty: "Beginner Friendly", price: "Rp 150.000", rating: 4.9, reviews: 156, certs: ["RRCA"], color: "from-pink-500 to-fuchsia-500" },
+    { name: "Dana Wijaya", initials: "DW", specialty: "Trail & Ultra", price: "Rp 450.000", rating: 4.8, reviews: 84, certs: ["UESCA", "ACE"], color: "from-emerald-500 to-teal-500" },
+    { name: "Rio Hidayat", initials: "RH", specialty: "Speed & 5k–10k", price: "Rp 200.000", rating: 4.7, reviews: 56, certs: ["USATF L1"], color: "from-sky-500 to-blue-500" },
+    { name: "Mira Santoso", initials: "MS", specialty: "Base Building", price: "Rp 50.000", rating: 4.9, reviews: 210, certs: ["RRCA"], color: "from-amber-500 to-yellow-500" },
   ];
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-muted-foreground">
+        Mulai dari <span className="font-semibold text-foreground">Rp 50.000/bulan</span> · Tiap coach menentukan tarifnya sendiri
+      </div>
       <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
         <Search size={16} className="text-muted-foreground" />
         <input placeholder="Search coaches…" className="w-full bg-transparent text-sm outline-none" />
@@ -2696,7 +2696,7 @@ function FindCoachView() {
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <div className="font-bold">{c.name}</div>
-                  <div className="text-sm font-bold">{c.price}<span className="text-[10px] font-normal text-muted-foreground">/mo</span></div>
+                  <div className="text-sm font-bold">{c.price}<span className="text-[10px] font-normal text-muted-foreground">/bulan</span></div>
                 </div>
                 <div className="text-xs text-muted-foreground">{c.specialty}</div>
                 <div className="mt-1 flex items-center gap-2 text-xs">
@@ -2739,10 +2739,10 @@ function SubscriptionView() {
         <div className="bg-gradient-brand p-5 text-white">
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/80"><Crown size={12} /> RUNIQ Pro</div>
           <div className="mt-2 text-3xl font-black">
-            {billing === "monthly" ? "Rp 180,000" : "Rp 1,800,000"}
-            <span className="ml-1 text-sm font-normal text-white/70">/ {billing === "monthly" ? "month" : "year"}</span>
+            {billing === "monthly" ? "Rp 35.000" : "Rp 350.000"}
+            <span className="ml-1 text-sm font-normal text-white/70">/ {billing === "monthly" ? "bulan" : "tahun"}</span>
           </div>
-          {billing === "yearly" && <div className="text-xs text-white/80">Save Rp 360,000 · 2 months free</div>}
+          {billing === "yearly" && <div className="text-xs text-white/80">Hemat 17% · setara Rp 29.167/bulan</div>}
         </div>
         <div className="p-4">
           <div className="grid grid-cols-2 gap-2 rounded-xl bg-white/5 p-1">

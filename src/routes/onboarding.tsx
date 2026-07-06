@@ -192,9 +192,9 @@ function Onboarding() {
         {step === 4 && (
           <div className="space-y-3">
             {[
-              { id: "sarah", name: "Sarah Mitchell", specialty: "Marathon Specialist", price: "Rp 850k/mo" },
-              { id: "marcus", name: "Marcus Chen", specialty: "Speed & Track", price: "Rp 1.1jt/mo" },
-              { id: "ai", name: "AI Coach only", specialty: "Auto-generated plans", price: "Free with Pro" },
+              { id: "sarah", name: "Sarah Mitchell", specialty: "Marathon Specialist", price: "Rp 350.000/bulan" },
+              { id: "marcus", name: "Marcus Chen", specialty: "Speed & Track", price: "Rp 500.000/bulan" },
+              { id: "ai", name: "AI Coach only", specialty: "Auto-generated plans", price: "Termasuk RUNIQ Pro (Rp 35.000/bulan)" },
               { id: "skip", name: "Skip for now", specialty: "Decide later from Settings", price: "—" },
             ].map((c) => (
               <button key={c.id} onClick={() => setCoach(c.id)} className={`w-full rounded-2xl border p-4 text-left ${coach === c.id ? "border-indigo-500 bg-indigo-500/10" : "border-white/10 bg-card/60"}`}>
