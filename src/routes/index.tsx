@@ -1191,13 +1191,19 @@ function BookSheet({ onClose }: { onClose: () => void }) {
         <div className="mt-6 rounded-2xl border border-white/5 bg-white/5 p-4">
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-2xl font-bold">$149<span className="text-sm font-normal text-muted-foreground">/month</span></div>
+              <div className="text-2xl font-bold">Rp 350.000<span className="text-sm font-normal text-muted-foreground">/bulan</span></div>
               <div className="text-xs text-muted-foreground">Cancel anytime · No setup fee</div>
             </div>
             <div className="text-right text-xs">
               <div className="text-muted-foreground">Responds in</div>
               <div className="font-bold">&lt; 1 hour</div>
             </div>
+          </div>
+          <div className="mt-3 border-t border-white/10 pt-3 text-[11px] text-muted-foreground">
+            Harga sudah termasuk 20% platform fee RUNIQ
+            <div className="mt-1 flex justify-between"><span>Coach rate</span><span>Rp 291.667</span></div>
+            <div className="flex justify-between"><span>Platform fee (20%)</span><span>Rp 58.333</span></div>
+            <div className="mt-1 flex justify-between font-semibold text-foreground"><span>Total</span><span>Rp 350.000</span></div>
           </div>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
