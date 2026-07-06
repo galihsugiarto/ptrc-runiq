@@ -2645,13 +2645,18 @@ function FindCoachView() {
   const [filter, setFilter] = useState("All");
   const chips = ["All", "Marathon", "Speed", "Trail", "Ultra", "Beginner"];
   const coaches = [
-    { name: "Sarah Mitchell", initials: "SM", specialty: "Marathon Specialist", price: "Rp 850k", rating: 4.9, reviews: 127, certs: ["USATF L2", "RRCA"], color: "from-indigo-500 to-purple-500" },
-    { name: "Dana Wijaya", initials: "DW", specialty: "Trail & Ultra", price: "Rp 950k", rating: 4.8, reviews: 84, certs: ["UESCA", "ACE"], color: "from-emerald-500 to-teal-500" },
-    { name: "Rio Hidayat", initials: "RH", specialty: "Speed & 5k–10k", price: "Rp 650k", rating: 4.7, reviews: 56, certs: ["USATF L1"], color: "from-orange-500 to-red-500" },
-    { name: "Mira Santoso", initials: "MS", specialty: "Beginner Friendly", price: "Rp 550k", rating: 4.9, reviews: 210, certs: ["RRCA"], color: "from-pink-500 to-fuchsia-500" },
+    { name: "Sarah Mitchell", initials: "SM", specialty: "Marathon Specialist", price: "Rp 350.000", rating: 4.9, reviews: 127, certs: ["USATF L2", "RRCA"], color: "from-indigo-500 to-purple-500" },
+    { name: "Marcus Chen", initials: "MC", specialty: "Speed & Track", price: "Rp 500.000", rating: 4.8, reviews: 92, certs: ["USATF L3"], color: "from-orange-500 to-red-500" },
+    { name: "Jamie Lee", initials: "JL", specialty: "Beginner Friendly", price: "Rp 150.000", rating: 4.9, reviews: 156, certs: ["RRCA"], color: "from-pink-500 to-fuchsia-500" },
+    { name: "Dana Wijaya", initials: "DW", specialty: "Trail & Ultra", price: "Rp 450.000", rating: 4.8, reviews: 84, certs: ["UESCA", "ACE"], color: "from-emerald-500 to-teal-500" },
+    { name: "Rio Hidayat", initials: "RH", specialty: "Speed & 5k–10k", price: "Rp 200.000", rating: 4.7, reviews: 56, certs: ["USATF L1"], color: "from-sky-500 to-blue-500" },
+    { name: "Mira Santoso", initials: "MS", specialty: "Base Building", price: "Rp 50.000", rating: 4.9, reviews: 210, certs: ["RRCA"], color: "from-amber-500 to-yellow-500" },
   ];
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-muted-foreground">
+        Mulai dari <span className="font-semibold text-foreground">Rp 50.000/bulan</span> · Tiap coach menentukan tarifnya sendiri
+      </div>
       <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
         <Search size={16} className="text-muted-foreground" />
         <input placeholder="Search coaches…" className="w-full bg-transparent text-sm outline-none" />
@@ -2675,7 +2680,7 @@ function FindCoachView() {
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <div className="font-bold">{c.name}</div>
-                  <div className="text-sm font-bold">{c.price}<span className="text-[10px] font-normal text-muted-foreground">/mo</span></div>
+                  <div className="text-sm font-bold">{c.price}<span className="text-[10px] font-normal text-muted-foreground">/bulan</span></div>
                 </div>
                 <div className="text-xs text-muted-foreground">{c.specialty}</div>
                 <div className="mt-1 flex items-center gap-2 text-xs">
