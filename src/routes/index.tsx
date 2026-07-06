@@ -1781,12 +1781,9 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
 
   return (
     <div className="space-y-6 px-5 pt-6">
-      {/* Header with gear icon (only entry point to Settings Drawer) */}
+      {/* Profile header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Profile</h2>
-        <button onClick={onSettings} aria-label="Settings" className="rounded-full border border-white/10 bg-white/5 p-2.5">
-          <Settings size={18} />
-        </button>
       </div>
 
       <Card className="overflow-hidden p-0">
