@@ -1212,13 +1212,9 @@ function BookSheet({ onClose }: { onClose: () => void }) {
 function ActivityScreen({ tab, setTab, openDetail }: { tab: "week" | "record"; setTab: (t: any) => void; openDetail: (d: Detail) => void }) {
   return (
     <div className="space-y-5 px-5 pt-6">
-      <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1">
-        <div className="grid grid-cols-2 gap-1">
-          <button onClick={() => setTab("week")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "week" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>This Week</button>
-          <button onClick={() => setTab("record")} className={`rounded-xl py-3 text-sm font-semibold ${tab === "record" ? "bg-gradient-brand text-white shadow-brand" : "text-muted-foreground"}`}>Record</button>
-        </div>
-      </div>
-      {tab === "week" ? <WeekActivity openDetail={openDetail} goRecord={() => setTab("record")} /> : <RecordFlow goWeek={() => setTab("week")} />}
+      {tab === "record"
+        ? <RecordFlow goWeek={() => setTab("week")} />
+        : <WeekActivity openDetail={openDetail} goRecord={() => setTab("record")} />}
     </div>
   );
 }
