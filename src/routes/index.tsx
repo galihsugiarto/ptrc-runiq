@@ -2121,7 +2121,23 @@ function DetailBody({ detail }: { detail: Detail }) {
         </div>
         <Card className="p-5">
           <div className="text-sm text-muted-foreground">Monthly subscription</div>
-          <div className="text-3xl font-black">{detail.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+          <div className="text-3xl font-black">{detail.price}<span className="text-sm font-normal text-muted-foreground">/bulan</span></div>
+          {(() => {
+            const digits = (detail.price || "").replace(/[^0-9]/g, "");
+            const total = parseInt(digits || "0", 10);
+            if (!total) return null;
+            const rate = Math.round(total / 1.2);
+            const fee = total - rate;
+            const fmt = (n: number) => "Rp " + n.toLocaleString("id-ID");
+            return (
+              <div className="mt-3 border-t border-white/10 pt-3 text-xs text-muted-foreground">
+                Harga sudah termasuk 20% platform fee RUNIQ
+                <div className="mt-1 flex justify-between"><span>Coach rate</span><span>{fmt(rate)}</span></div>
+                <div className="flex justify-between"><span>Platform fee (20%)</span><span>{fmt(fee)}</span></div>
+                <div className="mt-1 flex justify-between font-semibold text-foreground"><span>Total</span><span>{fmt(total)}</span></div>
+              </div>
+            );
+          })()}
         </Card>
         <div>
           <h3 className="mb-2 font-bold">About</h3>
