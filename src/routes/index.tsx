@@ -2712,10 +2712,10 @@ function SubscriptionView() {
         <div className="bg-gradient-brand p-5 text-white">
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/80"><Crown size={12} /> RUNIQ Pro</div>
           <div className="mt-2 text-3xl font-black">
-            {billing === "monthly" ? "Rp 180,000" : "Rp 1,800,000"}
-            <span className="ml-1 text-sm font-normal text-white/70">/ {billing === "monthly" ? "month" : "year"}</span>
+            {billing === "monthly" ? "Rp 35.000" : "Rp 350.000"}
+            <span className="ml-1 text-sm font-normal text-white/70">/ {billing === "monthly" ? "bulan" : "tahun"}</span>
           </div>
-          {billing === "yearly" && <div className="text-xs text-white/80">Save Rp 360,000 · 2 months free</div>}
+          {billing === "yearly" && <div className="text-xs text-white/80">Hemat 17% · setara Rp 29.167/bulan</div>}
         </div>
         <div className="p-4">
           <div className="grid grid-cols-2 gap-2 rounded-xl bg-white/5 p-1">
