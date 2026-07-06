@@ -1092,7 +1092,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
       </div>
       <p className="text-sm text-muted-foreground">4 coaches found</p>
       <CoachCard onBook={onBook} openDetail={openDetail} />
-      <button onClick={() => openDetail({ kind: "coach", name: "Marcus Chen", specialty: "Speed & Track", initials: "MC", price: "$199" })} className="w-full text-left">
+      <button onClick={() => openDetail({ kind: "coach", name: "Marcus Chen", specialty: "Speed & Track", initials: "MC", price: "Rp 500.000" })} className="w-full text-left">
       <Card className="p-5">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 font-bold text-white">MC</div>
@@ -1103,7 +1103,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
                 <div className="text-sm text-muted-foreground">Speed & Track</div>
               </div>
               <div className="text-right">
-                <div className="font-bold">$199<span className="text-xs text-muted-foreground">/mo</span></div>
+                <div className="font-bold">Rp 500.000<span className="text-xs text-muted-foreground">/bulan</span></div>
                 <span className="mt-1 inline-block rounded-full border border-orange-500/40 px-2 py-0.5 text-xs text-orange-400">Waitlist</span>
               </div>
             </div>
