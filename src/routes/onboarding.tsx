@@ -36,6 +36,8 @@ function Onboarding() {
   async function finish() {
     setSaving(true);
     localStorage.setItem("runiq.onboarding.done", "1");
+    localStorage.setItem("runiq_onboarded", "true");
+
     const payload = {
       language,
       goal,
@@ -82,26 +84,30 @@ function Onboarding() {
         ][step]}</p>
 
         {step === 0 && (
-          <div className="space-y-3">
-            {[
-              { id: "en", label: "English", sub: "English" },
-              { id: "id", label: "Bahasa Indonesia", sub: "Indonesian" },
-            ].map((o) => (
+          <div className="flex-1 flex flex-col items-center justify-center gap-8">
+            <div className="text-center">
+              <div className="text-2xl font-bold mb-2">Choose Language</div>
+              <div className="text-sm text-muted-foreground">Pilih bahasa / Select language</div>
+            </div>
+            <div className="flex gap-6">
               <button
-                key={o.id}
-                onClick={() => setLanguage(o.id)}
-                className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left ${language === o.id ? "border-indigo-500 bg-indigo-500/10" : "border-white/10 bg-card/60"}`}
+                onClick={() => setLanguage("en")}
+                className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-6 transition-all ${language === "en" ? "border-[#3b82f6] bg-[#3b82f6]/15" : "border-white/10 bg-white/5"}`}
               >
-                <Languages className="h-5 w-5 text-indigo-400" />
-                <span className="flex-1">
-                  <span className="block font-medium">{o.label}</span>
-                  <span className="block text-xs text-muted-foreground">{o.sub}</span>
-                </span>
-                {language === o.id && <Check className="h-5 w-5 text-indigo-400" />}
+                <span className="text-5xl">🇬🇧</span>
+                <span className="text-sm font-semibold">English</span>
               </button>
-            ))}
+              <button
+                onClick={() => setLanguage("id")}
+                className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-6 transition-all ${language === "id" ? "border-[#3b82f6] bg-[#3b82f6]/15" : "border-white/10 bg-white/5"}`}
+              >
+                <span className="text-5xl">🇮🇩</span>
+                <span className="text-sm font-semibold">Bahasa</span>
+              </button>
+            </div>
           </div>
         )}
+
 
         {step === 1 && (
           <div className="space-y-3">

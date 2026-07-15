@@ -81,7 +81,9 @@ export type Detail =
   | { kind: "readiness-breakdown" }
   | { kind: "trend-28d" }
   | { kind: "edit-profile" }
+  | { kind: "onboarding-adjust" }
   | { kind: "wallet" };
+
 
 
 function Index() {
@@ -103,7 +105,7 @@ function Index() {
             authMode === "login" ? (
               <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
             ) : authMode === "signup" ? (
-              <SignupScreen onSignup={() => { window.location.href = "/onboarding"; }} onBack={() => setAuthMode("login")} />
+              <SignupScreen onSignup={() => { window.location.href = (typeof window !== "undefined" && localStorage.getItem("runiq_onboarded") === "true") ? "/" : "/onboarding"; }} onBack={() => setAuthMode("login")} />
             ) : (
               <ForgotPasswordScreen onBack={() => setAuthMode("login")} />
             )
@@ -1770,7 +1772,56 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
   );
 }
 
+function OnboardingAdjustView() {
+  const [goal, setGoal] = useState("Train for a race");
+  const [pace, setPace] = useState("5:30");
+  const [kmPerWeek, setKmPerWeek] = useState(30);
+  const [targetRace, setTargetRace] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const goals = ["First 5K","First 10K","First Half Marathon","First Marathon","Improve My Time","Fitness Umum"];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Running Goal</div>
+        <div className="space-y-2">
+          {goals.map(g => (
+            <button key={g} onClick={() => setGoal(g)}
+              className={`w-full rounded-xl border p-3 text-left text-sm transition-all ${goal === g ? "border-[#3b82f6]/60 bg-[#3b82f6]/15 font-semibold" : "border-white/10 bg-white/5"}`}>
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target Race Date</div>
+        <input type="date" value={targetRace} onChange={e => setTargetRace(e.target.value)}
+          className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
+      </div>
+      <div>
+        <div className="mb-3 flex justify-between text-sm">
+          <span>KM per minggu</span>
+          <span className="font-bold text-[#3b82f6]">{kmPerWeek} km</span>
+        </div>
+        <input type="range" min={5} max={120} step={5} value={kmPerWeek} onChange={e => setKmPerWeek(Number(e.target.value))}
+          className="w-full accent-[#3b82f6]" />
+      </div>
+      <div>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Pace (min/km)</div>
+        <input value={pace} onChange={e => setPace(e.target.value)} placeholder="e.g. 5:30"
+          className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
+      </div>
+      <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+        className={`w-full rounded-2xl py-4 font-bold transition-all ${saved ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-gradient-to-r from-[#3b82f6] to-[#7c3aed] text-white"}`}>
+        {saved ? "✓ Tersimpan!" : "Simpan Perubahan"}
+      </button>
+    </div>
+  );
+}
+
 function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
+
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -1830,8 +1881,15 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Total Runs</div></div>
             <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Active Weeks</div></div>
           </div>
+          <button
+            onClick={() => openDetail({ kind: "onboarding-adjust" })}
+            className="mt-4 w-full rounded-2xl border border-[#3b82f6]/30 bg-[#3b82f6]/10 py-3 text-sm font-semibold text-[#3b82f6]"
+          >
+            ⚙ Adjust Running Profile
+          </button>
         </div>
       </Card>
+
 
       {/* MY COACH */}
       <section>
@@ -2103,7 +2161,9 @@ function detailTitle(d: Detail): string {
     case "trend-28d": return "28-Day Trend";
     case "edit-profile": return "Edit Profile";
     case "wallet": return "Wallet & Payments";
+    case "onboarding-adjust": return "Adjust Running Profile";
   }
+
 }
 
 
@@ -2262,6 +2322,8 @@ function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "help") return <HelpSupportView />;
   if (detail.kind === "edit-profile") return <EditProfileView />;
   if (detail.kind === "wallet") return <WalletView />;
+  if (detail.kind === "onboarding-adjust") return <OnboardingAdjustView />;
+
   if (detail.kind === "profile-item") {
     return <EditProfileView />;
   }
