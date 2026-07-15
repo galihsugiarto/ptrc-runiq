@@ -1832,8 +1832,15 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Total Runs</div></div>
             <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Active Weeks</div></div>
           </div>
+          <button
+            onClick={() => openDetail({ kind: "onboarding-adjust" })}
+            className="mt-4 w-full rounded-2xl border border-[#3b82f6]/30 bg-[#3b82f6]/10 py-3 text-sm font-semibold text-[#3b82f6]"
+          >
+            ⚙ Adjust Running Profile
+          </button>
         </div>
       </Card>
+
 
       {/* MY COACH */}
       <section>
