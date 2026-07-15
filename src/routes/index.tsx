@@ -2266,6 +2266,8 @@ function DetailBody({ detail }: { detail: Detail }) {
   if (detail.kind === "help") return <HelpSupportView />;
   if (detail.kind === "edit-profile") return <EditProfileView />;
   if (detail.kind === "wallet") return <WalletView />;
+  if (detail.kind === "onboarding-adjust") return <OnboardingAdjustView />;
+
   if (detail.kind === "profile-item") {
     return <EditProfileView />;
   }
