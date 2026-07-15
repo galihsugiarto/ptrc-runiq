@@ -81,7 +81,9 @@ export type Detail =
   | { kind: "readiness-breakdown" }
   | { kind: "trend-28d" }
   | { kind: "edit-profile" }
+  | { kind: "onboarding-adjust" }
   | { kind: "wallet" };
+
 
 
 function Index() {
