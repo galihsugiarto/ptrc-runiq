@@ -2105,7 +2105,9 @@ function detailTitle(d: Detail): string {
     case "trend-28d": return "28-Day Trend";
     case "edit-profile": return "Edit Profile";
     case "wallet": return "Wallet & Payments";
+    case "onboarding-adjust": return "Adjust Running Profile";
   }
+
 }
 
 
