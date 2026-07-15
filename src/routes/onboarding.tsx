@@ -36,6 +36,8 @@ function Onboarding() {
   async function finish() {
     setSaving(true);
     localStorage.setItem("runiq.onboarding.done", "1");
+    localStorage.setItem("runiq_onboarded", "true");
+
     const payload = {
       language,
       goal,
