@@ -22,9 +22,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "RUNIQ — AI-Powered Telefitness for Runners" },
-      { name: "description", content: "Indonesia's first Telefitness marketplace: AI training plans validated by certified coaches." },
+      { name: "description", content: "Indonesia's first Telefitness marketplace: AI training plans monitored by certified coaches." },
       { property: "og:title", content: "RUNIQ — AI-Powered Telefitness for Runners" },
-      { property: "og:description", content: "AI plans. Human-approved. Built for Indonesian runners." },
+      { property: "og:description", content: "Indonesia's first Telefitness marketplace: AI training plans monitored by certified coaches." },
     ],
   }),
   component: Index,

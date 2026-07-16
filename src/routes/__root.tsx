@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "RUNIQ — AI-Powered Telefitness for Runners" },
+      { name: "description", content: "Indonesia's first Telefitness marketplace: AI training plans monitored by certified coaches." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "RUNIQ — AI-Powered Telefitness for Runners" },
+      { property: "og:description", content: "Indonesia's first Telefitness marketplace: AI training plans monitored by certified coaches." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "RUNIQ — AI-Powered Telefitness for Runners" },
+      { name: "twitter:description", content: "Indonesia's first Telefitness marketplace: AI training plans monitored by certified coaches." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/7YWy2OCbu0MhY4F4XWLWx1Gw8oS2/social-images/social-1784176067899-jkt_(3).webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/7YWy2OCbu0MhY4F4XWLWx1Gw8oS2/social-images/social-1784176067899-jkt_(3).webp" },
     ],
     links: [
       {
