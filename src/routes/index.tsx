@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Activity, Settings, LayoutGrid, Calendar, MessageCircle, User,
   Heart, Moon, Dumbbell, TrendingUp, ChevronRight, Link as LinkIcon,
