@@ -97,6 +97,13 @@ function Index() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const openDetail = (d: Detail) => setDetail(d);
 
+  // Auto-login if Supabase session exists (client-only)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) setAuthed(true);
+    }).catch(() => {});
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-[#050816] text-foreground">
       <div className="mx-auto flex max-w-[420px] flex-col">
