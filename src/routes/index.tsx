@@ -94,6 +94,7 @@ export type Detail =
 function Index() {
   const [authed, setAuthed] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot">("login");
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; initials: string } | null>(null);
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coachTab, setCoachTab] = useState<"week" | "program">("week");
@@ -101,6 +102,31 @@ function Index() {
   const [activityTab, setActivityTab] = useState<"week" | "record">("week");
   const [detail, setDetail] = useState<Detail | null>(null);
   const openDetail = (d: Detail) => setDetail(d);
+
+  // Load real user from Supabase auth
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const name = session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Runner";
+        const email = session.user.email || "";
+        const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+        setCurrentUser({ name, email, initials });
+        setAuthed(true);
+      }
+    });
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const name = session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Runner";
+        const email = session.user.email || "";
+        const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+        setCurrentUser({ name, email, initials });
+        setAuthed(true);
+      } else {
+        setCurrentUser(null);
+        setAuthed(false);
+      }
+    });
+  }, []);
 
   // Handle OAuth callbacks (Strava, Garmin etc)
   React.useEffect(() => {
@@ -142,11 +168,11 @@ function Index() {
                 )}
                 {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} openDetail={openDetail} />}
                 {screen === "messages" && <MessagesScreen openDetail={openDetail} />}
-                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} />}
+                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} currentUser={currentUser} />}
               </main>
               <TabBar screen={screen} setScreen={setScreen} />
               {settingsOpen && (
-                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
+                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); setCurrentUser(null); }} openDetail={openDetail} currentUser={currentUser} />
               )}
               {bookOpen && <BookSheet onClose={() => setBookOpen(false)} />}
               {detail && <DetailOverlay detail={detail} onBack={() => setDetail(null)} />}
@@ -183,7 +209,7 @@ function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: (
           )}
         </button>
         <button onClick={onAvatar} className="rounded-full" aria-label="Profile">
-          <AvatarC initials="AR" color="from-[#3b82f6] to-[#a855f7]" />
+          <AvatarC initials={currentUser?.initials ?? "?"} color="from-[#3b82f6] to-[#a855f7]" />
         </button>
         {onSettings && (
           <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Settings">
@@ -1841,7 +1867,7 @@ function OnboardingAdjustView() {
   );
 }
 
-function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
+function ProfileScreen({ onSettings, openDetail, currentUser }: { onSettings: () => void; openDetail: (d: Detail) => void; currentUser: { name: string; email: string; initials: string } | null }) {
 
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
@@ -1894,7 +1920,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </button>
             <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
           </div>
-          <div className="mt-3 text-xl font-bold">Andi Pratama</div>
+          <div className="mt-3 text-xl font-bold">{currentUser?.name ?? "Runner"}</div>
           <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
@@ -2060,7 +2086,7 @@ function ProgressGridMini() {
 }
 
 
-function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
+function SettingsSheet({ onClose, onLogout, openDetail, currentUser }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void; currentUser: { name: string; email: string; initials: string } | null }) {
   type Item = { icon: any; label: string; sub?: string; badge?: string; onClick: () => void };
   const account: Item[] = [
     { icon: User, label: "Edit Profile", sub: "Name, email, goal, fitness level", onClick: () => openDetail({ kind: "edit-profile" }) },
@@ -2112,8 +2138,8 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
         <div className="mt-6 flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
           <div>
-            <div className="font-bold">Andi Pratama</div>
-            <div className="text-xs text-muted-foreground">Athlete · andi@example.com</div>
+            <div className="font-bold">{currentUser?.name ?? "Runner"}</div>
+            <div className="text-xs text-muted-foreground">Athlete · {currentUser?.email ?? ""}</div>
           </div>
         </div>
 
