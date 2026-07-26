@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Activity, Settings, LayoutGrid, Calendar, MessageCircle, User,
   Heart, Moon, Dumbbell, TrendingUp, ChevronRight, Link as LinkIcon,
@@ -53,13 +53,7 @@ export function isConnected(provider: Provider) {
   if (typeof window === "undefined") return false;
   return localStorage.getItem(`runiq.connected.${provider}`) === "1";
 }
-function connectStrava() {
-  if (typeof window === "undefined") return;
-  const clientId = "266921";
-  const redirectUri = encodeURIComponent("https://ptrc-runiq.vercel.app/api/strava/callback");
-  const scope = "read,activity:read_all,profile:read_all";
-  window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&approval_prompt=auto&scope=${scope}`;
-}
+function connectStrava() { mockConnect("strava", "Strava"); }
 function connectGarmin() { mockConnect("garmin", "Garmin"); }
 
 type Screen = "dashboard" | "plan" | "activity" | "messages" | "profile";
@@ -95,7 +89,6 @@ export type Detail =
 function Index() {
   const [authed, setAuthed] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot">("login");
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; initials: string } | null>(null);
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coachTab, setCoachTab] = useState<"week" | "program">("week");
@@ -103,52 +96,6 @@ function Index() {
   const [activityTab, setActivityTab] = useState<"week" | "record">("week");
   const [detail, setDetail] = useState<Detail | null>(null);
   const openDetail = (d: Detail) => setDetail(d);
-
-  // Load real user from Supabase auth
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    function buildUser(u: any) {
-      const name = u.user_metadata?.name || u.email?.split("@")[0] || "Runner";
-      const email = u.email || "";
-      const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-      return { name, email, initials };
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setCurrentUser(buildUser(session.user));
-        setAuthed(true);
-      }
-    }).catch(() => {});
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setCurrentUser(buildUser(session.user));
-        setAuthed(true);
-      } else {
-        setCurrentUser(null);
-        setAuthed(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Handle OAuth callbacks (Strava, Garmin etc)
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("strava_connected") === "true") {
-      localStorage.setItem("runiq.connected.strava", "1");
-      window.history.replaceState({}, "", window.location.pathname);
-      setAuthed(true);
-    }
-    if (params.get("strava_error")) {
-      alert("Strava connection failed: " + params.get("strava_error"));
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-  }, []);
 
   return (
     <div className="min-h-screen w-full bg-[#050816] text-foreground">
@@ -176,11 +123,11 @@ function Index() {
                 )}
                 {screen === "activity" && <ActivityScreen tab={activityTab} setTab={setActivityTab} openDetail={openDetail} />}
                 {screen === "messages" && <MessagesScreen openDetail={openDetail} />}
-                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} currentUser={currentUser} />}
+                {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} />}
               </main>
               <TabBar screen={screen} setScreen={setScreen} />
               {settingsOpen && (
-                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); setCurrentUser(null); }} openDetail={openDetail} currentUser={currentUser} />
+                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
               )}
               {bookOpen && <BookSheet onClose={() => setBookOpen(false)} />}
               {detail && <DetailOverlay detail={detail} onBack={() => setDetail(null)} />}
@@ -217,7 +164,7 @@ function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: (
           )}
         </button>
         <button onClick={onAvatar} className="rounded-full" aria-label="Profile">
-          <AvatarC initials={currentUser?.initials ?? "?"} color="from-[#3b82f6] to-[#a855f7]" />
+          <AvatarC initials="AR" color="from-[#3b82f6] to-[#a855f7]" />
         </button>
         {onSettings && (
           <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Settings">
@@ -323,7 +270,7 @@ function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
     if (!email.trim()) return;
     setLoading(true);
     const { error: supaError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://ptrc-runiq.vercel.app"}/reset-password`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
     if (supaError) {
@@ -820,15 +767,20 @@ function AiCoachNotesCard() {
     setGenerated(false);
     setStreaming(true);
     try {
-      const res = await fetch("/api/ai-notes", {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: `Kamu adalah RUNIQ, AI coach lari untuk runner Indonesia. Tulis catatan coaching mingguan yang hangat dan personal dalam Bahasa Indonesia (2 paragraf pendek, maks 80 kata total) untuk runner Alex. Goal: Sub-4hr Marathon Oktober 2026. Data: HRV 68ms (baseline 72ms, sedikit di bawah), Tidur 7.2jam (kualitas 78%), Training Load 45 (ACWR 1.1), Minggu ke-8 dari 24 base building. Minggu ini: Easy 8km Sen ✓, Intervals 10km Sel ✓, Recovery 6km Rab ✓. Ke depan: Tempo 12km Kam, Long Run 22km Sab. Spesifik, hangat, sebut penurunan HRV. Gunakan "kamu". Seperti coach sungguhan, bukan robot.`
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 300,
+          messages: [{
+            role: "user",
+            content: `Kamu adalah RUNIQ, AI coach lari untuk runner Indonesia. Tulis catatan coaching mingguan yang hangat dan personal dalam Bahasa Indonesia (2 paragraf pendek, maks 80 kata total) untuk runner Alex. Goal: Sub-4hr Marathon Oktober 2026. Data: HRV 68ms (baseline 72ms, sedikit di bawah), Tidur 7.2jam (kualitas 78%), Training Load 45 (ACWR 1.1), Minggu ke-8 dari 24 base building. Minggu ini: Easy 8km Sen ✓, Intervals 10km Sel ✓, Recovery 6km Rab ✓. Ke depan: Tempo 12km Kam, Long Run 22km Sab. Spesifik, hangat, sebut penurunan HRV. Gunakan "kamu". Seperti coach sungguhan, bukan robot.`
+          }]
         })
       });
       const data = await res.json();
-      const text = data.text ?? "Catatan coaching tidak tersedia saat ini.";
+      const text = data.content?.[0]?.text ?? "Catatan coaching tidak tersedia saat ini.";
       let i = 0;
       const interval = setInterval(() => {
         i += 4;
@@ -1875,7 +1827,7 @@ function OnboardingAdjustView() {
   );
 }
 
-function ProfileScreen({ onSettings, openDetail, currentUser }: { onSettings: () => void; openDetail: (d: Detail) => void; currentUser: { name: string; email: string; initials: string } | null }) {
+function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
 
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
@@ -1928,7 +1880,7 @@ function ProfileScreen({ onSettings, openDetail, currentUser }: { onSettings: ()
             </button>
             <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
           </div>
-          <div className="mt-3 text-xl font-bold">{currentUser?.name ?? "Runner"}</div>
+          <div className="mt-3 text-xl font-bold">Andi Pratama</div>
           <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
@@ -2094,7 +2046,7 @@ function ProgressGridMini() {
 }
 
 
-function SettingsSheet({ onClose, onLogout, openDetail, currentUser }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void; currentUser: { name: string; email: string; initials: string } | null }) {
+function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
   type Item = { icon: any; label: string; sub?: string; badge?: string; onClick: () => void };
   const account: Item[] = [
     { icon: User, label: "Edit Profile", sub: "Name, email, goal, fitness level", onClick: () => openDetail({ kind: "edit-profile" }) },
@@ -2146,8 +2098,8 @@ function SettingsSheet({ onClose, onLogout, openDetail, currentUser }: { onClose
         <div className="mt-6 flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
           <div>
-            <div className="font-bold">{currentUser?.name ?? "Runner"}</div>
-            <div className="text-xs text-muted-foreground">Athlete · {currentUser?.email ?? ""}</div>
+            <div className="font-bold">Andi Pratama</div>
+            <div className="text-xs text-muted-foreground">Athlete · andi@example.com</div>
           </div>
         </div>
 
