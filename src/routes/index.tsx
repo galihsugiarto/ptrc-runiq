@@ -54,6 +54,7 @@ export function isConnected(provider: Provider) {
   return localStorage.getItem(`runiq.connected.${provider}`) === "1";
 }
 function connectStrava() {
+  if (typeof window === "undefined") return;
   const clientId = "266921";
   const redirectUri = encodeURIComponent("https://ptrc-runiq.vercel.app/api/strava/callback");
   const scope = "read,activity:read_all,profile:read_all";
@@ -136,6 +137,7 @@ function Index() {
 
   // Handle OAuth callbacks (Strava, Garmin etc)
   React.useEffect(() => {
+    if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("strava_connected") === "true") {
       localStorage.setItem("runiq.connected.strava", "1");
@@ -321,7 +323,7 @@ function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
     if (!email.trim()) return;
     setLoading(true);
     const { error: supaError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://ptrc-runiq.vercel.app"}/reset-password`,
     });
     setLoading(false);
     if (supaError) {
