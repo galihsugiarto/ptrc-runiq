@@ -105,27 +105,33 @@ function Index() {
 
   // Load real user from Supabase auth
   React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    function buildUser(u: any) {
+      const name = u.user_metadata?.name || u.email?.split("@")[0] || "Runner";
+      const email = u.email || "";
+      const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+      return { name, email, initials };
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const name = session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Runner";
-        const email = session.user.email || "";
-        const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-        setCurrentUser({ name, email, initials });
+        setCurrentUser(buildUser(session.user));
         setAuthed(true);
       }
-    });
-    supabase.auth.onAuthStateChange((_event, session) => {
+    }).catch(() => {});
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        const name = session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Runner";
-        const email = session.user.email || "";
-        const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-        setCurrentUser({ name, email, initials });
+        setCurrentUser(buildUser(session.user));
         setAuthed(true);
       } else {
         setCurrentUser(null);
         setAuthed(false);
       }
     });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Handle OAuth callbacks (Strava, Garmin etc)
