@@ -123,7 +123,7 @@ function Index() {
                 onAvatar={() => setScreen("profile")}
                 onSettings={() => setSettingsOpen(true)}
               />
-              <main className="flex-1 overflow-y-auto pb-28">
+              <main className="flex-1 overflow-y-auto pb-28 pt-[70px]">
                 {screen === "dashboard" && <DashboardScreen openDetail={openDetail} setScreen={setScreen} />}
                 {screen === "plan" && (
                   <PlanScreen tab={coachTab} setTab={setCoachTab} openDetail={openDetail} />
@@ -158,7 +158,7 @@ function Logo({ size = 40 }: { size?: number }) {
 function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: () => void; onAvatar?: () => void; onSettings?: () => void }) {
   const unread = 3;
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/5 bg-[#0a0f24] px-5 py-4">
+    <header className="fixed top-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 flex items-center justify-between border-b border-white/5 bg-[#0a0f24] px-5 py-4">
       <div className="flex items-center gap-3">
         <Logo size={42} />
         <h1 className="text-2xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
