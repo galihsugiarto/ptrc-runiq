@@ -95,7 +95,8 @@ function Index() {
   const [bookOpen, setBookOpen] = useState(false);
   const [activityTab, setActivityTab] = useState<"week" | "record">("week");
   const [detail, setDetail] = useState<Detail | null>(null);
-  const openDetail = (d: Detail) => setDetail(d);
+  const openDetail = (d: Detail) => { setDetail(d); document.querySelector("main")?.scrollTo(0, 0); };
+  const changeScreen = (s: Screen) => { setScreen(s); document.querySelector("main")?.scrollTo(0, 0); };
 
   // Auto-login if Supabase session exists (client-only)
   useEffect(() => {
@@ -120,7 +121,7 @@ function Index() {
             <>
               <TopBar
                 onNotifications={() => openDetail({ kind: "notifications" })}
-                onAvatar={() => setScreen("profile")}
+                onAvatar={() => changeScreen("profile")}
                 onSettings={() => setSettingsOpen(true)}
               />
               <main className="flex-1 overflow-y-auto pb-28 pt-[70px]">
@@ -132,7 +133,7 @@ function Index() {
                 {screen === "messages" && <MessagesScreen openDetail={openDetail} />}
                 {screen === "profile" && <ProfileScreen onSettings={() => setSettingsOpen(true)} openDetail={openDetail} />}
               </main>
-              <TabBar screen={screen} setScreen={setScreen} />
+              <TabBar screen={screen} setScreen={changeScreen} />
               {settingsOpen && (
                 <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
               )}
