@@ -107,7 +107,7 @@ function Index() {
   return (
     <div className="min-h-screen w-full bg-[#050816] text-foreground">
       <div className="mx-auto flex max-w-[420px] flex-col">
-        <div className="relative min-h-screen overflow-hidden bg-[#0a0f24]">
+        <div className="relative flex min-h-screen flex-col bg-[#0a0f24]">
           {!authed ? (
             authMode === "login" ? (
               <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
@@ -123,7 +123,7 @@ function Index() {
                 onAvatar={() => setScreen("profile")}
                 onSettings={() => setSettingsOpen(true)}
               />
-              <main className="pb-28">
+              <main className="flex-1 overflow-y-auto pb-28">
                 {screen === "dashboard" && <DashboardScreen openDetail={openDetail} setScreen={setScreen} />}
                 {screen === "plan" && (
                   <PlanScreen tab={coachTab} setTab={setCoachTab} openDetail={openDetail} />
@@ -158,7 +158,7 @@ function Logo({ size = 40 }: { size?: number }) {
 function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: () => void; onAvatar?: () => void; onSettings?: () => void }) {
   const unread = 3;
   return (
-    <header className="flex items-center justify-between border-b border-white/5 px-5 py-4">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/5 bg-[#0a0f24] px-5 py-4">
       <div className="flex items-center gap-3">
         <Logo size={42} />
         <h1 className="text-2xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
@@ -192,7 +192,7 @@ function TabBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
     { id: "profile", icon: User },
   ];
   return (
-    <nav className="absolute bottom-0 left-0 right-0 border-t border-white/5 bg-[#0a0f24]/95 backdrop-blur">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/5 bg-[#0a0f24]/95 backdrop-blur">
       <div className="flex items-center justify-around px-2 py-3">
         {items.map((it) => {
           const active = screen === it.id;
