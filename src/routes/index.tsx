@@ -1370,6 +1370,87 @@ function SignalIndicator({ state }: { state: SignalState }) {
 
 type RecPhase = "pre" | "active" | "post" | "manual";
 
+
+// ── LIVE MAP (Geolocation + Canvas) ──────────────────────────────
+function LiveMap({ active }: { active: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ptsRef = useRef<{lat: number; lng: number}[]>([]);
+  const watchRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!active || typeof navigator === "undefined") return;
+    watchRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        ptsRef.current.push({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        drawMap();
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 2000 }
+    );
+    return () => { if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current); };
+  }, [active]);
+
+  function drawMap() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const pts = ptsRef.current;
+    if (pts.length < 2) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const W = canvas.width, H = canvas.height;
+    const lats = pts.map(p => p.lat), lngs = pts.map(p => p.lng);
+    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+    const pad = 20;
+    const scaleX = (W - pad*2) / (maxLng - minLng || 0.001);
+    const scaleY = (H - pad*2) / (maxLat - minLat || 0.001);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#0a0f24";
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "#00D4C8";
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const x = pad + (p.lng - minLng) * scaleX;
+      const y = H - pad - (p.lat - minLat) * scaleY;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    // Current position dot
+    const last = pts[pts.length - 1];
+    const cx = pad + (last.lng - minLng) * scaleX;
+    const cy = H - pad - (last.lat - minLat) * scaleY;
+    ctx.fillStyle = "#F0FF4B";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (!active) return (
+    <div className="flex h-40 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+      <div className="text-center text-xs text-muted-foreground">
+        <MapPin size={20} className="mx-auto mb-2 opacity-40" />
+        Map akan muncul saat recording dimulai
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-[#00D4C8]/30">
+      <canvas ref={canvasRef} width={380} height={160} className="w-full" />
+      {ptsRef.current.length < 2 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#0a0f24]">
+          <div className="text-center text-xs text-muted-foreground">
+            <div className="mb-1 animate-pulse text-[#00D4C8]">● Mendeteksi lokasi...</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RecordFlow({ goWeek }: { goWeek: () => void }) {
   const [phase, setPhase] = useState<RecPhase>("pre");
   const [signal, setSignal] = useState<SignalState>("ready");
@@ -1404,6 +1485,7 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
           </div>
           <SignalIndicator state={signal} />
         </div>
+        <LiveMap active={true} />
         <div className="flex flex-col items-center py-4" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.6))" }}>
           <div className="text-6xl font-black text-emerald-400 tabular-nums">{fmt(seconds)}</div>
           <div className="mt-1 text-[10px] tracking-[0.3em] text-muted-foreground">DURATION</div>
@@ -1440,6 +1522,7 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
   const canStart = signal === "good" || signal === "ready";
   return (
     <div className="space-y-4 pt-2">
+      <LiveMap active={false} />
       <div className="flex items-center justify-between">
         <button onClick={goWeek} className="text-muted-foreground hover:text-foreground"><ArrowLeft size={22} /></button>
         <span className="text-sm font-bold tracking-[0.3em]">RECORD</span>
