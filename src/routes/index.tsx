@@ -88,8 +88,6 @@ export type Detail =
 
 function Index() {
   const [authed, setAuthed] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [userInitials, setUserInitials] = useState("?");
   const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot">("login");
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -101,20 +99,9 @@ function Index() {
 
   // Auto-login if Supabase session exists (client-only)
   useEffect(() => {
-    function applyUser(user: any) {
-      const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Runner";
-      const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-      setUserName(name);
-      setUserInitials(initials);
-      setAuthed(true);
-    }
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) applyUser(session.user);
+      if (session?.user) setAuthed(true);
     }).catch(() => {});
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session?.user) applyUser(session.user);
-    });
-    return () => subscription.unsubscribe();
   }, []);
 
   return (
@@ -184,7 +171,7 @@ function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: (
           )}
         </button>
         <button onClick={onAvatar} className="rounded-full" aria-label="Profile">
-          <AvatarC initials={userInitials} color="from-[#3b82f6] to-[#a855f7]" />
+          <AvatarC initials="AR" color="from-[#3b82f6] to-[#a855f7]" />
         </button>
         {onSettings && (
           <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Settings">
@@ -1900,7 +1887,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </button>
             <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
           </div>
-          <div className="mt-3 text-xl font-bold">{userName || "Runner"}</div>
+          <div className="mt-3 text-xl font-bold">Andi Pratama</div>
           <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
@@ -2118,7 +2105,7 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
         <div className="mt-6 flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
           <div>
-            <div className="font-bold">{userName || "Runner"}</div>
+            <div className="font-bold">Andi Pratama</div>
             <div className="text-xs text-muted-foreground">Athlete · andi@example.com</div>
           </div>
         </div>
