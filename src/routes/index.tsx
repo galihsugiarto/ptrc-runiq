@@ -105,9 +105,9 @@ function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-[#050816] text-foreground">
+    <div className="min-h-screen w-full bg-[#0A1628] text-foreground">
       <div className="mx-auto flex max-w-[420px] flex-col">
-        <div className="relative flex min-h-screen flex-col bg-[#0a0f24]">
+        <div className="relative flex min-h-screen flex-col bg-[#0D1E35]">
           {!authed ? (
             authMode === "login" ? (
               <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
@@ -158,7 +158,7 @@ function Logo({ size = 40 }: { size?: number }) {
 function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: () => void; onAvatar?: () => void; onSettings?: () => void }) {
   const unread = 3;
   return (
-    <header className="fixed top-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 flex items-center justify-between border-b border-white/5 bg-[#0a0f24] px-5 py-4">
+    <header className="fixed top-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 flex items-center justify-between border-b border-white/5 bg-[#0D1E35] px-5 py-4">
       <div className="flex items-center gap-3">
         <Logo size={42} />
         <h1 className="text-2xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
@@ -171,7 +171,7 @@ function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: (
           )}
         </button>
         <button onClick={onAvatar} className="rounded-full" aria-label="Profile">
-          <AvatarC initials="AR" color="from-[#3b82f6] to-[#a855f7]" />
+          <AvatarC initials="AR" color="from-[#00D4C8] to-[#00D4C8]" />
         </button>
         {onSettings && (
           <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Settings">
@@ -192,15 +192,15 @@ function TabBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
     { id: "profile", icon: User },
   ];
   return (
-    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-white/5 bg-[#0a0f24]/95 backdrop-blur">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-white/5 bg-[#0D1E35]/95 backdrop-blur">
       <div className="flex items-center justify-around px-2 py-3">
         {items.map((it) => {
           const active = screen === it.id;
           const Icon = it.icon;
           return (
             <button key={it.id} onClick={() => setScreen(it.id)} className="relative flex flex-col items-center gap-1 px-4 py-1">
-              <Icon size={22} className={active ? "text-[#3b82f6]" : "text-muted-foreground"} />
-              {active && <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-[#3b82f6]" />}
+              <Icon size={22} className={active ? "text-[#00D4C8]" : "text-muted-foreground"} />
+              {active && <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-[#00D4C8]" />}
             </button>
           );
         })}
@@ -232,7 +232,7 @@ function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onS
         <div>
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">Password</label>
-            <button type="button" onClick={onForgot} className="text-sm text-[#3b82f6]">Forgot password?</button>
+            <button type="button" onClick={onForgot} className="text-sm text-[#00D4C8]">Forgot password?</button>
           </div>
           <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <Lock size={18} className="text-muted-foreground" />
@@ -254,12 +254,12 @@ function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onS
           <Activity size={16} className="text-orange-500" /> Strava
         </button>
         <button onClick={connectGarmin} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
-          <Activity size={16} className="text-[#3b82f6]" /> Garmin
+          <Activity size={16} className="text-[#00D4C8]" /> Garmin
         </button>
       </div>
       <p className="mt-8 text-center text-sm text-muted-foreground">
         Don't have an account?{" "}
-        <button type="button" onClick={onSignup} className="font-semibold text-[#3b82f6]">Sign up</button>
+        <button type="button" onClick={onSignup} className="font-semibold text-[#00D4C8]">Sign up</button>
       </p>
     </div>
   );
@@ -306,7 +306,7 @@ function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
           <p className="text-sm text-muted-foreground">
             Check your inbox for a password reset link.
           </p>
-          <button onClick={onBack} className="text-sm font-semibold text-[#3b82f6]">
+          <button onClick={onBack} className="text-sm font-semibold text-[#00D4C8]">
             Back to login
           </button>
         </div>
@@ -386,7 +386,7 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
                 onClick={() => setGender(g)}
                 className={`rounded-xl border py-3 text-sm capitalize transition-colors ${
                   gender === g
-                    ? "border-[#3b82f6] bg-[#3b82f6]/15 text-white"
+                    ? "border-[#00D4C8] bg-[#00D4C8]/15 text-white"
                     : "border-white/10 bg-white/5 text-muted-foreground"
                 }`}
               >
@@ -453,16 +453,16 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
         >
           <span
             className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
-              agreed ? "border-[#3b82f6] bg-[#3b82f6]" : "border-white/30 bg-transparent"
+              agreed ? "border-[#00D4C8] bg-[#00D4C8]" : "border-white/30 bg-transparent"
             }`}
           >
             {agreed && <Check size={14} className="text-white" />}
           </span>
           <span className="text-xs leading-relaxed text-muted-foreground">
             I agree to the{" "}
-            <span className="font-semibold text-[#3b82f6]">Terms of Service</span>,{" "}
-            <span className="font-semibold text-[#3b82f6]">Privacy Policy</span>, and{" "}
-            <span className="font-semibold text-[#3b82f6]">Medical & Fitness Disclaimer</span>, and
+            <span className="font-semibold text-[#00D4C8]">Terms of Service</span>,{" "}
+            <span className="font-semibold text-[#00D4C8]">Privacy Policy</span>, and{" "}
+            <span className="font-semibold text-[#00D4C8]">Medical & Fitness Disclaimer</span>, and
             consent to RUNIQ processing my health and training data.
           </span>
 
@@ -487,13 +487,13 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
           <Activity size={16} className="text-orange-500" /> Strava
         </button>
         <button type="button" onClick={connectGarmin} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
-          <Activity size={16} className="text-[#3b82f6]" /> Garmin
+          <Activity size={16} className="text-[#00D4C8]" /> Garmin
         </button>
       </div>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <button type="button" onClick={onBack} className="font-semibold text-[#3b82f6]">Log in</button>
+        <button type="button" onClick={onBack} className="font-semibold text-[#00D4C8]">Log in</button>
       </p>
     </div>
   );
@@ -519,13 +519,13 @@ function RoleCard({
       onClick={onClick}
       className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors ${
         active
-          ? "border-[#3b82f6] bg-[#3b82f6]/15 text-white"
+          ? "border-[#00D4C8] bg-[#00D4C8]/15 text-white"
           : "border-white/10 bg-white/5 text-muted-foreground"
       }`}
     >
       <span
         className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-          active ? "bg-[#3b82f6] text-white" : "bg-white/5 text-muted-foreground"
+          active ? "bg-[#00D4C8] text-white" : "bg-white/5 text-muted-foreground"
         }`}
       >
         {icon}
@@ -561,7 +561,7 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
               <h2 className="text-2xl font-bold">Readiness</h2>
               <p className="mt-1 text-sm" style={{ color: readinessColor }}>{readinessLabel}</p>
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                <TrendingUp size={12} className={trendUp ? "text-emerald-400" : "rotate-180 text-rose-400"} />
+                <TrendingUp size={12} className={trendUp ? "text-[#EEFF41]" : "rotate-180 text-rose-400"} />
                 {trendUp ? "+4" : "-3"} vs yesterday
               </p>
             </div>
@@ -576,8 +576,8 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
       {/* Health Metrics Strip */}
       <section className="grid grid-cols-3 gap-3">
         <MetricCard icon={<Heart size={12} />} label="HRV" value="58" unit="ms" bar="linear-gradient(90deg,#ef4444,#f97316)" sub="vs 62ms base" />
-        <MetricCard icon={<Moon size={12} />} label="Sleep" value="7.2" unit="h · 84%" bar="linear-gradient(90deg,#6366f1,#a855f7)" sub="Good quality" />
-        <MetricCard icon={<Dumbbell size={12} />} label="Load" value="68" unit="ACWR 1.1" bar="linear-gradient(90deg,#10b981,#3b82f6)" sub="Optimal" />
+        <MetricCard icon={<Moon size={12} />} label="Sleep" value="7.2" unit="h · 84%" bar="linear-gradient(90deg,#6366f1,#00D4C8)" sub="Good quality" />
+        <MetricCard icon={<Dumbbell size={12} />} label="Load" value="68" unit="ACWR 1.1" bar="linear-gradient(90deg,#10b981,#00D4C8)" sub="Optimal" />
       </section>
 
       {/* Nutrition (MyFitnessPal) */}
@@ -591,8 +591,8 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
           {[
-            { l: "Karbo", v: "180g", c: "#3b82f6" },
-            { l: "Protein", v: "92g", c: "#a855f7" },
+            { l: "Karbo", v: "180g", c: "#00D4C8" },
+            { l: "Protein", v: "92g", c: "#00D4C8" },
             { l: "Lemak", v: "48g", c: "#f59e0b" },
           ].map((m) => (
             <div key={m.l}>
@@ -618,7 +618,7 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
           2km WU · 8km threshold · 2km CD
         </div>
         <button onClick={() => openDetail({ kind: "chat", name: "Coach Andre", initials: "CA", color: "from-blue-400 to-indigo-500" })} className="mt-3 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-xs text-muted-foreground hover:bg-white/10">
-          <MessageSquare size={14} className="text-[#3b82f6]" />
+          <MessageSquare size={14} className="text-[#00D4C8]" />
           <span><span className="font-semibold text-foreground">Coach Andre:</span> Focus on pace, don't go over-effort early.</span>
         </button>
         <div className="mt-4 grid grid-cols-2 gap-2">
@@ -636,7 +636,7 @@ function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) =>
         <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
           <div className="flex items-center justify-between">
             <h3 className="font-bold">7-Day Readiness Trend</h3>
-            <span className="text-xs font-semibold text-emerald-400">↗ Improving</span>
+            <span className="text-xs font-semibold text-[#EEFF41]">↗ Improving</span>
           </div>
           <div className="mt-4 flex h-24 items-end justify-between gap-2">
             {trend.map((v, i) => (
@@ -727,7 +727,7 @@ function Sparkline() {
     <svg viewBox={`0 0 ${w} ${h}`} className="mt-4 h-24 w-full">
       <defs>
         <linearGradient id="sg" x1="0" x2="1">
-          <stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#a855f7" />
+          <stop offset="0%" stopColor="#00D4C8" /><stop offset="100%" stopColor="#00D4C8" />
         </linearGradient>
       </defs>
       <path d={path} fill="none" stroke="url(#sg)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -807,9 +807,9 @@ function AiCoachNotesCard() {
   }
 
   return (
-    <div className="rounded-2xl border border-[#3b82f6]/30 bg-[#3b82f6]/10 p-4 space-y-3">
+    <div className="rounded-2xl border border-[#00D4C8]/30 bg-[#00D4C8]/10 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-[#3b82f6]">
+        <div className="flex items-center gap-2 text-[#00D4C8]">
           <Sparkles size={16} />
           <span className="text-sm font-bold">AI Coach Notes</span>
         </div>
@@ -820,13 +820,13 @@ function AiCoachNotesCard() {
         )}
       </div>
       {!generated && !loading && (
-        <button onClick={generate} className="w-full rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#7c3aed] py-3 text-sm font-bold text-white">
+        <button onClick={generate} className="w-full rounded-xl bg-gradient-to-r from-[#00D4C8] to-[#00BFA5] py-3 text-sm font-bold text-white">
           ✦ Generate Catatan Coach Minggu Ini
         </button>
       )}
       {loading && !note && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-          <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#3b82f6] border-t-transparent" />
+          <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#00D4C8] border-t-transparent" />
           Menganalisis data latihanmu...
         </div>
       )}
@@ -872,23 +872,23 @@ function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
       ) : (
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#3b82f6]"><Sparkles size={18} /><span className="text-sm font-bold">AI Coaching Notes</span></div>
+            <div className="flex items-center gap-2 text-[#00D4C8]"><Sparkles size={18} /><span className="text-sm font-bold">AI Coaching Notes</span></div>
             <button onClick={() => {}} className="text-xs text-muted-foreground hover:text-white flex items-center gap-1"><RefreshCw size={12} /> Refresh</button>
           </div>
           <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
             Your HRV is 8% below baseline this week — I've kept intensity moderate. Prioritise sleep before Thursday's tempo…
           </p>
           <div className="mt-3 flex items-center justify-between">
-            <button onClick={() => openDetail({ kind: "ai-notes" })} className="text-xs font-semibold text-[#3b82f6]">Read More →</button>
+            <button onClick={() => openDetail({ kind: "ai-notes" })} className="text-xs font-semibold text-[#00D4C8]">Read More →</button>
             <span className="text-[10px] text-muted-foreground">Generated 2h ago</span>
           </div>
         </Card>
       )}
 
       {/* Coach Approval Banner */}
-      <button onClick={() => openDetail({ kind: "ai-notes" })} className="w-full rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-left">
+      <button onClick={() => openDetail({ kind: "ai-notes" })} className="w-full rounded-2xl border border-[#EEFF41]/30 bg-[#EEFF41]/10 px-4 py-3 text-left">
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-emerald-400 font-semibold">✓ Approved by Coach Sarah</span>
+          <span className="text-[#EEFF41] font-semibold">✓ Approved by Coach Sarah</span>
           <span className="text-muted-foreground text-xs ml-auto">2h ago</span>
         </div>
       </button>
@@ -900,7 +900,7 @@ function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
           <span className="font-bold">{completed}/{total} sessions</span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#3b82f6)" }} />
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#00D4C8)" }} />
         </div>
         <div className="mt-3 flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Volume</span>
@@ -914,7 +914,7 @@ function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
         {sessions.map((s) => {
           const color = SESSION_COLORS[s.type] ?? "#3B82F6";
           return (
-            <button key={s.day} onClick={() => openDetail({ kind: "workout", day: s.day, date: s.date, type: s.type, miles: s.dist, pace: s.detail })} className={`flex w-full items-stretch overflow-hidden rounded-2xl border text-left ${s.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-white/5 bg-card/80"}`}>
+            <button key={s.day} onClick={() => openDetail({ kind: "workout", day: s.day, date: s.date, type: s.type, miles: s.dist, pace: s.detail })} className={`flex w-full items-stretch overflow-hidden rounded-2xl border text-left ${s.done ? "border-[#EEFF41]/30 bg-[#EEFF41]/5" : "border-white/5 bg-card/80"}`}>
               <div className="w-1.5 shrink-0" style={{ background: color }} />
               <div className="flex flex-1 items-center gap-3 p-4">
                 <div className="flex-1 min-w-0">
@@ -927,7 +927,7 @@ function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground truncate">{s.detail}</p>
                 </div>
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${s.done ? "bg-emerald-500" : "border border-white/15"}`}>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${s.done ? "bg-[#EEFF41]" : "border border-white/15"}`}>
                   {s.done && <Check size={16} className="text-white" />}
                 </div>
               </div>
@@ -968,7 +968,7 @@ function ProgramView() {
     <>
       {/* Program Overview */}
       <Card className="p-5">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#3b82f6]">Marathon Program</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-[#00D4C8]">Marathon Program</div>
         <h3 className="mt-1 text-xl font-bold">Sub-3:30 Marathon Program</h3>
         <p className="mt-1 text-sm text-muted-foreground">Jakarta Marathon · October 26, 2026</p>
         <div className="mt-4 flex items-center justify-between text-xs">
@@ -981,8 +981,8 @@ function ProgramView() {
         <div className="mt-4">
           <div className="text-[11px] text-muted-foreground mb-2">Current phase: <span className="text-white font-semibold">Build</span></div>
           <div className="flex h-2 gap-1 overflow-hidden rounded-full">
-            <div className="flex-[8] rounded-l-full bg-emerald-500/60" />
-            <div className="flex-[8] bg-[#3b82f6]" />
+            <div className="flex-[8] rounded-l-full bg-[#EEFF41]/60" />
+            <div className="flex-[8] bg-[#00D4C8]" />
             <div className="flex-[4] bg-white/10" />
             <div className="flex-[3] bg-white/10" />
             <div className="flex-[1] rounded-r-full bg-white/10" />
@@ -1012,12 +1012,12 @@ function ProgramView() {
         <div className="text-sm font-bold mb-3">Phase Breakdown</div>
         <div className="space-y-2">
           {phases.map((p) => (
-            <div key={p.name} className={`rounded-xl border p-3 ${p.status === "active" ? "border-[#3b82f6]/50 bg-[#3b82f6]/10" : p.status === "done" ? "border-white/5 bg-white/[0.02] opacity-60" : "border-white/5 bg-white/[0.02]"}`}>
+            <div key={p.name} className={`rounded-xl border p-3 ${p.status === "active" ? "border-[#00D4C8]/50 bg-[#00D4C8]/10" : p.status === "done" ? "border-white/5 bg-white/[0.02] opacity-60" : "border-white/5 bg-white/[0.02]"}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="font-bold">{p.name}</span>
-                  {p.status === "done" && <Check size={14} className="text-emerald-400" />}
-                  {p.status === "active" && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-[9px] font-bold text-white">ACTIVE</span>}
+                  {p.status === "done" && <Check size={14} className="text-[#EEFF41]" />}
+                  {p.status === "active" && <span className="rounded-full bg-[#00D4C8] px-2 py-0.5 text-[9px] font-bold text-white">ACTIVE</span>}
                   {p.status === "locked" && <span className="text-xs text-muted-foreground">🔒</span>}
                 </div>
                 <span className="text-xs text-muted-foreground">{p.weeks}</span>
@@ -1096,7 +1096,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
       </div>
       <div className="-mx-5 flex gap-2 overflow-x-auto px-5 scrollbar-hide">
         {filters.map((f) => (
-          <button key={f} onClick={() => setActive(f)} className={`shrink-0 rounded-full border px-5 py-2 text-sm font-semibold ${active === f ? "border-transparent bg-[#3b82f6] text-white" : "border-white/10 text-muted-foreground"}`}>{f}</button>
+          <button key={f} onClick={() => setActive(f)} className={`shrink-0 rounded-full border px-5 py-2 text-sm font-semibold ${active === f ? "border-transparent bg-[#00D4C8] text-white" : "border-white/10 text-muted-foreground"}`}>{f}</button>
         ))}
       </div>
       <p className="text-sm text-muted-foreground">4 coaches found</p>
@@ -1116,7 +1116,7 @@ function FindCoach({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
                 <span className="mt-1 inline-block rounded-full border border-orange-500/40 px-2 py-0.5 text-xs text-orange-400">Waitlist</span>
               </div>
             </div>
-            <div className="mt-3"><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L3</span></div>
+            <div className="mt-3"><span className="rounded-full border border-[#00D4C8]/40 px-2 py-0.5 text-xs text-[#00D4C8]">USATF L3</span></div>
           </div>
         </div>
       </Card>
@@ -1139,12 +1139,12 @@ function CoachCard({ onBook, openDetail }: { onBook: () => void; openDetail: (d:
             </div>
             <div className="text-right">
               <div className="font-bold">Rp 350.000<span className="text-xs text-muted-foreground">/bulan</span></div>
-              <span className="mt-1 inline-block rounded-full border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-400">Available</span>
+              <span className="mt-1 inline-block rounded-full border border-[#EEFF41]/40 px-2 py-0.5 text-xs text-[#EEFF41]">Available</span>
             </div>
           </div>
           <div className="mt-3 flex gap-2">
-            <span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L2</span>
-            <span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">RRCA</span>
+            <span className="rounded-full border border-[#00D4C8]/40 px-2 py-0.5 text-xs text-[#00D4C8]">USATF L2</span>
+            <span className="rounded-full border border-[#00D4C8]/40 px-2 py-0.5 text-xs text-[#00D4C8]">RRCA</span>
           </div>
         </div>
       </div>
@@ -1194,7 +1194,7 @@ function BookSheet({ onClose }: { onClose: () => void }) {
         <p className="mt-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">What's included</p>
         <ul className="mt-3 space-y-3">
           {features.map((f) => (
-            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="mt-0.5 text-emerald-400" /> {f}</li>
+            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="mt-0.5 text-[#EEFF41]" /> {f}</li>
           ))}
         </ul>
         <div className="mt-6 rounded-2xl border border-white/5 bg-white/5 p-4">
@@ -1243,7 +1243,7 @@ function ActivityScreen({ tab, setTab, openDetail }: { tab: "week" | "record"; s
 
 type MatchStatus = "match" | "diff" | "extra";
 const MATCH_STYLE: Record<MatchStatus, { label: string; cls: string }> = {
-  match: { label: "✓ Matches Plan", cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" },
+  match: { label: "✓ Matches Plan", cls: "border-[#EEFF41]/40 bg-[#EEFF41]/10 text-[#EEFF41]" },
   diff:  { label: "⚠ Differs from Plan", cls: "border-yellow-500/40 bg-yellow-500/10 text-yellow-400" },
   extra: { label: "Extra Run", cls: "border-sky-500/40 bg-sky-500/10 text-sky-400" },
 };
@@ -1252,8 +1252,8 @@ function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => voi
   const [manualOpen, setManualOpen] = useState(false);
   const activities = [
     { title: "Tempo Run", date: "Wed, May 7 · 6:12 AM", source: "Strava", feel: "💪", stats: ["12.1 km","54:22","4:29/km","162 bpm"], match: "match" as MatchStatus, color: "#f97316" },
-    { title: "Easy Recovery", date: "Tue, May 6 · 5:45 AM", source: "Garmin", feel: "🙂", stats: ["6.0 km","33:14","5:32/km","138 bpm"], match: "match" as MatchStatus, color: "#3b82f6" },
-    { title: "Long Run", date: "Sun, May 4 · 5:30 AM", source: "RUNIQ Record", feel: "😐", stats: ["18.4 km","1:38:02","5:19/km","149 bpm"], match: "diff" as MatchStatus, color: "#a855f7" },
+    { title: "Easy Recovery", date: "Tue, May 6 · 5:45 AM", source: "Garmin", feel: "🙂", stats: ["6.0 km","33:14","5:32/km","138 bpm"], match: "match" as MatchStatus, color: "#00D4C8" },
+    { title: "Long Run", date: "Sun, May 4 · 5:30 AM", source: "RUNIQ Record", feel: "😐", stats: ["18.4 km","1:38:02","5:19/km","149 bpm"], match: "diff" as MatchStatus, color: "#00D4C8" },
     { title: "Trail Adventure", date: "Sat, May 3 · 7:00 AM", source: "Strava", feel: "🔥", stats: ["8.2 km","52:11","6:22/km","155 bpm"], match: "extra" as MatchStatus, color: "#10b981" },
   ];
   return (
@@ -1272,7 +1272,7 @@ function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => voi
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">May 5 – May 11, 2026</span>
-          <span className="text-xs font-semibold text-[#3b82f6]">4 activities</span>
+          <span className="text-xs font-semibold text-[#00D4C8]">4 activities</span>
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2">
           <Stat label="Distance" value="44.7 km" />
@@ -1283,7 +1283,7 @@ function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => voi
         <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.03] p-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">vs weekly plan target</span>
-            <span className="font-semibold text-emerald-400">44.7 / 55 km</span>
+            <span className="font-semibold text-[#EEFF41]">44.7 / 55 km</span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
             <div className="h-full rounded-full bg-gradient-brand" style={{ width: "81%" }} />
@@ -1441,7 +1441,7 @@ function LiveMap({ active }: { active: boolean }) {
     <div className="relative overflow-hidden rounded-2xl border border-[#00D4C8]/30">
       <canvas ref={canvasRef} width={380} height={160} className="w-full" />
       {ptsRef.current.length < 2 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#0a0f24]">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#0D1E35]">
           <div className="text-center text-xs text-muted-foreground">
             <div className="mb-1 animate-pulse text-[#00D4C8]">● Mendeteksi lokasi...</div>
           </div>
@@ -1487,7 +1487,7 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
         </div>
         <LiveMap active={true} />
         <div className="flex flex-col items-center py-4" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.6))" }}>
-          <div className="text-6xl font-black text-emerald-400 tabular-nums">{fmt(seconds)}</div>
+          <div className="text-6xl font-black text-[#EEFF41] tabular-nums">{fmt(seconds)}</div>
           <div className="mt-1 text-[10px] tracking-[0.3em] text-muted-foreground">DURATION</div>
         </div>
         <Card className="p-5 text-center">
@@ -1554,7 +1554,7 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
         </div>
         <label className="mt-3 flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] p-3">
           <span className="text-xs">Train for this session</span>
-          <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#3b82f6]" />
+          <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#00D4C8]" />
         </label>
       </Card>
 
@@ -1582,14 +1582,14 @@ function PostRunSummary({ duration, distance, onDiscard, onSave }: { duration: s
   return (
     <div className="space-y-4 pt-2">
       <div className="text-center">
-        <div className="text-xs tracking-widest text-emerald-400">RUN COMPLETE</div>
+        <div className="text-xs tracking-widest text-[#EEFF41]">RUN COMPLETE</div>
         <div className="mt-1 text-3xl font-black">{distance} km · {duration}</div>
       </div>
       <Card className="overflow-hidden">
         <div className="h-40 bg-black/30">
           <svg viewBox="0 0 300 140" className="h-full w-full">
             <rect width="300" height="140" fill="rgba(255,255,255,0.02)" />
-            <path d="M 40 110 Q 90 40, 150 70 T 260 100" fill="none" stroke="#3b82f6" strokeWidth="3" />
+            <path d="M 40 110 Q 90 40, 150 70 T 260 100" fill="none" stroke="#00D4C8" strokeWidth="3" />
             <circle cx="40" cy="110" r="5" fill="#10b981" />
             <circle cx="260" cy="100" r="5" fill="#ef4444" />
           </svg>
@@ -1621,7 +1621,7 @@ function PostRunSummary({ duration, distance, onDiscard, onSave }: { duration: s
         <div className="text-xs font-semibold tracking-widest text-muted-foreground">HR ZONE DISTRIBUTION</div>
         <div className="mt-3 grid grid-cols-5 gap-1.5 text-center text-[10px]">
           {[
-            { z: "Z1", pct: 8, color: "#3b82f6" },
+            { z: "Z1", pct: 8, color: "#00D4C8" },
             { z: "Z2", pct: 22, color: "#10b981" },
             { z: "Z3", pct: 41, color: "#f59e0b" },
             { z: "Z4", pct: 24, color: "#f97316" },
@@ -1647,7 +1647,7 @@ function PostRunSummary({ duration, distance, onDiscard, onSave }: { duration: s
         <div className="text-xs font-semibold tracking-widest text-muted-foreground">MATCH TO PLAN</div>
         <div className="text-sm">Was this your Tempo session for today?</div>
         <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => setMatchPlan("yes")} className={`rounded-xl border py-3 text-sm font-semibold ${matchPlan === "yes" ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/5"}`}>✓ Yes, mark done</button>
+          <button onClick={() => setMatchPlan("yes")} className={`rounded-xl border py-3 text-sm font-semibold ${matchPlan === "yes" ? "border-[#EEFF41]/60 bg-[#EEFF41]/10 text-[#EEFF41]" : "border-white/10 bg-white/5"}`}>✓ Yes, mark done</button>
           <button onClick={() => setMatchPlan("no")} className={`rounded-xl border py-3 text-sm font-semibold ${matchPlan === "no" ? "border-sky-500/60 bg-sky-500/10 text-sky-400" : "border-white/10 bg-white/5"}`}>Extra run</button>
         </div>
       </Card>
@@ -1670,7 +1670,7 @@ function ManualInputScreen({ onCancel, onSave }: { onCancel: () => void; onSave:
 function ManualInputSheet({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0a0f24] p-5 pb-8">
+      <div onClick={(e) => e.stopPropagation()} className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0D1E35] p-5 pb-8">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" />
         <ManualInputBody onCancel={onClose} onSave={onClose} />
       </div>
@@ -1696,7 +1696,7 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
       <FormField label="Activity Type">
         <div className="flex flex-wrap gap-2">
           {types.map((t) => (
-            <button key={t} onClick={() => setType(t)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${type === t ? "border-[#3b82f6] bg-[#3b82f6]/15 text-[#3b82f6]" : "border-white/10 bg-white/5 text-muted-foreground"}`}>{t}</button>
+            <button key={t} onClick={() => setType(t)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${type === t ? "border-[#00D4C8] bg-[#00D4C8]/15 text-[#00D4C8]" : "border-white/10 bg-white/5 text-muted-foreground"}`}>{t}</button>
           ))}
         </div>
       </FormField>
@@ -1715,7 +1715,7 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
       <FormField label="Notes"><textarea rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
         <span className="text-xs">Match with today's planned session</span>
-        <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#3b82f6]" />
+        <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#00D4C8]" />
       </label>
       <div className="grid grid-cols-2 gap-3 pt-1">
         <button onClick={onCancel} className="rounded-2xl border border-white/10 py-3.5 text-sm font-semibold text-muted-foreground">Cancel</button>
@@ -1762,29 +1762,29 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
       {/* YOUR COACH — pinned */}
       <section>
         <div className="mb-2 flex items-center gap-2">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#3b82f6]">Your Coach</h4>
-          <span className="rounded-full bg-[#3b82f6]/15 px-2 py-0.5 text-[9px] font-semibold text-[#3b82f6]">Pinned</span>
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#00D4C8]">Your Coach</h4>
+          <span className="rounded-full bg-[#00D4C8]/15 px-2 py-0.5 text-[9px] font-semibold text-[#00D4C8]">Pinned</span>
         </div>
         {showCoach ? (
           <button
             onClick={() => openDetail({ kind: "chat", name: coach.name, initials: coach.initials, color: coach.color, isCoach: true })}
-            className="flex w-full items-center gap-3 rounded-2xl border border-[#3b82f6]/25 bg-gradient-to-r from-[#3b82f6]/10 to-purple-500/10 p-3 text-left"
+            className="flex w-full items-center gap-3 rounded-2xl border border-[#00D4C8]/25 bg-gradient-to-r from-[#00D4C8]/10 to-purple-500/10 p-3 text-left"
           >
             <div className="relative">
               <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${coach.color} text-sm font-bold text-white`}>{coach.initials}</div>
-              {coach.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+              {coach.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-[#EEFF41]" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="truncate font-bold">{coach.name}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#3b82f6]">Your Coach</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#00D4C8]">Your Coach</div>
                 </div>
-                <div className="text-xs font-semibold text-[#3b82f6]">{coach.time}</div>
+                <div className="text-xs font-semibold text-[#00D4C8]">{coach.time}</div>
               </div>
               <div className="mt-1 flex items-center justify-between gap-2">
                 <div className="truncate text-sm text-muted-foreground">{coach.preview}</div>
-                <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{coach.unread}</span>
+                <span className="rounded-full bg-[#00D4C8] px-2 py-0.5 text-xs font-bold text-white">{coach.unread}</span>
               </div>
             </div>
           </button>
@@ -1806,7 +1806,7 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
               <button key={c.name} onClick={() => openDetail({ kind: "chat", name: c.name, initials: c.initials, color: c.color })} className="flex w-full items-center gap-3 text-left">
                 <div className="relative">
                   <div className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${c.color} text-sm font-bold text-white`}>{c.initials}</div>
-                  {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-emerald-400" />}
+                  {(c as any).online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f24] bg-[#EEFF41]" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
@@ -1815,7 +1815,7 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
-                    {(c as any).unread && <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
+                    {(c as any).unread && <span className="rounded-full bg-[#00D4C8] px-2 py-0.5 text-xs font-bold text-white">{(c as any).unread}</span>}
                   </div>
                 </div>
               </button>
@@ -1840,7 +1840,7 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
                   <div className="flex items-center justify-between gap-2">
                     <div className="truncate text-sm text-muted-foreground">{c.preview}</div>
                     {c.unread ? (
-                      <span className="rounded-full bg-[#3b82f6] px-2 py-0.5 text-xs font-bold text-white">{c.unread}</span>
+                      <span className="rounded-full bg-[#00D4C8] px-2 py-0.5 text-xs font-bold text-white">{c.unread}</span>
                     ) : (
                       <span className="text-[10px] text-muted-foreground">{c.members} members</span>
                     )}
@@ -1855,7 +1855,7 @@ function MessagesScreen({ openDetail }: { openDetail: (d: Detail) => void }) {
       <div className="my-2 border-t border-white/5" />
       <button onClick={() => openDetail({ kind: "find-friend" })} className="w-full text-left">
         <Card className="flex items-center gap-3 p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b82f6]/15 text-[#3b82f6]"><UserPlus size={18} /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00D4C8]/15 text-[#00D4C8]"><UserPlus size={18} /></div>
           <div><div className="font-bold">Find a Runner Friend</div><div className="text-sm text-muted-foreground">Connect with other runners</div></div>
         </Card>
       </button>
@@ -1885,7 +1885,7 @@ function OnboardingAdjustView() {
         <div className="space-y-2">
           {goals.map(g => (
             <button key={g} onClick={() => setGoal(g)}
-              className={`w-full rounded-xl border p-3 text-left text-sm transition-all ${goal === g ? "border-[#3b82f6]/60 bg-[#3b82f6]/15 font-semibold" : "border-white/10 bg-white/5"}`}>
+              className={`w-full rounded-xl border p-3 text-left text-sm transition-all ${goal === g ? "border-[#00D4C8]/60 bg-[#00D4C8]/15 font-semibold" : "border-white/10 bg-white/5"}`}>
               {g}
             </button>
           ))}
@@ -1899,10 +1899,10 @@ function OnboardingAdjustView() {
       <div>
         <div className="mb-3 flex justify-between text-sm">
           <span>KM per minggu</span>
-          <span className="font-bold text-[#3b82f6]">{kmPerWeek} km</span>
+          <span className="font-bold text-[#00D4C8]">{kmPerWeek} km</span>
         </div>
         <input type="range" min={5} max={120} step={5} value={kmPerWeek} onChange={e => setKmPerWeek(Number(e.target.value))}
-          className="w-full accent-[#3b82f6]" />
+          className="w-full accent-[#00D4C8]" />
       </div>
       <div>
         <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Pace (min/km)</div>
@@ -1910,7 +1910,7 @@ function OnboardingAdjustView() {
           className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
       </div>
       <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }}
-        className={`w-full rounded-2xl py-4 font-bold transition-all ${saved ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-gradient-to-r from-[#3b82f6] to-[#7c3aed] text-white"}`}>
+        className={`w-full rounded-2xl py-4 font-bold transition-all ${saved ? "bg-[#EEFF41]/20 text-[#EEFF41] border border-[#EEFF41]/30" : "bg-gradient-to-r from-[#00D4C8] to-[#00BFA5] text-white"}`}>
         {saved ? "✓ Tersimpan!" : "Simpan Perubahan"}
       </button>
     </div>
@@ -1922,7 +1922,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
-  const [bg, setBg] = useState<string>("linear-gradient(135deg,#3b82f6,#a855f7)");
+  const [bg, setBg] = useState<string>("linear-gradient(135deg,#00D4C8,#00D4C8)");
 
   function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -1963,7 +1963,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </div>
             <button
               onClick={() => photoInput.current?.click()}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6] ring-2 ring-[#0a0f24]"
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#00D4C8] ring-2 ring-[#0a0f24]"
               aria-label="Edit profile photo"
             >
               <Pencil size={12} className="text-white" />
@@ -1980,7 +1980,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           </div>
           <button
             onClick={() => openDetail({ kind: "onboarding-adjust" })}
-            className="mt-4 w-full rounded-2xl border border-[#3b82f6]/30 bg-[#3b82f6]/10 py-3 text-sm font-semibold text-[#3b82f6]"
+            className="mt-4 w-full rounded-2xl border border-[#00D4C8]/30 bg-[#00D4C8]/10 py-3 text-sm font-semibold text-[#00D4C8]"
           >
             ⚙ Adjust Running Profile
           </button>
@@ -1997,7 +1997,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             <div className="flex-1">
               <div className="font-bold">Sarah Mitchell</div>
               <div className="text-xs text-muted-foreground">Marathon Specialist</div>
-              <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+              <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#EEFF41]/15 px-2 py-0.5 text-[10px] font-semibold text-[#EEFF41]">
                 <Check size={10} /> Plan approved
               </div>
             </div>
@@ -2057,7 +2057,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </div>
             <div className="mt-2 flex items-center justify-between text-xs">
               <span className="text-muted-foreground">50% complete</span>
-              <span className="font-semibold text-[#3b82f6]">See calendar →</span>
+              <span className="font-semibold text-[#00D4C8]">See calendar →</span>
             </div>
             <ProgressGridMini />
           </Card>
@@ -2069,7 +2069,7 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
         <h3 className="mb-3 font-bold">Daily Readiness</h3>
         <div className="grid grid-cols-3 gap-3">
           <MetricCard icon={<Heart size={14} />} label="HRV" value="68" unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
-          <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#a855f7,#3b82f6)" />
+          <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#00D4C8,#00D4C8)" />
           <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
         </div>
         <button onClick={() => openDetail({ kind: "trend-28d" })} className="mt-3 w-full text-left">
@@ -2221,7 +2221,7 @@ function Row({ icon, label, onClick }: { icon: React.ReactNode; label: string; o
 
 function DetailOverlay({ detail, onBack }: { detail: Detail; onBack: () => void }) {
   return (
-    <div className="absolute inset-0 z-[60] flex flex-col bg-[#0a0f24]">
+    <div className="absolute inset-0 z-[60] flex flex-col bg-[#0D1E35]">
       <header className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
         <button onClick={onBack} className="rounded-full p-1"><ArrowLeft size={22} /></button>
         <h2 className="text-lg font-bold">{detailTitle(detail)}</h2>
@@ -2334,7 +2334,7 @@ function CoachPackageSelector({ price, coachFirstName }: { price: string; coachF
             disabled={locked}
             className={`w-full rounded-2xl border-2 p-4 text-left transition-all ${
               selected === pkg.id
-                ? "border-[#3b82f6] bg-[#3b82f6]/15"
+                ? "border-[#00D4C8] bg-[#00D4C8]/15"
                 : locked
                 ? "border-white/5 bg-white/[0.02] opacity-40"
                 : "border-white/10 bg-white/5"
@@ -2344,10 +2344,10 @@ function CoachPackageSelector({ price, coachFirstName }: { price: string; coachF
               <div className="flex items-center gap-2">
                 <span className="text-lg">{pkg.icon}</span>
                 <span className="font-bold">{pkg.name}</span>
-                {selected === pkg.id && <span className="rounded-full bg-[#3b82f6]/20 px-2 py-0.5 text-[10px] font-bold text-[#3b82f6]">DIPILIH</span>}
+                {selected === pkg.id && <span className="rounded-full bg-[#00D4C8]/20 px-2 py-0.5 text-[10px] font-bold text-[#00D4C8]">DIPILIH</span>}
               </div>
               <div className="text-right">
-                <div className="font-bold text-[#3b82f6] text-sm">{fmt(pkg.price)}</div>
+                <div className="font-bold text-[#00D4C8] text-sm">{fmt(pkg.price)}</div>
                 <div className="text-[10px] text-muted-foreground">/bulan</div>
               </div>
             </div>
@@ -2355,13 +2355,13 @@ function CoachPackageSelector({ price, coachFirstName }: { price: string; coachF
             <div className="space-y-1">
               {pkg.features.map((f, i) => (
                 <div key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                  <span className="text-emerald-400 mt-0.5 flex-shrink-0">✓</span>
+                  <span className="text-[#EEFF41] mt-0.5 flex-shrink-0">✓</span>
                   <span>{f}</span>
                 </div>
               ))}
             </div>
             {pkg.cityRequired && (
-              <div className={`mt-2 rounded-lg px-3 py-1.5 text-xs ${sameCity ? "bg-emerald-500/10 text-emerald-400" : "bg-yellow-500/10 text-yellow-400"}`}>
+              <div className={`mt-2 rounded-lg px-3 py-1.5 text-xs ${sameCity ? "bg-[#EEFF41]/10 text-[#EEFF41]" : "bg-yellow-500/10 text-yellow-400"}`}>
                 {sameCity ? "✓ Tersedia di kotamu" : "⚠ Hanya untuk kota yang sama dengan coach"}
               </div>
             )}
@@ -2414,7 +2414,7 @@ function DetailBody({ detail }: { detail: Detail }) {
         </div>
         <div>
           <h3 className="mb-2 font-bold">Certifications</h3>
-          <div className="flex gap-2"><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">USATF L2</span><span className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-xs text-[#3b82f6]">RRCA</span></div>
+          <div className="flex gap-2"><span className="rounded-full border border-[#00D4C8]/40 px-2 py-0.5 text-xs text-[#00D4C8]">USATF L2</span><span className="rounded-full border border-[#00D4C8]/40 px-2 py-0.5 text-xs text-[#00D4C8]">RRCA</span></div>
         </div>
         <CoachPackageSelector price={detail.price ?? "Rp 150.000"} coachFirstName={detail.name.split(" ")[0]} />
       </div>
@@ -2425,7 +2425,7 @@ function DetailBody({ detail }: { detail: Detail }) {
       <div className="space-y-5">
         <Card className="p-5">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">{detail.date}</div>
-          <div className="mt-1 text-2xl font-bold text-[#3b82f6]">{detail.type}</div>
+          <div className="mt-1 text-2xl font-bold text-[#00D4C8]">{detail.type}</div>
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
             <div><div className="text-muted-foreground">Distance</div><div className="text-lg font-bold">{detail.miles}</div></div>
             <div><div className="text-muted-foreground">Target</div><div className="text-lg font-bold">{detail.pace}</div></div>
@@ -2469,7 +2469,7 @@ function DetailBody({ detail }: { detail: Detail }) {
           <Card key={n} className="flex items-center gap-3 p-4">
             <AvatarC initials={n.split(" ").map(s=>s[0]).join("")} color={["from-orange-400 to-amber-500","from-indigo-500 to-purple-500","from-emerald-400 to-teal-500","from-pink-500 to-fuchsia-500"][i]} />
             <div className="flex-1"><div className="font-bold">{n}</div><div className="text-xs text-muted-foreground">Jakarta · 5x/wk</div></div>
-            <button className="rounded-full bg-[#3b82f6] px-4 py-2 text-xs font-semibold text-white">Add</button>
+            <button className="rounded-full bg-[#00D4C8] px-4 py-2 text-xs font-semibold text-white">Add</button>
           </Card>
         ))}
       </div>
@@ -2501,7 +2501,7 @@ function DetailBody({ detail }: { detail: Detail }) {
         </Card>
         <ul className="space-y-3">
           {["Unlimited AI plan rewrites","Coach-validated workouts","Advanced HRV insights","Priority messaging"].map(f => (
-            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="text-emerald-400" /> {f}</li>
+            <li key={f} className="flex items-start gap-3 text-sm"><Check size={18} className="text-[#EEFF41]" /> {f}</li>
           ))}
         </ul>
         <button className="w-full rounded-2xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">Upgrade</button>
@@ -2559,10 +2559,10 @@ function SettingsItemView({ label }: { label: string }) {
 function ConnectAppsView() {
   const [connected, setConnected] = useState<Record<string, boolean>>({});
   const apps = [
-    { id: "garmin", name: "Garmin Connect", desc: "Watches & cycling computers", icon: <Watch size={22} className="text-[#3b82f6]" />, onConnect: connectGarmin },
+    { id: "garmin", name: "Garmin Connect", desc: "Watches & cycling computers", icon: <Watch size={22} className="text-[#00D4C8]" />, onConnect: connectGarmin },
     { id: "strava", name: "Strava", desc: "Activities & social feed", icon: <Activity size={22} className="text-orange-500" />, onConnect: connectStrava },
     { id: "apple-health", name: "Apple Health", desc: "iPhone & Apple Watch", icon: <Apple size={22} className="text-white" />, onConnect: () => alert("Apple Health: Tap Allow when iOS prompts to share HealthKit data.") },
-    { id: "google-fit", name: "Google Fit / Android Health", desc: "Android phones & Wear OS", icon: <Smartphone size={22} className="text-emerald-400" />, onConnect: () => alert("Android: redirect to Google Fit authorization (OAuth).") },
+    { id: "google-fit", name: "Google Fit / Android Health", desc: "Android phones & Wear OS", icon: <Smartphone size={22} className="text-[#EEFF41]" />, onConnect: () => alert("Android: redirect to Google Fit authorization (OAuth).") },
     { id: "huawei-health", name: "Huawei Health", desc: "Huawei watches & bands", icon: <Smartphone size={22} className="text-red-400" />, onConnect: () => alert("Huawei Health Kit: redirect to Huawei ID OAuth.") },
     { id: "mfp", name: "MyFitnessPal", desc: "Nutrition & calorie tracking", icon: <Utensils size={22} className="text-blue-400" />, onConnect: () => alert("MyFitnessPal: redirect to MFP OAuth.") },
     { id: "whoop", name: "Whoop", desc: "Recovery, strain & sleep", icon: <Heart size={22} className="text-rose-400" />, onConnect: () => alert("Whoop: redirect to api.prod.whoop.com OAuth.") },
@@ -2592,8 +2592,8 @@ function ConnectAppsView() {
               }}
               className={`rounded-full px-4 py-2 text-xs font-semibold ${
                 isConnected
-                  ? "border border-emerald-500/40 text-emerald-400"
-                  : "bg-[#3b82f6] text-white"
+                  ? "border border-[#EEFF41]/40 text-[#EEFF41]"
+                  : "bg-[#00D4C8] text-white"
               }`}
             >
               {isConnected ? "Connected" : "Connect"}
@@ -2670,7 +2670,7 @@ function CurrentProgressView() {
           })}
         </div>
         <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Training</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-[#EEFF41]" /> Training</span>
           <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-500" /> Rest</span>
           <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-white/10" /> No plan</span>
         </div>
@@ -2704,7 +2704,7 @@ function CurrentProgressView() {
 
       <Card className="grid grid-cols-2 gap-4 p-5 text-center">
         <div>
-          <div className="text-2xl font-bold text-emerald-400">{trained}</div>
+          <div className="text-2xl font-bold text-[#EEFF41]">{trained}</div>
           <div className="text-xs text-muted-foreground">Training days</div>
         </div>
         <div>
@@ -2723,8 +2723,8 @@ function NotificationsView() {
     {
       label: "Today",
       items: [
-        { title: "Tempo Run session waiting", body: "12 km · Zone 4 · Tap to start", time: "08:12", icon: <Activity size={16} className="text-[#3b82f6]" /> },
-        { title: "Coach Andre sent a message", body: "Focus on pace, don't over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-emerald-400" /> },
+        { title: "Tempo Run session waiting", body: "12 km · Zone 4 · Tap to start", time: "08:12", icon: <Activity size={16} className="text-[#00D4C8]" /> },
+        { title: "Coach Andre sent a message", body: "Focus on pace, don't over-effort.", time: "07:40", icon: <MessageSquare size={16} className="text-[#EEFF41]" /> },
         { title: "Readiness ready", body: "Score 72 — Moderate Training", time: "06:30", icon: <Heart size={16} className="text-rose-400" /> },
       ],
     },
@@ -2745,7 +2745,7 @@ function NotificationsView() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">Latest notifications</span>
-        <button className="text-xs font-semibold text-[#3b82f6]">Mark all read</button>
+        <button className="text-xs font-semibold text-[#00D4C8]">Mark all read</button>
       </div>
       {groups.map((g) => (
         <div key={g.label}>
@@ -2773,7 +2773,7 @@ function NotificationsView() {
 function ReadinessBreakdownView() {
   const parts = [
     { l: "HRV", w: 40, v: 70, c: "#ef4444", sub: "58 ms vs 62 ms baseline" },
-    { l: "Sleep", w: 30, v: 84, c: "#a855f7", sub: "7.2 h · 84% quality" },
+    { l: "Sleep", w: 30, v: 84, c: "#00D4C8", sub: "7.2 h · 84% quality" },
     { l: "Load", w: 30, v: 68, c: "#10b981", sub: "ACWR 1.1 · optimal" },
   ];
   return (
@@ -2830,7 +2830,7 @@ function ChatDetailView({ chat }: { chat: Extract<Detail, { kind: "chat" }> }) {
     { me: false, t: "Great job on today's tempo run! Keep the effort dialed in.", time: "09:12" },
     { me: false, t: "", voice: true, sec: 32, time: "09:13" },
     { me: true, t: "Thanks coach — legs felt strong today.", time: "09:20" },
-    { me: false, t: "", time: "09:22", card: { title: "Tomorrow · Recovery Jog", sub: "5 km · HR < 140 · Zone 1–2", icon: <Footprints size={18} className="text-[#3b82f6]" /> } },
+    { me: false, t: "", time: "09:22", card: { title: "Tomorrow · Recovery Jog", sub: "5 km · HR < 140 · Zone 1–2", icon: <Footprints size={18} className="text-[#00D4C8]" /> } },
     { me: false, t: "Keep HR under 140 and hydrate well before bed.", time: "09:22" },
   ];
   const runnerMsgs: Msg[] = [
@@ -2848,8 +2848,8 @@ function ChatDetailView({ chat }: { chat: Extract<Detail, { kind: "chat" }> }) {
     <div className="-mx-5 -my-6 flex h-[calc(100%+3rem)] flex-col">
       {/* Pinned plan banner — coach only */}
       {isCoach && (
-        <div className="border-b border-[#3b82f6]/25 bg-gradient-to-r from-[#3b82f6]/15 to-purple-500/10 px-5 py-3">
-          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#3b82f6]">
+        <div className="border-b border-[#00D4C8]/25 bg-gradient-to-r from-[#00D4C8]/15 to-purple-500/10 px-5 py-3">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#00D4C8]">
             <Pin size={12} /> Pinned Plan
           </div>
           <div className="mt-1 flex items-center justify-between">
@@ -2857,7 +2857,7 @@ function ChatDetailView({ chat }: { chat: Extract<Detail, { kind: "chat" }> }) {
               <div className="text-sm font-bold">This Week — Marathon Base Wk 8</div>
               <div className="text-[11px] text-muted-foreground">6 sessions · Approved · Last updated 2h ago</div>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#EEFF41]/15 px-2 py-0.5 text-[10px] font-semibold text-[#EEFF41]">
               <Check size={10} /> Approved
             </span>
           </div>
@@ -2884,7 +2884,7 @@ function ChatDetailView({ chat }: { chat: Extract<Detail, { kind: "chat" }> }) {
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">{m.card.icon}</div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-[#3b82f6]">Session Card</div>
+                    <div className="text-[10px] uppercase tracking-wider text-[#00D4C8]">Session Card</div>
                     <div className="font-bold">{m.card.title}</div>
                     <div className="text-[11px] text-muted-foreground">{m.card.sub}</div>
                   </div>
@@ -2909,7 +2909,7 @@ function ChatDetailView({ chat }: { chat: Extract<Detail, { kind: "chat" }> }) {
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-white/5 bg-[#0a0f24] px-4 py-3">
+      <div className="border-t border-white/5 bg-[#0D1E35] px-4 py-3">
         <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1.5">
           <button className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-white" aria-label="Attach">
             <Paperclip size={16} />
@@ -2953,7 +2953,7 @@ function FindCoachView() {
           <button
             key={c}
             onClick={() => setFilter(c)}
-            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${filter === c ? "border-[#3b82f6] bg-[#3b82f6]/20 text-[#3b82f6]" : "border-white/10 bg-white/5 text-muted-foreground"}`}
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${filter === c ? "border-[#00D4C8] bg-[#00D4C8]/20 text-[#00D4C8]" : "border-white/10 bg-white/5 text-muted-foreground"}`}
           >
             {c}
           </button>
@@ -2977,7 +2977,7 @@ function FindCoachView() {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {c.certs.map((cert) => (
-                    <span key={cert} className="rounded-full border border-[#3b82f6]/40 px-2 py-0.5 text-[10px] text-[#3b82f6]">{cert}</span>
+                    <span key={cert} className="rounded-full border border-[#00D4C8]/40 px-2 py-0.5 text-[10px] text-[#00D4C8]">{cert}</span>
                   ))}
                 </div>
               </div>
@@ -3030,7 +3030,7 @@ function SubscriptionView() {
         <div className="font-bold">What you get</div>
         <ul className="mt-3 space-y-2 text-sm">
           {perks.map((p) => (
-            <li key={p} className="flex items-start gap-2"><Check size={16} className="mt-0.5 text-emerald-400" /><span>{p}</span></li>
+            <li key={p} className="flex items-start gap-2"><Check size={16} className="mt-0.5 text-[#EEFF41]" /><span>{p}</span></li>
           ))}
         </ul>
       </Card>
@@ -3096,8 +3096,8 @@ function PrivacySettingsView() {
   const toggle = (k: string) => setState((s) => ({ ...s, [k]: !s[k] }));
   return (
     <div className="space-y-5">
-      <Card className="border border-[#3b82f6]/25 bg-[#3b82f6]/10 p-4 text-xs text-muted-foreground">
-        <div className="flex items-start gap-2 text-foreground"><Shield size={14} className="mt-0.5 text-[#3b82f6]" /><span className="font-semibold">Your data is yours.</span></div>
+      <Card className="border border-[#00D4C8]/25 bg-[#00D4C8]/10 p-4 text-xs text-muted-foreground">
+        <div className="flex items-start gap-2 text-foreground"><Shield size={14} className="mt-0.5 text-[#00D4C8]" /><span className="font-semibold">Your data is yours.</span></div>
         <p className="mt-1">Manage what RUNIQ, your coach, and connected apps can see. Changes take effect immediately.</p>
       </Card>
       {groups.map((g) => (
@@ -3219,7 +3219,7 @@ function EditProfileView() {
       <Card className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm font-semibold">Personal details</div>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] ${remote ? "bg-emerald-500/20 text-emerald-300" : "bg-white/5 text-muted-foreground"}`}>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] ${remote ? "bg-[#EEFF41]/20 text-emerald-300" : "bg-white/5 text-muted-foreground"}`}>
             {remote ? "Synced to cloud" : "Local (sign in to sync)"}
           </span>
         </div>
