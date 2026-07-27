@@ -192,7 +192,7 @@ function TabBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
     { id: "profile", icon: User },
   ];
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/5 bg-[#0a0f24]/95 backdrop-blur">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-white/5 bg-[#0a0f24]/95 backdrop-blur">
       <div className="flex items-center justify-around px-2 py-3">
         {items.map((it) => {
           const active = screen === it.id;
