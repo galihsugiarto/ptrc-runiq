@@ -1,8 +1,8 @@
 // RUNIQ Lark Bot
 // Deploy ke Vercel: tambahkan file ini ke /api/lark-bot.js di repo ptrc-runiq
 // Environment variables needed:
-//   LARK_APP_ID=cli_aaec7cd20078de15
-//   LARK_APP_SECRET=pDJEGUi5MTQiYDvRtx4ccZWzcyGKtHCQ
+//   LARK_APP_ID=your_app_id
+//   LARK_APP_SECRET=your_app_secret
 //   ANTHROPIC_API_KEY=sk-ant-...
 
 const ISSUES = [
