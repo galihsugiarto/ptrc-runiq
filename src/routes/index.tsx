@@ -161,8 +161,8 @@ function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: (
   return (
     <header className="fixed top-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 flex items-center justify-between border-b border-white/5 bg-[#0D1E35] px-5 py-4">
       <div className="flex items-center gap-3">
-        <Logo size={42} />
-        <h1 className="text-2xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
+        <img src="/logo-runiq.png" alt="RUNIQ" className="h-10 w-10 rounded-xl object-cover" />
+        <h1 className="text-2xl font-black tracking-wider" style={{color:"#00D4C8"}}>RUNIQ</h1>
       </div>
       <div className="flex items-center gap-2">
         <button onClick={onNotifications} className="relative rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Notifications">
