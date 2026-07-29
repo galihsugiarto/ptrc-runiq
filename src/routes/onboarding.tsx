@@ -15,13 +15,30 @@ export const Route = createFileRoute("/onboarding")({
 });
 
 type Step = 0 | 1 | 2 | 3 | 4;
+type CoachStep = 0 | 1 | 2 | 3 | 4;
 const STEPS = ["Language", "Goal", "Baseline", "Devices", "Coach"] as const;
+const COACH_STEPS = ["Language", "Identitas", "Pengalaman", "Portfolio", "Ketersediaan"] as const;
 
 function Onboarding() {
   const nav = useNavigate();
   const [step, setStep] = useState<Step>(0);
   const [saving, setSaving] = useState(false);
   const [language, setLanguage] = useState<string>("en");
+  const [role, setRole] = useState<"athlete"|"coach">("athlete");
+
+  // Coach onboarding state
+  const [coachName, setCoachName] = useState("");
+  const [coachCity, setCoachCity] = useState("");
+  const [coachEducation, setCoachEducation] = useState("");
+  const [coachCerts, setCoachCerts] = useState<string[]>([]);
+  const [coachMarathon, setCoachMarathon] = useState<"yes"|"no"|"">("");
+  const [coachBestRace, setCoachBestRace] = useState("");
+  const [coachYears, setCoachYears] = useState("");
+  const [coachSpec, setCoachSpec] = useState<string[]>([]);
+  const [coachStyle, setCoachStyle] = useState("");
+  const [coachBio, setCoachBio] = useState("");
+  const [coachPrice, setCoachPrice] = useState("");
+  const [coachMaxAthletes, setCoachMaxAthletes] = useState("10");
   const [goal, setGoal] = useState<string>("");
   const [distance, setDistance] = useState<string>("");
   const [race, setRace] = useState<string>("");
@@ -109,7 +126,112 @@ function Onboarding() {
         )}
 
 
-        {step === 1 && (
+        {/* ROLE SELECTOR — show after language if not yet chosen */}
+        {step === 0 && language && (
+          <div className="mt-6 space-y-3">
+            <div className="text-sm font-semibold text-muted-foreground mb-2">Saya bergabung sebagai:</div>
+            <button onClick={() => setRole("athlete")} className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left ${role === "athlete" ? "border-[#00D4C8] bg-[#00D4C8]/10" : "border-white/10 bg-card/60"}`}>
+              <span className="text-2xl">🏃</span>
+              <div><div className="font-semibold">Runner / Athlete</div><div className="text-xs text-muted-foreground">Ikuti program latihan AI yang divalidasi coach</div></div>
+              {role === "athlete" && <Check className="ml-auto h-5 w-5 text-[#00D4C8]" />}
+            </button>
+            <button onClick={() => setRole("coach")} className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left ${role === "coach" ? "border-[#00D4C8] bg-[#00D4C8]/10" : "border-white/10 bg-card/60"}`}>
+              <span className="text-2xl">📋</span>
+              <div><div className="font-semibold">Coach / Pelatih</div><div className="text-xs text-muted-foreground">Kelola atlet dan review plan latihan mereka</div></div>
+              {role === "coach" && <Check className="ml-auto h-5 w-5 text-[#00D4C8]" />}
+            </button>
+          </div>
+        )}
+
+        {/* COACH ONBOARDING STEPS */}
+        {role === "coach" && step === 1 && (
+          <div className="space-y-4">
+            <div><label className="mb-2 block text-xs text-muted-foreground">Nama Lengkap</label>
+              <input value={coachName} onChange={e => setCoachName(e.target.value)} placeholder="Nama kamu" className="w-full rounded-xl border border-white/10 bg-card/60 px-4 py-3 text-sm" /></div>
+            <div><label className="mb-2 block text-xs text-muted-foreground">Kota Domisili</label>
+              <input value={coachCity} onChange={e => setCoachCity(e.target.value)} placeholder="Jakarta, Bandung, dll" className="w-full rounded-xl border border-white/10 bg-card/60 px-4 py-3 text-sm" /></div>
+            <div><label className="mb-2 block text-xs text-muted-foreground">Pendidikan (Jurusan/Major)</label>
+              <input value={coachEducation} onChange={e => setCoachEducation(e.target.value)} placeholder="Sport Science, Kepelatihan Olahraga, dll" className="w-full rounded-xl border border-white/10 bg-card/60 px-4 py-3 text-sm" /></div>
+            <div><label className="mb-2 block text-xs text-muted-foreground">Sertifikasi (pilih semua yang sesuai)</label>
+              <div className="flex flex-wrap gap-2">
+                {["USATF", "IAAF", "RRCA", "PASI", "NSCA", "ACSM", "Lainnya"].map(c => (
+                  <button key={c} onClick={() => setCoachCerts(p => p.includes(c) ? p.filter(x=>x!==c) : [...p,c])}
+                    className={`rounded-full border px-3 py-1.5 text-xs transition-all ${coachCerts.includes(c) ? "border-[#00D4C8] bg-[#00D4C8]/20 text-[#00D4C8]" : "border-white/10 text-muted-foreground"}`}>{c}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {role === "coach" && step === 2 && (
+          <div className="space-y-4">
+            <div><label className="mb-2 block text-xs text-muted-foreground">Pernah finish marathon?</label>
+              <div className="flex gap-3">
+                {[["yes","Ya, pernah 🏅"],["no","Belum"]].map(([v,l]) => (
+                  <button key={v} onClick={() => setCoachMarathon(v as any)} className={`flex-1 rounded-xl border py-2.5 text-sm ${coachMarathon===v ? "border-[#00D4C8] bg-[#00D4C8]/10" : "border-white/10 bg-card/60"}`}>{l}</button>
+                ))}
+              </div>
+            </div>
+            {coachMarathon === "yes" && (
+              <div><label className="mb-2 block text-xs text-muted-foreground">Waktu finish terbaik</label>
+                <input value={coachBestRace} onChange={e => setCoachBestRace(e.target.value)} placeholder="e.g. 3:45:00" className="w-full rounded-xl border border-white/10 bg-card/60 px-4 py-3 text-sm" /></div>
+            )}
+            <div><label className="mb-2 block text-xs text-muted-foreground">Sudah berapa lama melatih?</label>
+              <div className="grid grid-cols-4 gap-2">
+                {["< 1 tahun","1-3 tahun","3-5 tahun","5+ tahun"].map(y => (
+                  <button key={y} onClick={() => setCoachYears(y)} className={`rounded-xl border py-2 text-xs ${coachYears===y ? "border-[#00D4C8] bg-[#00D4C8]/10" : "border-white/10 bg-card/60"}`}>{y}</button>
+                ))}
+              </div>
+            </div>
+            <div><label className="mb-2 block text-xs text-muted-foreground">Spesialisasi</label>
+              <div className="flex flex-wrap gap-2">
+                {["Marathon","Half Marathon","10K/5K","Trail","Speed","Beginner","Injury Prevention","Triathlon"].map(s => (
+                  <button key={s} onClick={() => setCoachSpec(p => p.includes(s) ? p.filter(x=>x!==s) : [...p,s])}
+                    className={`rounded-full border px-3 py-1.5 text-xs ${coachSpec.includes(s) ? "border-[#00D4C8] bg-[#00D4C8]/20 text-[#00D4C8]" : "border-white/10 text-muted-foreground"}`}>{s}</button>
+                ))}
+              </div>
+            </div>
+            <div><label className="mb-2 block text-xs text-muted-foreground">Gaya melatih</label>
+              <div className="space-y-2">
+                {["Terstruktur & Data-driven","Fleksibel & Adaptif","Motivator & Komunitas","Kombinasi"].map(s => (
+                  <button key={s} onClick={() => setCoachStyle(s)} className={`w-full rounded-xl border px-4 py-2.5 text-left text-sm ${coachStyle===s ? "border-[#00D4C8] bg-[#00D4C8]/10" : "border-white/10 bg-card/60"}`}>{s}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {role === "coach" && step === 3 && (
+          <div className="space-y-4">
+            <div><label className="mb-2 block text-xs text-muted-foreground">Bio singkat (tampil di marketplace)</label>
+              <textarea value={coachBio} onChange={e => setCoachBio(e.target.value)} maxLength={200} rows={3} placeholder="Ceritakan pengalamanmu sebagai coach..." className="w-full resize-none rounded-xl border border-white/10 bg-card/60 px-4 py-3 text-sm" /></div>
+            <div className="text-xs text-muted-foreground">{coachBio.length}/200 karakter</div>
+            <div className="rounded-2xl border border-[#00D4C8]/20 bg-[#00D4C8]/5 p-4 text-sm text-muted-foreground">
+              📸 Upload foto dan video portofolio bisa dilakukan nanti dari halaman profil coach kamu.
+            </div>
+          </div>
+        )}
+
+        {role === "coach" && step === 4 && (
+          <div className="space-y-4">
+            <div><label className="mb-2 block text-xs text-muted-foreground">Harga per bulan (Rp) — untuk paket Partner</label>
+              <input value={coachPrice} onChange={e => setCoachPrice(e.target.value)} placeholder="e.g. 150000" type="number" className="w-full rounded-xl border border-white/10 bg-card/60 px-4 py-3 text-sm" />
+              <div className="mt-1 text-xs text-muted-foreground">Paket Athlete = 2×, Pro Athlete = 4× dari harga ini</div>
+            </div>
+            <div><label className="mb-2 block text-xs text-muted-foreground">Maksimum atlet yang bisa diterima</label>
+              <div className="grid grid-cols-4 gap-2">
+                {["5","10","15","20+"].map(n => (
+                  <button key={n} onClick={() => setCoachMaxAthletes(n)} className={`rounded-xl border py-2 text-sm ${coachMaxAthletes===n ? "border-[#00D4C8] bg-[#00D4C8]/10" : "border-white/10 bg-card/60"}`}>{n}</button>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#EEFF41]/20 bg-[#EEFF41]/5 p-4 text-sm text-muted-foreground">
+              ⚡ Platform fee 20% dipotong dari setiap booking. Kamu menerima 80% dari harga yang kamu tetapkan.
+            </div>
+          </div>
+        )}
+
+        {step === 1 && role === "athlete" && (
           <div className="space-y-3">
             {[
               { id: "race", label: "Train for a race", icon: Target },
@@ -140,7 +262,7 @@ function Onboarding() {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 2 && role === "athlete" && (
           <div className="space-y-4">
             <div>
               <label className="mb-2 block text-xs text-muted-foreground">Fitness level</label>
@@ -169,7 +291,7 @@ function Onboarding() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 3 && role === "athlete" && (
           <div className="space-y-2">
             {(
               [
@@ -195,7 +317,7 @@ function Onboarding() {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 4 && role === "athlete" && (
           <div className="space-y-3">
             {[
               { id: "sarah", name: "Sarah Mitchell", specialty: "Marathon Specialist", price: "Rp 350.000/bulan" },
