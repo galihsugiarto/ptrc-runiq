@@ -1376,7 +1376,7 @@ type RecPhase = "pre" | "active" | "post" | "manual";
 
 
 // ── LIVE MAP (Geolocation + Canvas) ──────────────────────────────
-function LiveMap({ active }: { active: boolean }) {
+function LiveMap({ active, full = false, onToggleFull }: { active: boolean; full?: boolean; onToggleFull?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ptsRef = useRef<{lat: number; lng: number}[]>([]);
   const watchRef = useRef<number | null>(null);
