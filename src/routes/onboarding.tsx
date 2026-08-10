@@ -85,20 +85,32 @@ function Onboarding() {
           ))}
         </div>
 
-        <h1 className="mb-1 text-2xl font-bold">{[
+        <h1 className="mb-1 text-2xl font-bold">{(role === "coach" ? [
+          "Choose your language",
+          "Your identity",
+          "Coaching experience",
+          "Portfolio",
+          "Availability & pricing",
+        ] : [
           "Choose your language",
           "What's your goal?",
           "Baseline fitness",
           "Connect your devices",
           "Choose a coach",
-        ][step]}</h1>
-        <p className="mb-6 text-sm text-muted-foreground">{[
+        ])[step]}</h1>
+        <p className="mb-6 text-sm text-muted-foreground">{(role === "coach" ? [
+          "You can change this later in Settings.",
+          "Tell athletes who you are.",
+          "Your background builds trust.",
+          "Shown on your marketplace profile.",
+          "Set your rate and athlete capacity.",
+        ] : [
           "You can change this later in Settings.",
           "We'll shape your plan around this.",
           "Helps us calibrate paces and volume.",
           "Sync runs automatically from your watch or phone.",
           "Human-approved plans — you can change later.",
-        ][step]}</p>
+        ])[step]}</p>
 
         {step === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center gap-8">
@@ -341,7 +353,11 @@ function Onboarding() {
         <div className="mt-auto pt-6">
           <button
             onClick={next}
-            disabled={saving || (step === 1 && !goal) || (step === 4 && !coach)}
+            disabled={
+              saving ||
+              (role === "athlete" && ((step === 1 && !goal) || (step === 4 && !coach))) ||
+              (role === "coach" && ((step === 1 && (!coachName || !coachCity)) || (step === 2 && !coachYears)))
+            }
             className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 px-6 py-3 text-sm font-semibold shadow-lg disabled:opacity-40"
           >
             {saving ? "Saving…" : step === 4 ? "Finish" : "Continue"} <ChevronRight className="h-4 w-4" />
