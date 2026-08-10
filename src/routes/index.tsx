@@ -1492,7 +1492,34 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
   if (phase === "manual") return <ManualInputScreen onCancel={() => setPhase("pre")} onSave={goWeek} />;
   if (phase === "post") return <PostRunSummary duration={fmt(seconds)} distance={km} onDiscard={() => { setPhase("pre"); setSeconds(0); }} onSave={goWeek} />;
   if (phase === "active") {
+    if (mapFull) {
+      return (
+        <div className="fixed inset-0 z-[60] mx-auto flex max-w-[420px] flex-col bg-[#0A1628]">
+          <div className="relative flex-1">
+            <LiveMap active={true} full onToggleFull={() => setMapFull(false)} />
+            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-8 pt-4">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                <span className="text-xs font-bold tracking-widest text-red-400">RECORDING</span>
+              </div>
+            </div>
+            <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/85 to-transparent px-4 pb-5 pt-12">
+              <div className="grid grid-cols-3 text-center">
+                <div><div className="text-2xl font-black tabular-nums text-[#EEFF41]">{fmt(seconds)}</div><div className="text-[9px] tracking-widest text-white/60">DURATION</div></div>
+                <div><div className="text-2xl font-black tabular-nums">{km}</div><div className="text-[9px] tracking-widest text-white/60">KM</div></div>
+                <div><div className="text-2xl font-black tabular-nums">5:12</div><div className="text-[9px] tracking-widest text-white/60">PACE</div></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setPaused((p) => !p)} className="rounded-2xl border border-white/20 bg-white/10 py-3.5 text-sm font-bold backdrop-blur">{paused ? "▶ Resume" : "⏸ Pause"}</button>
+                <button onClick={() => { setMapFull(false); setPhase("post"); }} className="rounded-2xl bg-red-500 py-3.5 text-sm font-bold text-white">⏹ Stop</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
+
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
