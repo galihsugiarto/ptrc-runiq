@@ -175,7 +175,7 @@ function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: (
           )}
         </button>
         <button onClick={onAvatar} className="rounded-full" aria-label="Profile">
-          <AvatarC initials="AR" color="from-[#00D4C8] to-[#00D4C8]" />
+          <AvatarC initials={initials} color="from-[#00D4C8] to-[#00D4C8]" />
         </button>
         {onSettings && (
           <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Settings">
