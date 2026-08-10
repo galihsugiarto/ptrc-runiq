@@ -788,7 +788,7 @@ function AiCoachNotesCard() {
           max_tokens: 300,
           messages: [{
             role: "user",
-            content: `Kamu adalah RUNIQ, AI coach lari untuk runner Indonesia. Tulis catatan coaching mingguan yang hangat dan personal dalam Bahasa Indonesia (2 paragraf pendek, maks 80 kata total) untuk runner Alex. Goal: Sub-4hr Marathon Oktober 2026. Data: HRV 68ms (baseline 72ms, sedikit di bawah), Tidur 7.2jam (kualitas 78%), Training Load 45 (ACWR 1.1), Minggu ke-8 dari 24 base building. Minggu ini: Easy 8km Sen ✓, Intervals 10km Sel ✓, Recovery 6km Rab ✓. Ke depan: Tempo 12km Kam, Long Run 22km Sab. Spesifik, hangat, sebut penurunan HRV. Gunakan "kamu". Seperti coach sungguhan, bukan robot.`
+            content: `Kamu adalah RUNIQ, AI coach lari untuk runner Indonesia. Tulis catatan coaching mingguan yang hangat dan personal dalam Bahasa Indonesia (2 paragraf pendek, maks 80 kata total) untuk runner ${displayName}. Goal: Sub-4hr Marathon Oktober 2026. Data: HRV 68ms (baseline 72ms, sedikit di bawah), Tidur 7.2jam (kualitas 78%), Training Load 45 (ACWR 1.1), Minggu ke-8 dari 24 base building. Minggu ini: Easy 8km Sen ✓, Intervals 10km Sel ✓, Recovery 6km Rab ✓. Ke depan: Tempo 12km Kam, Long Run 22km Sab. Spesifik, hangat, sebut penurunan HRV. Gunakan "kamu". Seperti coach sungguhan, bukan robot.`
           }]
         })
       });
