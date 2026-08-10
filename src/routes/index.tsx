@@ -12,6 +12,7 @@ import {
   Wallet, CreditCard, Plus, Trash2,
 } from "lucide-react";
 import { fetchProfile, upsertProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
+import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
 import privacyMd from "@/content/legal/privacy.md?raw";
