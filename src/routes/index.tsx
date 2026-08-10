@@ -1436,24 +1436,34 @@ function LiveMap({ active }: { active: boolean }) {
     <div className="flex h-40 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
       <div className="text-center text-xs text-muted-foreground">
         <MapPin size={20} className="mx-auto mb-2 opacity-40" />
-        Map akan muncul saat recording dimulai
+        Map appears once recording starts
       </div>
     </div>
   );
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#00D4C8]/30">
-      <canvas ref={canvasRef} width={380} height={160} className="w-full" />
+    <div className={full ? "relative h-full w-full overflow-hidden" : "relative overflow-hidden rounded-2xl border border-[#00D4C8]/30"}>
+      <canvas ref={canvasRef} width={380} height={full ? 620 : 160} className={full ? "h-full w-full object-cover" : "w-full"} />
+      {onToggleFull && (
+        <button
+          onClick={onToggleFull}
+          className="absolute right-3 top-3 rounded-full border border-white/15 bg-black/50 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur"
+          aria-label={full ? "Exit fullscreen map" : "Fullscreen map"}
+        >
+          {full ? "Exit map" : "⤢ Fullscreen"}
+        </button>
+      )}
       {ptsRef.current.length < 2 && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#0D1E35]">
           <div className="text-center text-xs text-muted-foreground">
-            <div className="mb-1 animate-pulse text-[#00D4C8]">● Mendeteksi lokasi...</div>
+            <div className="mb-1 animate-pulse text-[#00D4C8]">● Detecting location...</div>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 
 function RecordFlow({ goWeek }: { goWeek: () => void }) {
   const [phase, setPhase] = useState<RecPhase>("pre");
