@@ -1922,6 +1922,7 @@ function OnboardingAdjustView() {
 }
 
 function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
+  const { displayName, profile } = useProfile();
 
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
