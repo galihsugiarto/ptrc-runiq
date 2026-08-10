@@ -308,8 +308,8 @@ DeepSeek WAJIB berhenti dan eskalasi ke Claude jika menemukan:
 
 | No | Issue | Status |
 |---|---|---|
-| 3 | Nama user masih dummy | 🟡 In Progress (Claude) |
-| 6b | Map fullscreen saat recording | 🔴 Belum |
+| 3 | Nama user masih dummy | 🟢 Selesai (profil real dari Supabase/local) |
+| 6b | Map fullscreen saat recording | 🟢 Selesai |
 | 8a | Brand colors | 🟢 Selesai |
 | 8b | CSS tokens | 🟢 Selesai |
 | 8c | Logo RUNIQ | 🟢 Selesai |
