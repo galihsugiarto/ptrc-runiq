@@ -12,6 +12,7 @@ import {
   Wallet, CreditCard, Plus, Trash2,
 } from "lucide-react";
 import { fetchProfile, upsertProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
+import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
 import privacyMd from "@/content/legal/privacy.md?raw";
@@ -159,6 +160,7 @@ function Logo({ size = 40 }: { size?: number }) {
 
 function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: () => void; onAvatar?: () => void; onSettings?: () => void }) {
   const unread = 3;
+  const { initials } = useProfile();
   return (
     <header className="fixed top-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 flex items-center justify-between border-b border-white/5 bg-[#0D1E35] px-5 py-4">
       <div className="flex items-center gap-3">
@@ -173,7 +175,7 @@ function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: (
           )}
         </button>
         <button onClick={onAvatar} className="rounded-full" aria-label="Profile">
-          <AvatarC initials="AR" color="from-[#00D4C8] to-[#00D4C8]" />
+          <AvatarC initials={initials} color="from-[#00D4C8] to-[#00D4C8]" />
         </button>
         {onSettings && (
           <button onClick={onSettings} className="rounded-full p-2 text-muted-foreground hover:text-foreground" aria-label="Settings">
@@ -765,7 +767,9 @@ const SESSION_COLORS: Record<string, string> = {
 };
 
 function AiCoachNotesCard() {
+  const { displayName } = useProfile();
   const [note, setNote] = useState<string>("");
+
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -784,7 +788,7 @@ function AiCoachNotesCard() {
           max_tokens: 300,
           messages: [{
             role: "user",
-            content: `Kamu adalah RUNIQ, AI coach lari untuk runner Indonesia. Tulis catatan coaching mingguan yang hangat dan personal dalam Bahasa Indonesia (2 paragraf pendek, maks 80 kata total) untuk runner Alex. Goal: Sub-4hr Marathon Oktober 2026. Data: HRV 68ms (baseline 72ms, sedikit di bawah), Tidur 7.2jam (kualitas 78%), Training Load 45 (ACWR 1.1), Minggu ke-8 dari 24 base building. Minggu ini: Easy 8km Sen ✓, Intervals 10km Sel ✓, Recovery 6km Rab ✓. Ke depan: Tempo 12km Kam, Long Run 22km Sab. Spesifik, hangat, sebut penurunan HRV. Gunakan "kamu". Seperti coach sungguhan, bukan robot.`
+            content: `Kamu adalah RUNIQ, AI coach lari untuk runner Indonesia. Tulis catatan coaching mingguan yang hangat dan personal dalam Bahasa Indonesia (2 paragraf pendek, maks 80 kata total) untuk runner ${displayName}. Goal: Sub-4hr Marathon Oktober 2026. Data: HRV 68ms (baseline 72ms, sedikit di bawah), Tidur 7.2jam (kualitas 78%), Training Load 45 (ACWR 1.1), Minggu ke-8 dari 24 base building. Minggu ini: Easy 8km Sen ✓, Intervals 10km Sel ✓, Recovery 6km Rab ✓. Ke depan: Tempo 12km Kam, Long Run 22km Sab. Spesifik, hangat, sebut penurunan HRV. Gunakan "kamu". Seperti coach sungguhan, bukan robot.`
           }]
         })
       });
@@ -1374,7 +1378,7 @@ type RecPhase = "pre" | "active" | "post" | "manual";
 
 
 // ── LIVE MAP (Geolocation + Canvas) ──────────────────────────────
-function LiveMap({ active }: { active: boolean }) {
+function LiveMap({ active, full = false, onToggleFull }: { active: boolean; full?: boolean; onToggleFull?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ptsRef = useRef<{lat: number; lng: number}[]>([]);
   const watchRef = useRef<number | null>(null);
@@ -1434,24 +1438,34 @@ function LiveMap({ active }: { active: boolean }) {
     <div className="flex h-40 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
       <div className="text-center text-xs text-muted-foreground">
         <MapPin size={20} className="mx-auto mb-2 opacity-40" />
-        Map akan muncul saat recording dimulai
+        Map appears once recording starts
       </div>
     </div>
   );
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#00D4C8]/30">
-      <canvas ref={canvasRef} width={380} height={160} className="w-full" />
+    <div className={full ? "relative h-full w-full overflow-hidden" : "relative overflow-hidden rounded-2xl border border-[#00D4C8]/30"}>
+      <canvas ref={canvasRef} width={380} height={full ? 620 : 160} className={full ? "h-full w-full object-cover" : "w-full"} />
+      {onToggleFull && (
+        <button
+          onClick={onToggleFull}
+          className="absolute right-3 top-3 rounded-full border border-white/15 bg-black/50 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur"
+          aria-label={full ? "Exit fullscreen map" : "Fullscreen map"}
+        >
+          {full ? "Exit map" : "⤢ Fullscreen"}
+        </button>
+      )}
       {ptsRef.current.length < 2 && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#0D1E35]">
           <div className="text-center text-xs text-muted-foreground">
-            <div className="mb-1 animate-pulse text-[#00D4C8]">● Mendeteksi lokasi...</div>
+            <div className="mb-1 animate-pulse text-[#00D4C8]">● Detecting location...</div>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 
 function RecordFlow({ goWeek }: { goWeek: () => void }) {
   const [phase, setPhase] = useState<RecPhase>("pre");
@@ -1460,6 +1474,8 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [mapFull, setMapFull] = useState(false);
+
 
   useEffect(() => {
     if (phase !== "active" || paused) return;
@@ -1478,7 +1494,34 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
   if (phase === "manual") return <ManualInputScreen onCancel={() => setPhase("pre")} onSave={goWeek} />;
   if (phase === "post") return <PostRunSummary duration={fmt(seconds)} distance={km} onDiscard={() => { setPhase("pre"); setSeconds(0); }} onSave={goWeek} />;
   if (phase === "active") {
+    if (mapFull) {
+      return (
+        <div className="fixed inset-0 z-[60] mx-auto flex max-w-[420px] flex-col bg-[#0A1628]">
+          <div className="relative flex-1">
+            <LiveMap active={true} full onToggleFull={() => setMapFull(false)} />
+            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 pb-8 pt-4">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                <span className="text-xs font-bold tracking-widest text-red-400">RECORDING</span>
+              </div>
+            </div>
+            <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/85 to-transparent px-4 pb-5 pt-12">
+              <div className="grid grid-cols-3 text-center">
+                <div><div className="text-2xl font-black tabular-nums text-[#EEFF41]">{fmt(seconds)}</div><div className="text-[9px] tracking-widest text-white/60">DURATION</div></div>
+                <div><div className="text-2xl font-black tabular-nums">{km}</div><div className="text-[9px] tracking-widest text-white/60">KM</div></div>
+                <div><div className="text-2xl font-black tabular-nums">5:12</div><div className="text-[9px] tracking-widest text-white/60">PACE</div></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setPaused((p) => !p)} className="rounded-2xl border border-white/20 bg-white/10 py-3.5 text-sm font-bold backdrop-blur">{paused ? "▶ Resume" : "⏸ Pause"}</button>
+                <button onClick={() => { setMapFull(false); setPhase("post"); }} className="rounded-2xl bg-red-500 py-3.5 text-sm font-bold text-white">⏹ Stop</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
+
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -1487,7 +1530,7 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
           </div>
           <SignalIndicator state={signal} />
         </div>
-        <LiveMap active={true} />
+        <LiveMap active={true} onToggleFull={() => setMapFull(true)} />
         <div className="flex flex-col items-center py-4" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.6))" }}>
           <div className="text-6xl font-black text-[#EEFF41] tabular-nums">{fmt(seconds)}</div>
           <div className="mt-1 text-[10px] tracking-[0.3em] text-muted-foreground">DURATION</div>
@@ -1920,6 +1963,7 @@ function OnboardingAdjustView() {
 }
 
 function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
+  const { displayName, profile } = useProfile();
 
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
@@ -1972,8 +2016,9 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </button>
             <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
           </div>
-          <div className="mt-3 text-xl font-bold">Andi Pratama</div>
-          <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
+          <div className="mt-3 text-xl font-bold">{displayName}</div>
+          <div className="text-sm text-muted-foreground">{profile.goal || "Set your running goal"}</div>
+
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
             <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
