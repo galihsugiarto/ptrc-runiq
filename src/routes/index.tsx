@@ -1975,8 +1975,9 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
             </button>
             <input ref={photoInput} type="file" accept="image/*" hidden onChange={onPhoto} />
           </div>
-          <div className="mt-3 text-xl font-bold">Andi Pratama</div>
-          <div className="text-sm text-muted-foreground">Marathon Runner · Sub-4hr Goal</div>
+          <div className="mt-3 text-xl font-bold">{displayName}</div>
+          <div className="text-sm text-muted-foreground">{profile.goal || "Set your running goal"}</div>
+
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
             <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
