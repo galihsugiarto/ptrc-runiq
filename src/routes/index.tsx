@@ -1472,6 +1472,8 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [mapFull, setMapFull] = useState(false);
+
 
   useEffect(() => {
     if (phase !== "active" || paused) return;
