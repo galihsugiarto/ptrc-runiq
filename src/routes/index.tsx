@@ -1528,7 +1528,7 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
           </div>
           <SignalIndicator state={signal} />
         </div>
-        <LiveMap active={true} />
+        <LiveMap active={true} onToggleFull={() => setMapFull(true)} />
         <div className="flex flex-col items-center py-4" style={{ filter: "drop-shadow(0 0 30px rgba(16,185,129,0.6))" }}>
           <div className="text-6xl font-black text-[#EEFF41] tabular-nums">{fmt(seconds)}</div>
           <div className="mt-1 text-[10px] tracking-[0.3em] text-muted-foreground">DURATION</div>
