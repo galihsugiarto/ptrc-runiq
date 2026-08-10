@@ -767,7 +767,9 @@ const SESSION_COLORS: Record<string, string> = {
 };
 
 function AiCoachNotesCard() {
+  const { displayName } = useProfile();
   const [note, setNote] = useState<string>("");
+
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [streaming, setStreaming] = useState(false);
