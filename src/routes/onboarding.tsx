@@ -341,7 +341,11 @@ function Onboarding() {
         <div className="mt-auto pt-6">
           <button
             onClick={next}
-            disabled={saving || (step === 1 && !goal) || (step === 4 && !coach)}
+            disabled={
+              saving ||
+              (role === "athlete" && ((step === 1 && !goal) || (step === 4 && !coach))) ||
+              (role === "coach" && ((step === 1 && (!coachName || !coachCity)) || (step === 2 && !coachYears)))
+            }
             className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 px-6 py-3 text-sm font-semibold shadow-lg disabled:opacity-40"
           >
             {saving ? "Saving…" : step === 4 ? "Finish" : "Continue"} <ChevronRight className="h-4 w-4" />
