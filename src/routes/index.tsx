@@ -160,6 +160,7 @@ function Logo({ size = 40 }: { size?: number }) {
 
 function TopBar({ onNotifications, onAvatar, onSettings }: { onNotifications?: () => void; onAvatar?: () => void; onSettings?: () => void }) {
   const unread = 3;
+  const { initials } = useProfile();
   return (
     <header className="fixed top-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 flex items-center justify-between border-b border-white/5 bg-[#0D1E35] px-5 py-4">
       <div className="flex items-center gap-3">
