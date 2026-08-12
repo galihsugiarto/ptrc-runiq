@@ -2241,6 +2241,7 @@ function ProgressGridMini() {
 
 
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
+  const { profile, displayName, initials } = useProfile();
   type Item = { icon: any; label: string; sub?: string; badge?: string; onClick: () => void };
   const account: Item[] = [
     { icon: User, label: "Edit Profile", sub: "Name, email, goal, fitness level", onClick: () => openDetail({ kind: "edit-profile" }) },
