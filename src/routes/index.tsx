@@ -100,12 +100,26 @@ function Index() {
   const openDetail = (d: Detail) => { setDetail(d); document.querySelector("main")?.scrollTo(0, 0); };
   const changeScreen = (s: Screen) => { setScreen(s); document.querySelector("main")?.scrollTo(0, 0); };
 
-  // Auto-login if Supabase session exists (client-only)
+  // Auto-login if Supabase session exists (client-only) + route coaches to their console
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) setAuthed(true);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return;
+      const { data } = await (supabase as any)
+        .from("profiles").select("role").eq("user_id", session.user.id).maybeSingle();
+      if (data?.role === "coach") { window.location.href = "/coach"; return; }
+      setAuthed(true);
     }).catch(() => {});
   }, []);
+
+  async function afterLogin() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await (supabase as any)
+        .from("profiles").select("role").eq("user_id", user.id).maybeSingle();
+      if (data?.role === "coach") { window.location.href = "/coach"; return; }
+    }
+    setAuthed(true);
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#0A1628] text-foreground">
@@ -113,7 +127,7 @@ function Index() {
         <div className="relative flex min-h-screen flex-col bg-[#0D1E35]">
           {!authed ? (
             authMode === "login" ? (
-              <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
+              <LoginScreen onLogin={afterLogin} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
             ) : authMode === "signup" ? (
               <SignupScreen onSignup={() => { window.location.href = (typeof window !== "undefined" && localStorage.getItem("runiq_onboarded") === "true") ? "/" : "/onboarding"; }} onBack={() => setAuthMode("login")} />
             ) : (
@@ -137,7 +151,7 @@ function Index() {
               </main>
               <TabBar screen={screen} setScreen={changeScreen} />
               {settingsOpen && (
-                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
+                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={async () => { setSettingsOpen(false); await supabase.auth.signOut(); setAuthed(false); }} openDetail={openDetail} />
               )}
               {bookOpen && <BookSheet onClose={() => setBookOpen(false)} />}
               {detail && <DetailOverlay detail={detail} onBack={() => setDetail(null)} />}
@@ -512,6 +526,8 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
           </span>
 
         </button>
+
+        {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{error}</p>}
 
         <button
           type="submit"
@@ -2274,10 +2290,12 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
           <button onClick={onClose} aria-label="Close"><X /></button>
         </div>
         <div className="mt-6 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">{initials}</div>
           <div>
-            <div className="font-bold">Andi Pratama</div>
-            <div className="text-xs text-muted-foreground">Athlete · andi@example.com</div>
+            <div className="font-bold">{displayName}</div>
+            <div className="text-xs text-muted-foreground">
+              {(profile.role === "coach" ? "Coach" : "Athlete")}{profile.email ? ` · ${profile.email}` : ""}
+            </div>
           </div>
         </div>
 
@@ -3313,7 +3331,7 @@ function EditProfileView() {
         </div>
         <div className="space-y-3">
           <Field label="Full name">
-            <input value={form.full_name || ""} onChange={(e) => field("full_name", e.target.value)} onBlur={(e) => save({ full_name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="Andi Pratama" />
+            <input value={form.full_name || ""} onChange={(e) => field("full_name", e.target.value)} onBlur={(e) => save({ full_name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="Your full name" />
           </Field>
           <Field label="Email address">
             <input type="email" value={form.email || ""} onChange={(e) => field("email", e.target.value)} onBlur={(e) => save({ email: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="you@example.com" />
