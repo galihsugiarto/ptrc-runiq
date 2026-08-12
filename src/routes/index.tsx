@@ -129,7 +129,7 @@ function Index() {
             authMode === "login" ? (
               <LoginScreen onLogin={afterLogin} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
             ) : authMode === "signup" ? (
-              <SignupScreen onSignup={() => { window.location.href = (typeof window !== "undefined" && localStorage.getItem("runiq_onboarded") === "true") ? "/" : "/onboarding"; }} onBack={() => setAuthMode("login")} />
+              <SignupScreen onSignup={() => { if (typeof window !== "undefined") { localStorage.removeItem("runiq_onboarded"); localStorage.removeItem("runiq.onboarding.done"); window.location.href = "/onboarding"; } }} onBack={() => setAuthMode("login")} />
             ) : (
               <ForgotPasswordScreen onBack={() => setAuthMode("login")} />
             )
