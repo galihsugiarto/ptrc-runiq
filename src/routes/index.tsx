@@ -11,7 +11,7 @@ import {
   Apple, Utensils, ChevronLeft, RefreshCw, Mic, Paperclip, Pin, Crown,
   Wallet, CreditCard, Plus, Trash2,
 } from "lucide-react";
-import { fetchProfile, upsertProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
+import { fetchProfile, upsertProfile, setLocalProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
 import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
@@ -409,7 +409,7 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
       </div>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); if (canSubmit) onSignup(); }}
+        onSubmit={handleSignup}
         className="mt-8 space-y-4"
       >
         <Field label="Full Name">
@@ -515,10 +515,10 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || loading}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand disabled:opacity-40"
         >
-          Create Account <ArrowRight size={18} />
+          {loading ? "Creating…" : <>Create Account <ArrowRight size={18} /></>}
         </button>
       </form>
 
