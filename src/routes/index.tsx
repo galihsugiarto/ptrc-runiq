@@ -373,7 +373,29 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
   const [role, setRole] = useState<"athlete" | "coach" | "">("");
   const [agreed, setAgreed] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const canSubmit = name && gender && dob && email && password && role && agreed;
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setError("");
+    setLoading(true);
+    const { error: err } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
+        data: { full_name: name.trim(), role, gender, dob },
+      },
+    });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
+    setLocalProfile({ full_name: name.trim(), email: email.trim(), role, gender, dob } as any);
+    onSignup();
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col px-6 pt-10 pb-10">
