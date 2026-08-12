@@ -115,7 +115,8 @@ function Index() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { data } = await (supabase as any)
-        .from("profiles").select("role").eq("user_id", user.id).maybeSingle();
+        .from("profiles").select("role, onboarded").eq("user_id", user.id).maybeSingle();
+      if (!data?.onboarded) { window.location.href = "/onboarding"; return; }
       if (data?.role === "coach") { window.location.href = "/coach"; return; }
     }
     setAuthed(true);
@@ -129,7 +130,7 @@ function Index() {
             authMode === "login" ? (
               <LoginScreen onLogin={afterLogin} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
             ) : authMode === "signup" ? (
-              <SignupScreen onSignup={() => { window.location.href = (typeof window !== "undefined" && localStorage.getItem("runiq_onboarded") === "true") ? "/" : "/onboarding"; }} onBack={() => setAuthMode("login")} />
+              <SignupScreen onSignup={() => { if (typeof window !== "undefined") { localStorage.removeItem("runiq_onboarded"); localStorage.removeItem("runiq.onboarding.done"); window.location.href = "/onboarding"; } }} onBack={() => setAuthMode("login")} />
             ) : (
               <ForgotPasswordScreen onBack={() => setAuthMode("login")} />
             )
