@@ -218,6 +218,23 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onSignup: () => void; onForgot: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!email.trim() || !password) { setError("Enter your email and password."); return; }
+    setLoading(true);
+    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setLoading(false);
+    if (err) { setError(err.message || "Invalid email or password."); return; }
+    onLogin();
+  }
+
   return (
     <div className="flex min-h-screen flex-col px-6 pt-20">
       <div className="flex flex-col items-center">
@@ -225,12 +242,12 @@ function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onS
         <h1 className="mt-6 text-4xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
         <p className="mt-2 text-muted-foreground">AI-Powered Training Platform</p>
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); onLogin(); }} className="mt-12 space-y-5">
+      <form onSubmit={handleLogin} className="mt-12 space-y-5">
         <div>
           <label className="text-sm font-medium">Email</label>
           <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <Mail size={18} className="text-muted-foreground" />
-            <input type="email" placeholder="you@example.com" className="w-full bg-transparent text-sm outline-none" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full bg-transparent text-sm outline-none" />
           </div>
         </div>
         <div>
@@ -240,14 +257,16 @@ function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onS
           </div>
           <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <Lock size={18} className="text-muted-foreground" />
-            <input type="password" placeholder="••••••••" className="w-full bg-transparent text-sm outline-none" />
-            <Eye size={18} className="text-muted-foreground" />
+            <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-transparent text-sm outline-none" />
+            <button type="button" onClick={() => setShowPw((v) => !v)}><Eye size={18} className="text-muted-foreground" /></button>
           </div>
         </div>
-        <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">
-          Log In <ArrowRight size={18} />
+        {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{error}</p>}
+        <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand disabled:opacity-50">
+          {loading ? "Signing in…" : <>Log In <ArrowRight size={18} /></>}
         </button>
       </form>
+
       <div className="my-8 flex items-center gap-4">
         <div className="h-px flex-1 bg-white/10" />
         <span className="text-xs text-muted-foreground">or continue with</span>
