@@ -16,6 +16,9 @@ export type ProfileRow = {
   coach_id?: string | null;
   avatar_url?: string | null;
   onboarded?: boolean;
+  role?: string | null;
+  gender?: string | null;
+  dob?: string | null;
 };
 
 const LS_KEY = "runiq.profile.local";

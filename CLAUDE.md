@@ -317,6 +317,10 @@ DeepSeek WAJIB berhenti dan eskalasi ke Claude jika menemukan:
 | 10 | Scroll reset saat pindah tab | 🟢 Selesai |
 | 1b-1f | Coach onboarding flow | 🟢 Selesai |
 | 7 | Sticky header + fixed TabBar | 🟢 Selesai |
+| 14 | Login real (Supabase signInWithPassword) — email/password asal ditolak | 🟢 Selesai |
+| 15 | Signup real ke Supabase Auth (name, gender, dob, role tersimpan di profiles) | 🟢 Selesai |
+| 16 | Role routing: akun coach diarahkan ke /coach, bukan menu athlete | 🟢 Selesai |
+| 17 | Data dummy "Andi Pratama" di Settings diganti data profil asli | 🟢 Selesai |
 
 **DeepSeek JANGAN sentuh issue yang statusnya 🟡 In Progress (Claude).**
 

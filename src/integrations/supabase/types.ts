@@ -19,15 +19,18 @@ export type Database = {
           avatar_url: string | null
           coach_id: string | null
           created_at: string
+          dob: string | null
           email: string | null
           fitness_level: string | null
           full_name: string | null
+          gender: string | null
           goal: string | null
           id: string
           language: string | null
           onboarded: boolean
           pace_5k: string | null
           race_distance: string | null
+          role: string
           runs_per_week: number | null
           updated_at: string
           user_id: string
@@ -37,15 +40,18 @@ export type Database = {
           avatar_url?: string | null
           coach_id?: string | null
           created_at?: string
+          dob?: string | null
           email?: string | null
           fitness_level?: string | null
           full_name?: string | null
+          gender?: string | null
           goal?: string | null
           id?: string
           language?: string | null
           onboarded?: boolean
           pace_5k?: string | null
           race_distance?: string | null
+          role?: string
           runs_per_week?: number | null
           updated_at?: string
           user_id: string
@@ -55,15 +61,18 @@ export type Database = {
           avatar_url?: string | null
           coach_id?: string | null
           created_at?: string
+          dob?: string | null
           email?: string | null
           fitness_level?: string | null
           full_name?: string | null
+          gender?: string | null
           goal?: string | null
           id?: string
           language?: string | null
           onboarded?: boolean
           pace_5k?: string | null
           race_distance?: string | null
+          role?: string
           runs_per_week?: number | null
           updated_at?: string
           user_id?: string

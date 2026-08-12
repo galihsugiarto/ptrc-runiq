@@ -11,7 +11,7 @@ import {
   Apple, Utensils, ChevronLeft, RefreshCw, Mic, Paperclip, Pin, Crown,
   Wallet, CreditCard, Plus, Trash2,
 } from "lucide-react";
-import { fetchProfile, upsertProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
+import { fetchProfile, upsertProfile, setLocalProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
 import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
@@ -100,12 +100,26 @@ function Index() {
   const openDetail = (d: Detail) => { setDetail(d); document.querySelector("main")?.scrollTo(0, 0); };
   const changeScreen = (s: Screen) => { setScreen(s); document.querySelector("main")?.scrollTo(0, 0); };
 
-  // Auto-login if Supabase session exists (client-only)
+  // Auto-login if Supabase session exists (client-only) + route coaches to their console
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) setAuthed(true);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return;
+      const { data } = await (supabase as any)
+        .from("profiles").select("role").eq("user_id", session.user.id).maybeSingle();
+      if (data?.role === "coach") { window.location.href = "/coach"; return; }
+      setAuthed(true);
     }).catch(() => {});
   }, []);
+
+  async function afterLogin() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await (supabase as any)
+        .from("profiles").select("role").eq("user_id", user.id).maybeSingle();
+      if (data?.role === "coach") { window.location.href = "/coach"; return; }
+    }
+    setAuthed(true);
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#0A1628] text-foreground">
@@ -113,7 +127,7 @@ function Index() {
         <div className="relative flex min-h-screen flex-col bg-[#0D1E35]">
           {!authed ? (
             authMode === "login" ? (
-              <LoginScreen onLogin={() => setAuthed(true)} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
+              <LoginScreen onLogin={afterLogin} onSignup={() => setAuthMode("signup")} onForgot={() => setAuthMode("forgot")} />
             ) : authMode === "signup" ? (
               <SignupScreen onSignup={() => { window.location.href = (typeof window !== "undefined" && localStorage.getItem("runiq_onboarded") === "true") ? "/" : "/onboarding"; }} onBack={() => setAuthMode("login")} />
             ) : (
@@ -137,7 +151,7 @@ function Index() {
               </main>
               <TabBar screen={screen} setScreen={changeScreen} />
               {settingsOpen && (
-                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={() => { setSettingsOpen(false); setAuthed(false); }} openDetail={openDetail} />
+                <SettingsSheet onClose={() => setSettingsOpen(false)} onLogout={async () => { setSettingsOpen(false); await supabase.auth.signOut(); setAuthed(false); }} openDetail={openDetail} />
               )}
               {bookOpen && <BookSheet onClose={() => setBookOpen(false)} />}
               {detail && <DetailOverlay detail={detail} onBack={() => setDetail(null)} />}
@@ -218,6 +232,23 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onSignup: () => void; onForgot: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!email.trim() || !password) { setError("Enter your email and password."); return; }
+    setLoading(true);
+    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setLoading(false);
+    if (err) { setError(err.message || "Invalid email or password."); return; }
+    onLogin();
+  }
+
   return (
     <div className="flex min-h-screen flex-col px-6 pt-20">
       <div className="flex flex-col items-center">
@@ -225,12 +256,12 @@ function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onS
         <h1 className="mt-6 text-4xl font-black tracking-wider text-gradient-brand">RUNIQ</h1>
         <p className="mt-2 text-muted-foreground">AI-Powered Training Platform</p>
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); onLogin(); }} className="mt-12 space-y-5">
+      <form onSubmit={handleLogin} className="mt-12 space-y-5">
         <div>
           <label className="text-sm font-medium">Email</label>
           <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <Mail size={18} className="text-muted-foreground" />
-            <input type="email" placeholder="you@example.com" className="w-full bg-transparent text-sm outline-none" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full bg-transparent text-sm outline-none" />
           </div>
         </div>
         <div>
@@ -240,14 +271,16 @@ function LoginScreen({ onLogin, onSignup, onForgot }: { onLogin: () => void; onS
           </div>
           <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
             <Lock size={18} className="text-muted-foreground" />
-            <input type="password" placeholder="••••••••" className="w-full bg-transparent text-sm outline-none" />
-            <Eye size={18} className="text-muted-foreground" />
+            <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-transparent text-sm outline-none" />
+            <button type="button" onClick={() => setShowPw((v) => !v)}><Eye size={18} className="text-muted-foreground" /></button>
           </div>
         </div>
-        <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand">
-          Log In <ArrowRight size={18} />
+        {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{error}</p>}
+        <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand disabled:opacity-50">
+          {loading ? "Signing in…" : <>Log In <ArrowRight size={18} /></>}
         </button>
       </form>
+
       <div className="my-8 flex items-center gap-4">
         <div className="h-px flex-1 bg-white/10" />
         <span className="text-xs text-muted-foreground">or continue with</span>
@@ -354,7 +387,29 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
   const [role, setRole] = useState<"athlete" | "coach" | "">("");
   const [agreed, setAgreed] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const canSubmit = name && gender && dob && email && password && role && agreed;
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setError("");
+    setLoading(true);
+    const { error: err } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
+        data: { full_name: name.trim(), role, gender, dob },
+      },
+    });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
+    setLocalProfile({ full_name: name.trim(), email: email.trim(), role, gender, dob } as any);
+    onSignup();
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col px-6 pt-10 pb-10">
@@ -368,7 +423,7 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
       </div>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); if (canSubmit) onSignup(); }}
+        onSubmit={handleSignup}
         className="mt-8 space-y-4"
       >
         <Field label="Full Name">
@@ -472,12 +527,14 @@ function SignupScreen({ onSignup, onBack }: { onSignup: () => void; onBack: () =
 
         </button>
 
+        {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{error}</p>}
+
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || loading}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-4 font-semibold text-white shadow-brand disabled:opacity-40"
         >
-          Create Account <ArrowRight size={18} />
+          {loading ? "Creating…" : <>Create Account <ArrowRight size={18} /></>}
         </button>
       </form>
 
@@ -2184,6 +2241,7 @@ function ProgressGridMini() {
 
 
 function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void; onLogout: () => void; openDetail: (d: Detail) => void }) {
+  const { profile, displayName, initials } = useProfile();
   type Item = { icon: any; label: string; sub?: string; badge?: string; onClick: () => void };
   const account: Item[] = [
     { icon: User, label: "Edit Profile", sub: "Name, email, goal, fitness level", onClick: () => openDetail({ kind: "edit-profile" }) },
@@ -2233,10 +2291,12 @@ function SettingsSheet({ onClose, onLogout, openDetail }: { onClose: () => void;
           <button onClick={onClose} aria-label="Close"><X /></button>
         </div>
         <div className="mt-6 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">A</div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand text-xl font-bold shadow-brand">{initials}</div>
           <div>
-            <div className="font-bold">Andi Pratama</div>
-            <div className="text-xs text-muted-foreground">Athlete · andi@example.com</div>
+            <div className="font-bold">{displayName}</div>
+            <div className="text-xs text-muted-foreground">
+              {(profile.role === "coach" ? "Coach" : "Athlete")}{profile.email ? ` · ${profile.email}` : ""}
+            </div>
           </div>
         </div>
 
@@ -3272,7 +3332,7 @@ function EditProfileView() {
         </div>
         <div className="space-y-3">
           <Field label="Full name">
-            <input value={form.full_name || ""} onChange={(e) => field("full_name", e.target.value)} onBlur={(e) => save({ full_name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="Andi Pratama" />
+            <input value={form.full_name || ""} onChange={(e) => field("full_name", e.target.value)} onBlur={(e) => save({ full_name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="Your full name" />
           </Field>
           <Field label="Email address">
             <input type="email" value={form.email || ""} onChange={(e) => field("email", e.target.value)} onBlur={(e) => save({ email: e.target.value })} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm" placeholder="you@example.com" />
