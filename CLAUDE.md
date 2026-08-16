@@ -321,6 +321,9 @@ DeepSeek WAJIB berhenti dan eskalasi ke Claude jika menemukan:
 | 15 | Signup real ke Supabase Auth (name, gender, dob, role tersimpan di profiles) | 🟢 Selesai |
 | 16 | Role routing: akun coach diarahkan ke /coach, bukan menu athlete | 🟢 Selesai |
 | 17 | Data dummy "Andi Pratama" di Settings diganti data profil asli | 🟢 Selesai |
+| 18 | Coach console interaktif (tab, detail runner, chat kirim pesan, approve plan, settings + logout, notifikasi) | 🟢 Selesai |
+| 19 | Coach console pakai brand color cyan/navy (bukan indigo/purple lama) | 🟢 Selesai |
+| 20 | Nama coach di header diambil dari profil asli (bukan "Sarah Mitchell") | 🟢 Selesai |
 
 **DeepSeek JANGAN sentuh issue yang statusnya 🟡 In Progress (Claude).**
 
