@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { fetchProfile, upsertProfile, setLocalProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
 import { useProfile } from "@/hooks/use-profile";
+import { useAthleteData, fmtDuration, paceOf, logActivity, startOfWeek, type ActivityRow, type SessionRow } from "@/lib/athlete";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
 import privacyMd from "@/content/legal/privacy.md?raw";
@@ -597,140 +598,156 @@ function RoleCard({
   );
 }
 
+function EmptyState({ title, sub, action, onAction }: { title: string; sub: string; action?: string; onAction?: () => void }) {
+  return (
+    <Card className="p-5 text-center">
+      <div className="text-sm font-semibold">{title}</div>
+      <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
+      {action && onAction && (
+        <button onClick={onAction} className="mt-3 rounded-xl bg-gradient-brand px-4 py-2 text-xs font-semibold text-white shadow-brand">{action}</button>
+      )}
+    </Card>
+  );
+}
+
 function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) => void; setScreen: (s: Screen) => void }) {
-  const readiness = 72;
-  const readinessColor = readiness >= 80 ? "#10b981" : readiness >= 60 ? "#eab308" : "#ef4444";
-  const readinessLabel = readiness >= 80 ? "Ready to Train Hard 💪" : readiness >= 60 ? "Moderate Training" : "Recovery Focus 🛌";
-  const trendUp = true;
+  const { displayName } = useProfile();
+  const { metrics, sessions, activities, loading } = useAthleteData();
 
-  const trend = [62, 68, 58, 71, 65, 70, 72]; // Mon..Sun
-  const todayIdx = 3; // Thu highlight
-  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const latest = metrics[0];
+  const prev = metrics[1];
+  const readiness = latest?.readiness_score ?? null;
+  const readinessColor = readiness == null ? "#6B7099" : readiness >= 80 ? "#10b981" : readiness >= 60 ? "#eab308" : "#ef4444";
+  const readinessLabel = readiness == null ? "No readiness data yet" : readiness >= 80 ? "Ready to Train Hard 💪" : readiness >= 60 ? "Moderate Training" : "Recovery Focus 🛌";
+  const delta = readiness != null && prev?.readiness_score != null ? readiness - prev.readiness_score : null;
 
-  const friends = [
-    { name: "Marcus", initials: "ML", color: "from-orange-400 to-amber-500", dist: "8.3 km", time: "06:14" },
-    { name: "Sarah", initials: "SK", color: "from-pink-400 to-rose-500", dist: "5.0 km", time: "05:42" },
-    { name: "Budi", initials: "BP", color: "from-emerald-400 to-teal-500", dist: "12.1 km", time: "05:10" },
-  ];
+  const trend = metrics.slice(0, 7).reverse();
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const todaySession = sessions.find((s) => s.session_date === todayIso) ?? null;
 
   return (
     <div className="space-y-6 px-5 pt-6">
-      {/* Readiness Dashboard */}
       <section>
         <button onClick={() => openDetail({ kind: "readiness-breakdown" })} className="w-full text-left">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-2xl font-bold">Readiness</h2>
+              <h2 className="text-2xl font-bold">Hi, {displayName}</h2>
               <p className="mt-1 text-sm" style={{ color: readinessColor }}>{readinessLabel}</p>
-              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                <TrendingUp size={12} className={trendUp ? "text-[#EEFF41]" : "rotate-180 text-rose-400"} />
-                {trendUp ? "+4" : "-3"} vs yesterday
-              </p>
+              {delta != null && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                  <TrendingUp size={12} className={delta >= 0 ? "text-[#EEFF41]" : "rotate-180 text-rose-400"} />
+                  {delta >= 0 ? "+" : ""}{delta} vs yesterday
+                </p>
+              )}
             </div>
             <div className="text-right">
-              <div className="text-6xl font-black" style={{ color: readinessColor }}>{readiness}</div>
-              <div className="text-xs text-muted-foreground">/ 100 · tap for details</div>
+              <div className="text-6xl font-black" style={{ color: readinessColor }}>{readiness ?? "—"}</div>
+              <div className="text-xs text-muted-foreground">/ 100 · readiness</div>
             </div>
           </div>
         </button>
       </section>
 
-      {/* Health Metrics Strip */}
-      <section className="grid grid-cols-3 gap-3">
-        <MetricCard icon={<Heart size={12} />} label="HRV" value="58" unit="ms" bar="linear-gradient(90deg,#ef4444,#f97316)" sub="vs 62ms base" />
-        <MetricCard icon={<Moon size={12} />} label="Sleep" value="7.2" unit="h · 84%" bar="linear-gradient(90deg,#6366f1,#00D4C8)" sub="Good quality" />
-        <MetricCard icon={<Dumbbell size={12} />} label="Load" value="68" unit="ACWR 1.1" bar="linear-gradient(90deg,#10b981,#00D4C8)" sub="Optimal" />
-      </section>
+      {/* Health Metrics — only when synced data exists */}
+      {latest ? (
+        <section className="grid grid-cols-3 gap-3">
+          <MetricCard icon={<Heart size={12} />} label="HRV" value={latest.hrv_ms ?? "—"} unit="ms" bar="linear-gradient(90deg,#ef4444,#f97316)" />
+          <MetricCard icon={<Moon size={12} />} label="Sleep" value={latest.sleep_hours ?? "—"} unit={latest.sleep_quality ? `h · ${latest.sleep_quality}%` : "h"} bar="linear-gradient(90deg,#6366f1,#00D4C8)" />
+          <MetricCard icon={<Dumbbell size={12} />} label="Load" value={latest.training_load ?? "—"} unit="load" bar="linear-gradient(90deg,#10b981,#00D4C8)" />
+        </section>
+      ) : !loading ? (
+        <EmptyState
+          title="No health data yet"
+          sub="Connect Garmin, Strava, Apple Health or Whoop to sync HRV, sleep and training load."
+          action="Connect apps"
+          onAction={() => openDetail({ kind: "connect-apps" })}
+        />
+      ) : null}
 
-      {/* Nutrition (MyFitnessPal) */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Utensils size={12} /> Nutrition · MyFitnessPal</span>
-          <span>1,420 / 2,200 kcal</span>
-        </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: "64%", background: "linear-gradient(90deg,#10b981,#eab308)" }} />
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-          {[
-            { l: "Karbo", v: "180g", c: "#00D4C8" },
-            { l: "Protein", v: "92g", c: "#00D4C8" },
-            { l: "Lemak", v: "48g", c: "#f59e0b" },
-          ].map((m) => (
-            <div key={m.l}>
-              <div className="flex justify-between"><span className="text-muted-foreground">{m.l}</span><span>{m.v}</span></div>
-              <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full" style={{ width: "65%", background: m.c }} /></div>
+      {/* Nutrition — requires MyFitnessPal connection */}
+      {!isConnected("myfitnesspal") && (
+        <button onClick={() => openDetail({ kind: "connect-apps" })} className="w-full rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Utensils size={12} /> Nutrition</span>
+            <span className="text-[#00D4C8]">Connect MyFitnessPal →</span>
+          </div>
+        </button>
+      )}
+
+      {/* Today's Session */}
+      {todaySession ? (
+        <Card className="p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Today's Session · {new Date(todaySession.session_date).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })}
+          </div>
+          <div className="mt-2 flex items-start justify-between">
+            <div>
+              <h3 className="text-2xl font-bold">{todaySession.session_type}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {todaySession.distance_km ? `${todaySession.distance_km} km` : `${todaySession.duration_min ?? 0} min`}{todaySession.zone ? ` · ${todaySession.zone}` : ""}
+              </p>
             </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Today's Session Card */}
-      <Card className="p-5">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Today's Session · Thursday, 8 May</div>
-        <div className="mt-2 flex items-start justify-between">
-          <div>
-            <h3 className="text-2xl font-bold">Tempo Run</h3>
-            <p className="mt-1 text-sm text-muted-foreground">12 km · Zone 4 · HR 165–175</p>
-            <p className="text-sm text-muted-foreground">≈ 1h 05m</p>
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${todaySession.completed ? "bg-[#EEFF41]/15 text-[#EEFF41]" : "bg-amber-500/15 text-amber-300"}`}>
+              {todaySession.completed ? "● Completed" : "● Not Started"}
+            </span>
           </div>
-          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">● Not Started</span>
-        </div>
-        <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm">
-          2km WU · 8km threshold · 2km CD
-        </div>
-        <button onClick={() => openDetail({ kind: "chat", name: "Coach Andre", initials: "CA", color: "from-blue-400 to-indigo-500" })} className="mt-3 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-xs text-muted-foreground hover:bg-white/10">
-          <MessageSquare size={14} className="text-[#00D4C8]" />
-          <span><span className="font-semibold text-foreground">Coach Andre:</span> Focus on pace, don't go over-effort early.</span>
-        </button>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button onClick={() => setScreen("activity")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-semibold text-white shadow-brand">
-            <Play size={16} /> Start Run
+          {todaySession.description && (
+            <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm">{todaySession.description}</div>
+          )}
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button onClick={() => setScreen("activity")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-semibold text-white shadow-brand">
+              <Play size={16} /> Start Run
+            </button>
+            <button
+              onClick={() => openDetail({ kind: "workout", day: new Date(todaySession.session_date).toLocaleDateString("en-GB", { weekday: "long" }), date: todaySession.session_date, type: todaySession.session_type, miles: todaySession.distance_km ? `${todaySession.distance_km} km` : "—", pace: todaySession.description ?? "—" })}
+              className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10"
+            >
+              View Details
+            </button>
+          </div>
+        </Card>
+      ) : !loading ? (
+        <EmptyState
+          title="No session scheduled today"
+          sub="Your plan appears here once your coach approves an AI-generated week."
+          action="Go to Plan"
+          onAction={() => setScreen("plan")}
+        />
+      ) : null}
+
+      {/* Readiness Trend */}
+      {trend.length > 1 && (
+        <Card className="p-5">
+          <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
+            <h3 className="font-bold">Readiness Trend</h3>
+            <div className="mt-4 flex h-24 items-end justify-between gap-2">
+              {trend.map((m, i) => (
+                <div key={m.id} className="flex flex-1 flex-col items-center gap-1">
+                  <div className="w-full rounded-t" style={{ height: `${((m.readiness_score ?? 0) / 100) * 100}%`, background: i === trend.length - 1 ? "#22d3ee" : "rgba(0,212,200,0.5)" }} />
+                  <span className="text-[10px] text-muted-foreground">{new Date(m.metric_date).toLocaleDateString("en-GB", { weekday: "narrow" })}</span>
+                </div>
+              ))}
+            </div>
           </button>
-          <button onClick={() => openDetail({ kind: "workout", day: "Thursday", date: "8 May", type: "Tempo Run", miles: "12 km", pace: "Zone 4" })} className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
-            View Details
-          </button>
-        </div>
-      </Card>
+        </Card>
+      )}
 
-      {/* 7-Day Readiness Trend */}
-      <Card className="p-5">
-        <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold">7-Day Readiness Trend</h3>
-            <span className="text-xs font-semibold text-[#EEFF41]">↗ Improving</span>
-          </div>
-          <div className="mt-4 flex h-24 items-end justify-between gap-2">
-            {trend.map((v, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-t"
-                  style={{
-                    height: `${(v / 100) * 100}%`,
-                    background: i === todayIdx ? "#22d3ee" : "rgba(168,85,247,0.6)",
-                  }}
-                />
-                <span className={`text-[10px] ${i === todayIdx ? "text-[#22d3ee] font-bold" : "text-muted-foreground"}`}>{days[i]}</span>
-              </div>
-            ))}
-          </div>
-        </button>
-      </Card>
-
-      {/* Friends Activity Strip */}
-      {friends.length > 0 && (
+      {/* Recent activity */}
+      {activities.length > 0 && (
         <section>
-          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Friends Activity Today</h3>
-          <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
-            {friends.map((f) => (
+          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Recent Runs</h3>
+          <div className="space-y-2">
+            {activities.slice(0, 3).map((a) => (
               <button
-                key={f.name}
-                onClick={() => openDetail({ kind: "run", title: `${f.name}'s Run`, date: `Today, ${f.time}`, stats: [f.dist, "—", "—", "—"] })}
-                className="flex min-w-[140px] flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-3 text-left"
+                key={a.id}
+                onClick={() => openDetail({ kind: "run", title: a.title, date: new Date(a.started_at).toLocaleString(), stats: [`${a.distance_km} km`, fmtDuration(a.duration_sec), a.avg_pace ?? "—", a.avg_hr ? `${a.avg_hr} bpm` : "—"] })}
+                className="flex w-full items-center justify-between rounded-2xl border border-white/5 bg-card/80 p-3 text-left"
               >
-                <AvatarC initials={f.initials} color={f.color} />
-                <div className="text-sm font-semibold">{f.name}</div>
-                <div className="text-xs text-muted-foreground">{f.dist} · {f.time}</div>
+                <div>
+                  <div className="text-sm font-semibold">{a.title}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(a.started_at).toLocaleDateString()} · {a.source}</div>
+                </div>
+                <div className="text-sm font-bold">{a.distance_km} km</div>
               </button>
             ))}
           </div>
@@ -909,219 +926,121 @@ function AiCoachNotesCard() {
 }
 
 function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
-  const [noteGenerated, setNoteGenerated] = useState(true);
-  const sessions = [
-    { day: "Monday", date: "May 5", type: "Easy Run", dist: "8 km", zone: "Z2", detail: "Conversational pace, focus on form", done: true },
-    { day: "Tuesday", date: "May 6", type: "Intervals", dist: "10 km", zone: "Z4", detail: "6×800m @ 4:10/km, 2min recovery jog", done: true },
-    { day: "Wednesday", date: "May 7", type: "Recovery", dist: "6 km", zone: "Z1", detail: "Very easy shakeout, HR under 140", done: true },
-    { day: "Thursday", date: "May 8", type: "Tempo", dist: "10 km", zone: "Z3", detail: "20 min @ 4:45/km threshold effort", done: false },
-    { day: "Saturday", date: "May 10", type: "Long Run", dist: "24 km", zone: "Z2", detail: "Steady long run, last 5km slightly faster", done: false },
-    { day: "Sunday", date: "May 11", type: "Strength", dist: "45 min", zone: "—", detail: "Runner-specific strength: single-leg work + core", done: false },
-  ];
+  const { sessions, activities, loading } = useAthleteData();
+
   const total = sessions.length;
-  const completed = sessions.filter((s) => s.done).length;
-  const pct = Math.round((completed / total) * 100);
-  const kmDone = 24;
-  const kmTarget = 58;
+  const completed = sessions.filter((s) => s.completed).length;
+  const pct = total ? Math.round((completed / total) * 100) : 0;
+  const kmTarget = sessions.reduce((n, s) => n + (Number(s.distance_km) || 0), 0);
+  const weekStart = startOfWeek();
+  const kmDone = activities
+    .filter((a) => new Date(a.started_at) >= weekStart)
+    .reduce((n, a) => n + (Number(a.distance_km) || 0), 0);
 
   return (
     <>
-      {/* AI Coaching Notes Card */}
-      {!noteGenerated ? (
-        <button onClick={() => setNoteGenerated(true)} className="w-full rounded-2xl bg-gradient-brand p-5 text-left shadow-brand">
-          <div className="flex items-center gap-2 text-white"><Sparkles size={18} /><span className="text-sm font-semibold">AI Coaching Notes</span></div>
-          <p className="mt-2 text-sm text-white/90">Get personalised insights on this week's plan based on your HRV, sleep and training load.</p>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-semibold text-white">✦ Generate Now</div>
-        </button>
-      ) : (
+      <AiCoachNotesCard />
+
+      {total > 0 && (
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#00D4C8]"><Sparkles size={18} /><span className="text-sm font-bold">AI Coaching Notes</span></div>
-            <button onClick={() => {}} className="text-xs text-muted-foreground hover:text-white flex items-center gap-1"><RefreshCw size={12} /> Refresh</button>
+            <span className="text-muted-foreground">Weekly Progress</span>
+            <span className="font-bold">{completed}/{total} sessions</span>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
-            Your HRV is 8% below baseline this week — I've kept intensity moderate. Prioritise sleep before Thursday's tempo…
-          </p>
-          <div className="mt-3 flex items-center justify-between">
-            <button onClick={() => openDetail({ kind: "ai-notes" })} className="text-xs font-semibold text-[#00D4C8]">Read More →</button>
-            <span className="text-[10px] text-muted-foreground">Generated 2h ago</span>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#00D4C8)" }} />
+          </div>
+          <div className="mt-3 flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Volume</span>
+            <span className="font-semibold">{kmDone.toFixed(1)} km <span className="text-muted-foreground">of {kmTarget.toFixed(0)} km target</span></span>
           </div>
         </Card>
       )}
 
-      {/* Coach Approval Banner */}
-      <button onClick={() => openDetail({ kind: "ai-notes" })} className="w-full rounded-2xl border border-[#EEFF41]/30 bg-[#EEFF41]/10 px-4 py-3 text-left">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-[#EEFF41] font-semibold">✓ Approved by Coach Sarah</span>
-          <span className="text-muted-foreground text-xs ml-auto">2h ago</span>
-        </div>
-      </button>
-
-      {/* Weekly Progress */}
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Weekly Progress</span>
-          <span className="font-bold">{completed}/{total} sessions</span>
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#00D4C8)" }} />
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Volume</span>
-          <span className="font-semibold">{kmDone} km <span className="text-muted-foreground">of {kmTarget} km target</span></span>
-        </div>
-        <p className="mt-3 text-[11px] text-muted-foreground">Sessions auto-fill when activities sync from Strava/Garmin ✓</p>
-      </Card>
-
       {/* Session Cards */}
       <div className="space-y-3">
         {sessions.map((s) => {
-          const color = SESSION_COLORS[s.type] ?? "#3B82F6";
+          const color = SESSION_COLORS[s.session_type] ?? "#3B82F6";
+          const d = new Date(s.session_date);
           return (
-            <button key={s.day} onClick={() => openDetail({ kind: "workout", day: s.day, date: s.date, type: s.type, miles: s.dist, pace: s.detail })} className={`flex w-full items-stretch overflow-hidden rounded-2xl border text-left ${s.done ? "border-[#EEFF41]/30 bg-[#EEFF41]/5" : "border-white/5 bg-card/80"}`}>
+            <button key={s.id} onClick={() => openDetail({ kind: "workout", day: d.toLocaleDateString("en-GB", { weekday: "long" }), date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }), type: s.session_type, miles: s.distance_km ? `${s.distance_km} km` : `${s.duration_min ?? 0} min`, pace: s.description ?? "—" })} className={`flex w-full items-stretch overflow-hidden rounded-2xl border text-left ${s.completed ? "border-[#EEFF41]/30 bg-[#EEFF41]/5" : "border-white/5 bg-card/80"}`}>
               <div className="w-1.5 shrink-0" style={{ background: color }} />
               <div className="flex flex-1 items-center gap-3 p-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2"><span className="font-bold">{s.day}</span><span className="text-xs text-muted-foreground">{s.date}</span></div>
+                  <div className="flex items-center gap-2"><span className="font-bold">{d.toLocaleDateString("en-GB", { weekday: "long" })}</span><span className="text-xs text-muted-foreground">{d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span></div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
-                    <span className="font-semibold" style={{ color }}>{s.type}</span>
+                    <span className="font-semibold" style={{ color }}>{s.session_type}</span>
                     <span className="text-muted-foreground">·</span>
-                    <span>{s.dist}</span>
-                    <span className="rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] text-muted-foreground">{s.zone}</span>
+                    <span>{s.distance_km ? `${s.distance_km} km` : `${s.duration_min ?? 0} min`}</span>
+                    {s.zone && <span className="rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] text-muted-foreground">{s.zone}</span>}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground truncate">{s.detail}</p>
+                  {s.description && <p className="mt-1 text-xs text-muted-foreground truncate">{s.description}</p>}
                 </div>
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${s.done ? "bg-[#EEFF41]" : "border border-white/15"}`}>
-                  {s.done && <Check size={16} className="text-white" />}
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${s.completed ? "bg-[#EEFF41]" : "border border-white/15"}`}>
+                  {s.completed && <Check size={16} className="text-white" />}
                 </div>
               </div>
             </button>
           );
         })}
+        {!loading && total === 0 && (
+          <EmptyState
+            title="No sessions this week"
+            sub="Once your coach approves an AI-generated plan, your weekly sessions show up here."
+            action="Message your coach"
+            onAction={() => openDetail({ kind: "find-coach" })}
+          />
+        )}
       </div>
-
-      {/* Legend */}
-      <Card className="p-4">
-        <div className="text-xs font-semibold text-muted-foreground mb-3">Session Types</div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {Object.entries(SESSION_COLORS).map(([name, c]) => (
-            <div key={name} className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
-              <span>{name}</span>
-            </div>
-          ))}
-          <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/50" /><span className="text-muted-foreground">Rest</span></div>
-        </div>
-      </Card>
     </>
   );
 }
 
 function ProgramView() {
-  const phases = [
-    { name: "Base", weeks: "Week 1–8", focus: "Aerobic foundation", status: "done" as const },
-    { name: "Build", weeks: "Week 9–16", focus: "Threshold + volume", status: "active" as const },
-    { name: "Peak", weeks: "Week 17–20", focus: "Race-specific intensity", status: "locked" as const },
-    { name: "Taper", weeks: "Week 21–23", focus: "Recover & sharpen", status: "locked" as const },
-    { name: "Race", weeks: "Week 24", focus: "Race day", status: "locked" as const },
-  ];
-  const overallPct = 45;
-  const volumes = [30, 35, 40, 38, 45, 50, 48, 55, 60, 62, 65, 60, 70, 72, 68, 75, 80, 78, 70, 65, 55, 45, 30, 42];
+  const { profile } = useProfile();
+  const { activities, loading } = useAthleteData();
+
+  const totalKm = activities.reduce((n, a) => n + (Number(a.distance_km) || 0), 0);
+  const totalSec = activities.reduce((n, a) => n + (a.duration_sec || 0), 0);
+  const longest = activities.reduce((n, a) => Math.max(n, Number(a.distance_km) || 0), 0);
+
+  if (!profile.goal && !profile.race_distance) {
+    return (
+      <EmptyState
+        title="No program yet"
+        sub="Set your goal and race distance in your running profile to start a program."
+      />
+    );
+  }
 
   return (
     <>
-      {/* Program Overview */}
       <Card className="p-5">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#00D4C8]">Marathon Program</div>
-        <h3 className="mt-1 text-xl font-bold">Sub-3:30 Marathon Program</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Jakarta Marathon · October 26, 2026</p>
-        <div className="mt-4 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Overall progress</span>
-          <span className="font-bold">{overallPct}%</span>
-        </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full bg-gradient-brand" style={{ width: `${overallPct}%` }} />
-        </div>
-        <div className="mt-4">
-          <div className="text-[11px] text-muted-foreground mb-2">Current phase: <span className="text-white font-semibold">Build</span></div>
-          <div className="flex h-2 gap-1 overflow-hidden rounded-full">
-            <div className="flex-[8] rounded-l-full bg-[#EEFF41]/60" />
-            <div className="flex-[8] bg-[#00D4C8]" />
-            <div className="flex-[4] bg-white/10" />
-            <div className="flex-[3] bg-white/10" />
-            <div className="flex-[1] rounded-r-full bg-white/10" />
-          </div>
-          <div className="mt-1 flex justify-between text-[9px] text-muted-foreground">
-            <span>Base</span><span>Build</span><span>Peak</span><span>Taper</span><span>Race</span>
-          </div>
-        </div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-[#00D4C8]">Your Program</div>
+        <h3 className="mt-1 text-xl font-bold">{profile.goal || "Running goal"}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {profile.race_distance ? `${profile.race_distance}` : "Distance not set"}
+          {profile.runs_per_week ? ` · ${profile.runs_per_week} runs/week` : ""}
+          {profile.weekly_distance_km ? ` · ${profile.weekly_distance_km} km/week target` : ""}
+        </p>
       </Card>
 
-      {/* Program Stats */}
       <Card className="p-5">
-        <div className="text-sm font-bold mb-4">Program Stats</div>
-        <div className="grid grid-cols-2 gap-4">
-          <StatBox label="Total KM" value="428" />
-          <StatBox label="Sessions Completed" value="52" />
-          <StatBox label="Avg Pace" value="5:12/km" />
-          <StatBox label="Longest Run" value="28 km" />
-          <div className="col-span-2">
-            <StatBox label="Adherence Rate" value="92%" />
+        <div className="text-sm font-bold mb-4">Program Stats (last 30 days)</div>
+        {loading ? (
+          <div className="text-xs text-muted-foreground">Loading…</div>
+        ) : activities.length === 0 ? (
+          <div className="text-xs text-muted-foreground">No runs logged yet — record a run or sync a device.</div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            <StatBox label="Total KM" value={totalKm.toFixed(1)} />
+            <StatBox label="Runs Logged" value={String(activities.length)} />
+            <StatBox label="Avg Pace" value={paceOf(totalKm, totalSec)} />
+            <StatBox label="Longest Run" value={`${longest.toFixed(1)} km`} />
           </div>
-        </div>
+        )}
       </Card>
 
-      {/* Phase Breakdown */}
-      <Card className="p-5">
-        <div className="text-sm font-bold mb-3">Phase Breakdown</div>
-        <div className="space-y-2">
-          {phases.map((p) => (
-            <div key={p.name} className={`rounded-xl border p-3 ${p.status === "active" ? "border-[#00D4C8]/50 bg-[#00D4C8]/10" : p.status === "done" ? "border-white/5 bg-white/[0.02] opacity-60" : "border-white/5 bg-white/[0.02]"}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">{p.name}</span>
-                  {p.status === "done" && <Check size={14} className="text-[#EEFF41]" />}
-                  {p.status === "active" && <span className="rounded-full bg-[#00D4C8] px-2 py-0.5 text-[9px] font-bold text-white">ACTIVE</span>}
-                  {p.status === "locked" && <span className="text-xs text-muted-foreground">🔒</span>}
-                </div>
-                <span className="text-xs text-muted-foreground">{p.weeks}</span>
-              </div>
-              {p.status === "active" && <div className="mt-1 text-xs text-muted-foreground">{p.focus}</div>}
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Weekly Volume Chart */}
-      <Card className="p-5">
-        <div className="text-sm font-bold mb-1">Weekly Volume</div>
-        <div className="text-xs text-muted-foreground mb-4">24-week taper visualisation (km)</div>
-        <div className="-mx-1 overflow-x-auto scrollbar-hide">
-          <div className="flex items-end gap-1 px-1" style={{ minWidth: 24 * 14 }}>
-            {volumes.map((v, i) => {
-              const isActive = i === 10;
-              let color = "#10B981";
-              if (i >= 8 && i < 16) color = "#3B82F6";
-              else if (i >= 16 && i < 20) color = "#F97316";
-              else if (i >= 20 && i < 23) color = "#EAB308";
-              else if (i >= 23) color = "#EF4444";
-              return (
-                <div key={i} className="flex flex-col items-center gap-1" style={{ width: 12 }}>
-                  <div className="w-full rounded-t" style={{ height: v * 1.2, background: color, opacity: isActive ? 1 : 0.7, outline: isActive ? "1px solid white" : "none" }} />
-                  <div className="text-[8px] text-muted-foreground">{i + 1}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3 text-[10px]">
-          <LegendDot color="#10B981" label="Base" />
-          <LegendDot color="#3B82F6" label="Build" />
-          <LegendDot color="#F97316" label="Peak" />
-          <LegendDot color="#EAB308" label="Taper" />
-          <LegendDot color="#EF4444" label="Race" />
-        </div>
-      </Card>
     </>
   );
 }
@@ -1314,12 +1233,20 @@ const MATCH_STYLE: Record<MatchStatus, { label: string; cls: string }> = {
 
 function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => void; goRecord: () => void }) {
   const [manualOpen, setManualOpen] = useState(false);
-  const activities = [
-    { title: "Tempo Run", date: "Wed, May 7 · 6:12 AM", source: "Strava", feel: "💪", stats: ["12.1 km","54:22","4:29/km","162 bpm"], match: "match" as MatchStatus, color: "#f97316" },
-    { title: "Easy Recovery", date: "Tue, May 6 · 5:45 AM", source: "Garmin", feel: "🙂", stats: ["6.0 km","33:14","5:32/km","138 bpm"], match: "match" as MatchStatus, color: "#00D4C8" },
-    { title: "Long Run", date: "Sun, May 4 · 5:30 AM", source: "RUNIQ Record", feel: "😐", stats: ["18.4 km","1:38:02","5:19/km","149 bpm"], match: "diff" as MatchStatus, color: "#00D4C8" },
-    { title: "Trail Adventure", date: "Sat, May 3 · 7:00 AM", source: "Strava", feel: "🔥", stats: ["8.2 km","52:11","6:22/km","155 bpm"], match: "extra" as MatchStatus, color: "#10b981" },
-  ];
+  const { activities, sessions, loading, reload } = useAthleteData();
+
+  const weekStart = startOfWeek();
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+  const week = activities.filter((a) => {
+    const d = new Date(a.started_at);
+    return d >= weekStart && d < weekEnd;
+  });
+  const km = week.reduce((n, a) => n + (Number(a.distance_km) || 0), 0);
+  const sec = week.reduce((n, a) => n + (a.duration_sec || 0), 0);
+  const hrVals = week.map((a) => a.avg_hr).filter((h): h is number => !!h);
+  const avgHr = hrVals.length ? Math.round(hrVals.reduce((n, h) => n + h, 0) / hrVals.length) : null;
+  const target = sessions.reduce((n, s) => n + (Number(s.distance_km) || 0), 0);
+
   return (
     <>
       {/* Quick Actions Row */}
@@ -1335,34 +1262,54 @@ function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => voi
       {/* Week Summary Card */}
       <Card className="p-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">May 5 – May 11, 2026</span>
-          <span className="text-xs font-semibold text-[#00D4C8]">4 activities</span>
+          <span className="text-xs text-muted-foreground">
+            {weekStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – {new Date(weekEnd.getTime() - 86400000).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
+          <span className="text-xs font-semibold text-[#00D4C8]">{week.length} {week.length === 1 ? "activity" : "activities"}</span>
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2">
-          <Stat label="Distance" value="44.7 km" />
-          <Stat label="Time" value="3:57" />
-          <Stat label="Avg Pace" value="5:18/km" />
-          <Stat label="Avg HR" value="151 bpm" />
+          <Stat label="Distance" value={`${km.toFixed(1)} km`} />
+          <Stat label="Time" value={sec ? fmtDuration(sec) : "—"} />
+          <Stat label="Avg Pace" value={paceOf(km, sec)} />
+          <Stat label="Avg HR" value={avgHr ? `${avgHr} bpm` : "—"} />
         </div>
-        <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">vs weekly plan target</span>
-            <span className="font-semibold text-[#EEFF41]">44.7 / 55 km</span>
+        {target > 0 && (
+          <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">vs weekly plan target</span>
+              <span className="font-semibold text-[#EEFF41]">{km.toFixed(1)} / {target.toFixed(0)} km</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-gradient-brand" style={{ width: `${Math.min(100, (km / target) * 100)}%` }} />
+            </div>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-gradient-brand" style={{ width: "81%" }} />
-          </div>
-        </div>
+        )}
       </Card>
 
       {/* Activity Cards */}
       {activities.map((a) => (
-        <button key={a.title + a.date} onClick={() => openDetail({ kind: "run", title: a.title, date: a.date, stats: a.stats })} className="block w-full text-left">
-          <ActivityCard {...a} />
+        <button
+          key={a.id}
+          onClick={() => openDetail({ kind: "run", title: a.title, date: new Date(a.started_at).toLocaleString(), stats: [`${a.distance_km} km`, fmtDuration(a.duration_sec), a.avg_pace ?? paceOf(Number(a.distance_km), a.duration_sec), a.avg_hr ? `${a.avg_hr} bpm` : "—"] })}
+          className="block w-full text-left"
+        >
+          <ActivityCard
+            title={a.title}
+            date={new Date(a.started_at).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+            source={a.source}
+            feel={a.feel ?? ""}
+            stats={[`${a.distance_km} km`, fmtDuration(a.duration_sec), a.avg_pace ?? paceOf(Number(a.distance_km), a.duration_sec), a.avg_hr ? `${a.avg_hr} bpm` : "—"]}
+            match={"extra" as MatchStatus}
+            color="#00D4C8"
+          />
         </button>
       ))}
 
-      {manualOpen && <ManualInputSheet onClose={() => setManualOpen(false)} />}
+      {!loading && activities.length === 0 && (
+        <EmptyState title="No runs logged yet" sub="Record a run, add it manually, or connect Strava/Garmin to sync automatically." action="Record a run" onAction={goRecord} />
+      )}
+
+      {manualOpen && <ManualInputSheet onClose={() => { setManualOpen(false); reload(); }} />}
     </>
   );
 }
@@ -1785,7 +1732,37 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
   const [type, setType] = useState("Easy");
   const [feel, setFeel] = useState(2);
   const [linkPlan, setLinkPlan] = useState(false);
+  const [when, setWhen] = useState("");
+  const [dist, setDist] = useState("");
+  const [dur, setDur] = useState("");
+  const [hr, setHr] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const types = ["Easy","Tempo","Long Run","Intervals","Strength","Other"];
+
+  async function save() {
+    setError("");
+    const km = parseFloat(dist);
+    const parts = dur.split(":").map((p) => parseInt(p, 10) || 0);
+    const sec = parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts.length === 2 ? parts[0] * 60 + parts[1] : 0;
+    if (!km || !sec) { setError("Enter distance and duration (HH:MM:SS)."); return; }
+    setSaving(true);
+    const res = await logActivity({
+      title: type,
+      source: "Manual",
+      started_at: when ? new Date(when).toISOString() : new Date().toISOString(),
+      distance_km: km,
+      duration_sec: sec,
+      avg_hr: hr ? parseInt(hr, 10) : null,
+      feel: FEELS[feel],
+      notes: notes || null,
+    });
+    setSaving(false);
+    if (!res.ok) { setError(res.error || "Could not save. Please sign in again."); return; }
+    onSave();
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -1794,7 +1771,7 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
         <span className="w-5" />
       </div>
       <FormField label="Date & Start Time">
-        <input type="datetime-local" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
+        <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
       </FormField>
       <FormField label="Activity Type">
         <div className="flex flex-wrap gap-2">
@@ -1804,10 +1781,10 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
         </div>
       </FormField>
       <div className="grid grid-cols-2 gap-3">
-        <FormField label="Distance (km)"><input type="number" step="0.01" placeholder="0.00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
-        <FormField label="Duration (HH:MM:SS)"><input type="text" placeholder="00:00:00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+        <FormField label="Distance (km)"><input value={dist} onChange={(e) => setDist(e.target.value)} type="number" step="0.01" placeholder="0.00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+        <FormField label="Duration (HH:MM:SS)"><input value={dur} onChange={(e) => setDur(e.target.value)} type="text" placeholder="00:00:00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       </div>
-      <FormField label="Avg HR (optional)"><input type="number" placeholder="bpm" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      <FormField label="Avg HR (optional)"><input value={hr} onChange={(e) => setHr(e.target.value)} type="number" placeholder="bpm" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       <FormField label="Feel">
         <div className="flex justify-between">
           {FEELS.map((f, i) => (
@@ -1815,14 +1792,15 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
           ))}
         </div>
       </FormField>
-      <FormField label="Notes"><textarea rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      <FormField label="Notes"><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
         <span className="text-xs">Match with today's planned session</span>
         <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#00D4C8]" />
       </label>
+      {error && <p className="text-xs text-[#FF6B4A]">{error}</p>}
       <div className="grid grid-cols-2 gap-3 pt-1">
         <button onClick={onCancel} className="rounded-2xl border border-white/10 py-3.5 text-sm font-semibold text-muted-foreground">Cancel</button>
-        <button onClick={onSave} className="rounded-2xl bg-gradient-brand py-3.5 text-sm font-bold text-white shadow-brand">Save Activity</button>
+        <button disabled={saving} onClick={save} className="rounded-2xl bg-gradient-brand py-3.5 text-sm font-bold text-white shadow-brand disabled:opacity-60">{saving ? "Saving…" : "Save Activity"}</button>
       </div>
     </div>
   );

@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          avg_hr: number | null
+          avg_pace: string | null
+          created_at: string
+          distance_km: number
+          duration_sec: number
+          feel: string | null
+          id: string
+          notes: string | null
+          source: string
+          started_at: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          avg_hr?: number | null
+          avg_pace?: string | null
+          created_at?: string
+          distance_km?: number
+          duration_sec?: number
+          feel?: string | null
+          id?: string
+          notes?: string | null
+          source?: string
+          started_at?: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          avg_hr?: number | null
+          avg_pace?: string | null
+          created_at?: string
+          distance_km?: number
+          duration_sec?: number
+          feel?: string | null
+          id?: string
+          notes?: string | null
+          source?: string
+          started_at?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_metrics: {
+        Row: {
+          created_at: string
+          hrv_ms: number | null
+          id: string
+          metric_date: string
+          readiness_score: number | null
+          sleep_hours: number | null
+          sleep_quality: number | null
+          training_load: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hrv_ms?: number | null
+          id?: string
+          metric_date?: string
+          readiness_score?: number | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          training_load?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hrv_ms?: number | null
+          id?: string
+          metric_date?: string
+          readiness_score?: number | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          training_load?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -77,6 +158,45 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weekly_distance_km?: number | null
+        }
+        Relationships: []
+      }
+      training_sessions: {
+        Row: {
+          completed: boolean
+          created_at: string
+          description: string | null
+          distance_km: number | null
+          duration_min: number | null
+          id: string
+          session_date: string
+          session_type: string
+          user_id: string
+          zone: string | null
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          distance_km?: number | null
+          duration_min?: number | null
+          id?: string
+          session_date: string
+          session_type?: string
+          user_id: string
+          zone?: string | null
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          distance_km?: number | null
+          duration_min?: number | null
+          id?: string
+          session_date?: string
+          session_type?: string
+          user_id?: string
+          zone?: string | null
         }
         Relationships: []
       }
