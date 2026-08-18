@@ -1233,12 +1233,20 @@ const MATCH_STYLE: Record<MatchStatus, { label: string; cls: string }> = {
 
 function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => void; goRecord: () => void }) {
   const [manualOpen, setManualOpen] = useState(false);
-  const activities = [
-    { title: "Tempo Run", date: "Wed, May 7 · 6:12 AM", source: "Strava", feel: "💪", stats: ["12.1 km","54:22","4:29/km","162 bpm"], match: "match" as MatchStatus, color: "#f97316" },
-    { title: "Easy Recovery", date: "Tue, May 6 · 5:45 AM", source: "Garmin", feel: "🙂", stats: ["6.0 km","33:14","5:32/km","138 bpm"], match: "match" as MatchStatus, color: "#00D4C8" },
-    { title: "Long Run", date: "Sun, May 4 · 5:30 AM", source: "RUNIQ Record", feel: "😐", stats: ["18.4 km","1:38:02","5:19/km","149 bpm"], match: "diff" as MatchStatus, color: "#00D4C8" },
-    { title: "Trail Adventure", date: "Sat, May 3 · 7:00 AM", source: "Strava", feel: "🔥", stats: ["8.2 km","52:11","6:22/km","155 bpm"], match: "extra" as MatchStatus, color: "#10b981" },
-  ];
+  const { activities, sessions, loading, reload } = useAthleteData();
+
+  const weekStart = startOfWeek();
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+  const week = activities.filter((a) => {
+    const d = new Date(a.started_at);
+    return d >= weekStart && d < weekEnd;
+  });
+  const km = week.reduce((n, a) => n + (Number(a.distance_km) || 0), 0);
+  const sec = week.reduce((n, a) => n + (a.duration_sec || 0), 0);
+  const hrVals = week.map((a) => a.avg_hr).filter((h): h is number => !!h);
+  const avgHr = hrVals.length ? Math.round(hrVals.reduce((n, h) => n + h, 0) / hrVals.length) : null;
+  const target = sessions.reduce((n, s) => n + (Number(s.distance_km) || 0), 0);
+
   return (
     <>
       {/* Quick Actions Row */}
@@ -1254,34 +1262,54 @@ function WeekActivity({ openDetail, goRecord }: { openDetail: (d: Detail) => voi
       {/* Week Summary Card */}
       <Card className="p-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">May 5 – May 11, 2026</span>
-          <span className="text-xs font-semibold text-[#00D4C8]">4 activities</span>
+          <span className="text-xs text-muted-foreground">
+            {weekStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – {new Date(weekEnd.getTime() - 86400000).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
+          <span className="text-xs font-semibold text-[#00D4C8]">{week.length} {week.length === 1 ? "activity" : "activities"}</span>
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2">
-          <Stat label="Distance" value="44.7 km" />
-          <Stat label="Time" value="3:57" />
-          <Stat label="Avg Pace" value="5:18/km" />
-          <Stat label="Avg HR" value="151 bpm" />
+          <Stat label="Distance" value={`${km.toFixed(1)} km`} />
+          <Stat label="Time" value={sec ? fmtDuration(sec) : "—"} />
+          <Stat label="Avg Pace" value={paceOf(km, sec)} />
+          <Stat label="Avg HR" value={avgHr ? `${avgHr} bpm` : "—"} />
         </div>
-        <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">vs weekly plan target</span>
-            <span className="font-semibold text-[#EEFF41]">44.7 / 55 km</span>
+        {target > 0 && (
+          <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">vs weekly plan target</span>
+              <span className="font-semibold text-[#EEFF41]">{km.toFixed(1)} / {target.toFixed(0)} km</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-gradient-brand" style={{ width: `${Math.min(100, (km / target) * 100)}%` }} />
+            </div>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-gradient-brand" style={{ width: "81%" }} />
-          </div>
-        </div>
+        )}
       </Card>
 
       {/* Activity Cards */}
       {activities.map((a) => (
-        <button key={a.title + a.date} onClick={() => openDetail({ kind: "run", title: a.title, date: a.date, stats: a.stats })} className="block w-full text-left">
-          <ActivityCard {...a} />
+        <button
+          key={a.id}
+          onClick={() => openDetail({ kind: "run", title: a.title, date: new Date(a.started_at).toLocaleString(), stats: [`${a.distance_km} km`, fmtDuration(a.duration_sec), a.avg_pace ?? paceOf(Number(a.distance_km), a.duration_sec), a.avg_hr ? `${a.avg_hr} bpm` : "—"] })}
+          className="block w-full text-left"
+        >
+          <ActivityCard
+            title={a.title}
+            date={new Date(a.started_at).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+            source={a.source}
+            feel={a.feel ?? ""}
+            stats={[`${a.distance_km} km`, fmtDuration(a.duration_sec), a.avg_pace ?? paceOf(Number(a.distance_km), a.duration_sec), a.avg_hr ? `${a.avg_hr} bpm` : "—"]}
+            match={"extra" as MatchStatus}
+            color="#00D4C8"
+          />
         </button>
       ))}
 
-      {manualOpen && <ManualInputSheet onClose={() => setManualOpen(false)} />}
+      {!loading && activities.length === 0 && (
+        <EmptyState title="No runs logged yet" sub="Record a run, add it manually, or connect Strava/Garmin to sync automatically." action="Record a run" onAction={goRecord} />
+      )}
+
+      {manualOpen && <ManualInputSheet onClose={() => { setManualOpen(false); reload(); }} />}
     </>
   );
 }
