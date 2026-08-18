@@ -597,140 +597,156 @@ function RoleCard({
   );
 }
 
+function EmptyState({ title, sub, action, onAction }: { title: string; sub: string; action?: string; onAction?: () => void }) {
+  return (
+    <Card className="p-5 text-center">
+      <div className="text-sm font-semibold">{title}</div>
+      <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
+      {action && onAction && (
+        <button onClick={onAction} className="mt-3 rounded-xl bg-gradient-brand px-4 py-2 text-xs font-semibold text-white shadow-brand">{action}</button>
+      )}
+    </Card>
+  );
+}
+
 function DashboardScreen({ openDetail, setScreen }: { openDetail: (d: Detail) => void; setScreen: (s: Screen) => void }) {
-  const readiness = 72;
-  const readinessColor = readiness >= 80 ? "#10b981" : readiness >= 60 ? "#eab308" : "#ef4444";
-  const readinessLabel = readiness >= 80 ? "Ready to Train Hard 💪" : readiness >= 60 ? "Moderate Training" : "Recovery Focus 🛌";
-  const trendUp = true;
+  const { displayName } = useProfile();
+  const { metrics, sessions, activities, loading } = useAthleteData();
 
-  const trend = [62, 68, 58, 71, 65, 70, 72]; // Mon..Sun
-  const todayIdx = 3; // Thu highlight
-  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const latest = metrics[0];
+  const prev = metrics[1];
+  const readiness = latest?.readiness_score ?? null;
+  const readinessColor = readiness == null ? "#6B7099" : readiness >= 80 ? "#10b981" : readiness >= 60 ? "#eab308" : "#ef4444";
+  const readinessLabel = readiness == null ? "No readiness data yet" : readiness >= 80 ? "Ready to Train Hard 💪" : readiness >= 60 ? "Moderate Training" : "Recovery Focus 🛌";
+  const delta = readiness != null && prev?.readiness_score != null ? readiness - prev.readiness_score : null;
 
-  const friends = [
-    { name: "Marcus", initials: "ML", color: "from-orange-400 to-amber-500", dist: "8.3 km", time: "06:14" },
-    { name: "Sarah", initials: "SK", color: "from-pink-400 to-rose-500", dist: "5.0 km", time: "05:42" },
-    { name: "Budi", initials: "BP", color: "from-emerald-400 to-teal-500", dist: "12.1 km", time: "05:10" },
-  ];
+  const trend = metrics.slice(0, 7).reverse();
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const todaySession = sessions.find((s) => s.session_date === todayIso) ?? null;
 
   return (
     <div className="space-y-6 px-5 pt-6">
-      {/* Readiness Dashboard */}
       <section>
         <button onClick={() => openDetail({ kind: "readiness-breakdown" })} className="w-full text-left">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-2xl font-bold">Readiness</h2>
+              <h2 className="text-2xl font-bold">Hi, {displayName}</h2>
               <p className="mt-1 text-sm" style={{ color: readinessColor }}>{readinessLabel}</p>
-              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                <TrendingUp size={12} className={trendUp ? "text-[#EEFF41]" : "rotate-180 text-rose-400"} />
-                {trendUp ? "+4" : "-3"} vs yesterday
-              </p>
+              {delta != null && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                  <TrendingUp size={12} className={delta >= 0 ? "text-[#EEFF41]" : "rotate-180 text-rose-400"} />
+                  {delta >= 0 ? "+" : ""}{delta} vs yesterday
+                </p>
+              )}
             </div>
             <div className="text-right">
-              <div className="text-6xl font-black" style={{ color: readinessColor }}>{readiness}</div>
-              <div className="text-xs text-muted-foreground">/ 100 · tap for details</div>
+              <div className="text-6xl font-black" style={{ color: readinessColor }}>{readiness ?? "—"}</div>
+              <div className="text-xs text-muted-foreground">/ 100 · readiness</div>
             </div>
           </div>
         </button>
       </section>
 
-      {/* Health Metrics Strip */}
-      <section className="grid grid-cols-3 gap-3">
-        <MetricCard icon={<Heart size={12} />} label="HRV" value="58" unit="ms" bar="linear-gradient(90deg,#ef4444,#f97316)" sub="vs 62ms base" />
-        <MetricCard icon={<Moon size={12} />} label="Sleep" value="7.2" unit="h · 84%" bar="linear-gradient(90deg,#6366f1,#00D4C8)" sub="Good quality" />
-        <MetricCard icon={<Dumbbell size={12} />} label="Load" value="68" unit="ACWR 1.1" bar="linear-gradient(90deg,#10b981,#00D4C8)" sub="Optimal" />
-      </section>
+      {/* Health Metrics — only when synced data exists */}
+      {latest ? (
+        <section className="grid grid-cols-3 gap-3">
+          <MetricCard icon={<Heart size={12} />} label="HRV" value={latest.hrv_ms ?? "—"} unit="ms" bar="linear-gradient(90deg,#ef4444,#f97316)" />
+          <MetricCard icon={<Moon size={12} />} label="Sleep" value={latest.sleep_hours ?? "—"} unit={latest.sleep_quality ? `h · ${latest.sleep_quality}%` : "h"} bar="linear-gradient(90deg,#6366f1,#00D4C8)" />
+          <MetricCard icon={<Dumbbell size={12} />} label="Load" value={latest.training_load ?? "—"} unit="load" bar="linear-gradient(90deg,#10b981,#00D4C8)" />
+        </section>
+      ) : !loading ? (
+        <EmptyState
+          title="No health data yet"
+          sub="Connect Garmin, Strava, Apple Health or Whoop to sync HRV, sleep and training load."
+          action="Connect apps"
+          onAction={() => openDetail({ kind: "connect-apps" })}
+        />
+      ) : null}
 
-      {/* Nutrition (MyFitnessPal) */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Utensils size={12} /> Nutrition · MyFitnessPal</span>
-          <span>1,420 / 2,200 kcal</span>
-        </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: "64%", background: "linear-gradient(90deg,#10b981,#eab308)" }} />
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-          {[
-            { l: "Karbo", v: "180g", c: "#00D4C8" },
-            { l: "Protein", v: "92g", c: "#00D4C8" },
-            { l: "Lemak", v: "48g", c: "#f59e0b" },
-          ].map((m) => (
-            <div key={m.l}>
-              <div className="flex justify-between"><span className="text-muted-foreground">{m.l}</span><span>{m.v}</span></div>
-              <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full" style={{ width: "65%", background: m.c }} /></div>
+      {/* Nutrition — requires MyFitnessPal connection */}
+      {!isConnected("myfitnesspal") && (
+        <button onClick={() => openDetail({ kind: "connect-apps" })} className="w-full rounded-2xl border border-white/5 bg-card/80 p-4 text-left">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Utensils size={12} /> Nutrition</span>
+            <span className="text-[#00D4C8]">Connect MyFitnessPal →</span>
+          </div>
+        </button>
+      )}
+
+      {/* Today's Session */}
+      {todaySession ? (
+        <Card className="p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Today's Session · {new Date(todaySession.session_date).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })}
+          </div>
+          <div className="mt-2 flex items-start justify-between">
+            <div>
+              <h3 className="text-2xl font-bold">{todaySession.session_type}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {todaySession.distance_km ? `${todaySession.distance_km} km` : `${todaySession.duration_min ?? 0} min`}{todaySession.zone ? ` · ${todaySession.zone}` : ""}
+              </p>
             </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Today's Session Card */}
-      <Card className="p-5">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Today's Session · Thursday, 8 May</div>
-        <div className="mt-2 flex items-start justify-between">
-          <div>
-            <h3 className="text-2xl font-bold">Tempo Run</h3>
-            <p className="mt-1 text-sm text-muted-foreground">12 km · Zone 4 · HR 165–175</p>
-            <p className="text-sm text-muted-foreground">≈ 1h 05m</p>
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${todaySession.completed ? "bg-[#EEFF41]/15 text-[#EEFF41]" : "bg-amber-500/15 text-amber-300"}`}>
+              {todaySession.completed ? "● Completed" : "● Not Started"}
+            </span>
           </div>
-          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">● Not Started</span>
-        </div>
-        <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm">
-          2km WU · 8km threshold · 2km CD
-        </div>
-        <button onClick={() => openDetail({ kind: "chat", name: "Coach Andre", initials: "CA", color: "from-blue-400 to-indigo-500" })} className="mt-3 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-xs text-muted-foreground hover:bg-white/10">
-          <MessageSquare size={14} className="text-[#00D4C8]" />
-          <span><span className="font-semibold text-foreground">Coach Andre:</span> Focus on pace, don't go over-effort early.</span>
-        </button>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button onClick={() => setScreen("activity")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-semibold text-white shadow-brand">
-            <Play size={16} /> Start Run
+          {todaySession.description && (
+            <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm">{todaySession.description}</div>
+          )}
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button onClick={() => setScreen("activity")} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-semibold text-white shadow-brand">
+              <Play size={16} /> Start Run
+            </button>
+            <button
+              onClick={() => openDetail({ kind: "workout", day: new Date(todaySession.session_date).toLocaleDateString("en-GB", { weekday: "long" }), date: todaySession.session_date, type: todaySession.session_type, miles: todaySession.distance_km ? `${todaySession.distance_km} km` : "—", pace: todaySession.description ?? "—" })}
+              className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10"
+            >
+              View Details
+            </button>
+          </div>
+        </Card>
+      ) : !loading ? (
+        <EmptyState
+          title="No session scheduled today"
+          sub="Your plan appears here once your coach approves an AI-generated week."
+          action="Go to Plan"
+          onAction={() => setScreen("plan")}
+        />
+      ) : null}
+
+      {/* Readiness Trend */}
+      {trend.length > 1 && (
+        <Card className="p-5">
+          <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
+            <h3 className="font-bold">Readiness Trend</h3>
+            <div className="mt-4 flex h-24 items-end justify-between gap-2">
+              {trend.map((m, i) => (
+                <div key={m.id} className="flex flex-1 flex-col items-center gap-1">
+                  <div className="w-full rounded-t" style={{ height: `${((m.readiness_score ?? 0) / 100) * 100}%`, background: i === trend.length - 1 ? "#22d3ee" : "rgba(0,212,200,0.5)" }} />
+                  <span className="text-[10px] text-muted-foreground">{new Date(m.metric_date).toLocaleDateString("en-GB", { weekday: "narrow" })}</span>
+                </div>
+              ))}
+            </div>
           </button>
-          <button onClick={() => openDetail({ kind: "workout", day: "Thursday", date: "8 May", type: "Tempo Run", miles: "12 km", pace: "Zone 4" })} className="rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10">
-            View Details
-          </button>
-        </div>
-      </Card>
+        </Card>
+      )}
 
-      {/* 7-Day Readiness Trend */}
-      <Card className="p-5">
-        <button onClick={() => openDetail({ kind: "trend-28d" })} className="w-full text-left">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold">7-Day Readiness Trend</h3>
-            <span className="text-xs font-semibold text-[#EEFF41]">↗ Improving</span>
-          </div>
-          <div className="mt-4 flex h-24 items-end justify-between gap-2">
-            {trend.map((v, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-t"
-                  style={{
-                    height: `${(v / 100) * 100}%`,
-                    background: i === todayIdx ? "#22d3ee" : "rgba(168,85,247,0.6)",
-                  }}
-                />
-                <span className={`text-[10px] ${i === todayIdx ? "text-[#22d3ee] font-bold" : "text-muted-foreground"}`}>{days[i]}</span>
-              </div>
-            ))}
-          </div>
-        </button>
-      </Card>
-
-      {/* Friends Activity Strip */}
-      {friends.length > 0 && (
+      {/* Recent activity */}
+      {activities.length > 0 && (
         <section>
-          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Friends Activity Today</h3>
-          <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2">
-            {friends.map((f) => (
+          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Recent Runs</h3>
+          <div className="space-y-2">
+            {activities.slice(0, 3).map((a) => (
               <button
-                key={f.name}
-                onClick={() => openDetail({ kind: "run", title: `${f.name}'s Run`, date: `Today, ${f.time}`, stats: [f.dist, "—", "—", "—"] })}
-                className="flex min-w-[140px] flex-col items-start gap-2 rounded-2xl border border-white/5 bg-card/80 p-3 text-left"
+                key={a.id}
+                onClick={() => openDetail({ kind: "run", title: a.title, date: new Date(a.started_at).toLocaleString(), stats: [`${a.distance_km} km`, fmtDuration(a.duration_sec), a.avg_pace ?? "—", a.avg_hr ? `${a.avg_hr} bpm` : "—"] })}
+                className="flex w-full items-center justify-between rounded-2xl border border-white/5 bg-card/80 p-3 text-left"
               >
-                <AvatarC initials={f.initials} color={f.color} />
-                <div className="text-sm font-semibold">{f.name}</div>
-                <div className="text-xs text-muted-foreground">{f.dist} · {f.time}</div>
+                <div>
+                  <div className="text-sm font-semibold">{a.title}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(a.started_at).toLocaleDateString()} · {a.source}</div>
+                </div>
+                <div className="text-sm font-bold">{a.distance_km} km</div>
               </button>
             ))}
           </div>
