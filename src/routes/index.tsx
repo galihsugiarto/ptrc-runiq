@@ -926,110 +926,72 @@ function AiCoachNotesCard() {
 }
 
 function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
-  const [noteGenerated, setNoteGenerated] = useState(true);
-  const sessions = [
-    { day: "Monday", date: "May 5", type: "Easy Run", dist: "8 km", zone: "Z2", detail: "Conversational pace, focus on form", done: true },
-    { day: "Tuesday", date: "May 6", type: "Intervals", dist: "10 km", zone: "Z4", detail: "6×800m @ 4:10/km, 2min recovery jog", done: true },
-    { day: "Wednesday", date: "May 7", type: "Recovery", dist: "6 km", zone: "Z1", detail: "Very easy shakeout, HR under 140", done: true },
-    { day: "Thursday", date: "May 8", type: "Tempo", dist: "10 km", zone: "Z3", detail: "20 min @ 4:45/km threshold effort", done: false },
-    { day: "Saturday", date: "May 10", type: "Long Run", dist: "24 km", zone: "Z2", detail: "Steady long run, last 5km slightly faster", done: false },
-    { day: "Sunday", date: "May 11", type: "Strength", dist: "45 min", zone: "—", detail: "Runner-specific strength: single-leg work + core", done: false },
-  ];
+  const { sessions, activities, loading } = useAthleteData();
+
   const total = sessions.length;
-  const completed = sessions.filter((s) => s.done).length;
-  const pct = Math.round((completed / total) * 100);
-  const kmDone = 24;
-  const kmTarget = 58;
+  const completed = sessions.filter((s) => s.completed).length;
+  const pct = total ? Math.round((completed / total) * 100) : 0;
+  const kmTarget = sessions.reduce((n, s) => n + (Number(s.distance_km) || 0), 0);
+  const weekStart = startOfWeek();
+  const kmDone = activities
+    .filter((a) => new Date(a.started_at) >= weekStart)
+    .reduce((n, a) => n + (Number(a.distance_km) || 0), 0);
 
   return (
     <>
-      {/* AI Coaching Notes Card */}
-      {!noteGenerated ? (
-        <button onClick={() => setNoteGenerated(true)} className="w-full rounded-2xl bg-gradient-brand p-5 text-left shadow-brand">
-          <div className="flex items-center gap-2 text-white"><Sparkles size={18} /><span className="text-sm font-semibold">AI Coaching Notes</span></div>
-          <p className="mt-2 text-sm text-white/90">Get personalised insights on this week's plan based on your HRV, sleep and training load.</p>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-semibold text-white">✦ Generate Now</div>
-        </button>
-      ) : (
+      <AiCoachNotesCard />
+
+      {total > 0 && (
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#00D4C8]"><Sparkles size={18} /><span className="text-sm font-bold">AI Coaching Notes</span></div>
-            <button onClick={() => {}} className="text-xs text-muted-foreground hover:text-white flex items-center gap-1"><RefreshCw size={12} /> Refresh</button>
+            <span className="text-muted-foreground">Weekly Progress</span>
+            <span className="font-bold">{completed}/{total} sessions</span>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
-            Your HRV is 8% below baseline this week — I've kept intensity moderate. Prioritise sleep before Thursday's tempo…
-          </p>
-          <div className="mt-3 flex items-center justify-between">
-            <button onClick={() => openDetail({ kind: "ai-notes" })} className="text-xs font-semibold text-[#00D4C8]">Read More →</button>
-            <span className="text-[10px] text-muted-foreground">Generated 2h ago</span>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#00D4C8)" }} />
+          </div>
+          <div className="mt-3 flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Volume</span>
+            <span className="font-semibold">{kmDone.toFixed(1)} km <span className="text-muted-foreground">of {kmTarget.toFixed(0)} km target</span></span>
           </div>
         </Card>
       )}
 
-      {/* Coach Approval Banner */}
-      <button onClick={() => openDetail({ kind: "ai-notes" })} className="w-full rounded-2xl border border-[#EEFF41]/30 bg-[#EEFF41]/10 px-4 py-3 text-left">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-[#EEFF41] font-semibold">✓ Approved by Coach Sarah</span>
-          <span className="text-muted-foreground text-xs ml-auto">2h ago</span>
-        </div>
-      </button>
-
-      {/* Weekly Progress */}
-      <Card className="p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Weekly Progress</span>
-          <span className="font-bold">{completed}/{total} sessions</span>
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#10b981,#00D4C8)" }} />
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Volume</span>
-          <span className="font-semibold">{kmDone} km <span className="text-muted-foreground">of {kmTarget} km target</span></span>
-        </div>
-        <p className="mt-3 text-[11px] text-muted-foreground">Sessions auto-fill when activities sync from Strava/Garmin ✓</p>
-      </Card>
-
       {/* Session Cards */}
       <div className="space-y-3">
         {sessions.map((s) => {
-          const color = SESSION_COLORS[s.type] ?? "#3B82F6";
+          const color = SESSION_COLORS[s.session_type] ?? "#3B82F6";
+          const d = new Date(s.session_date);
           return (
-            <button key={s.day} onClick={() => openDetail({ kind: "workout", day: s.day, date: s.date, type: s.type, miles: s.dist, pace: s.detail })} className={`flex w-full items-stretch overflow-hidden rounded-2xl border text-left ${s.done ? "border-[#EEFF41]/30 bg-[#EEFF41]/5" : "border-white/5 bg-card/80"}`}>
+            <button key={s.id} onClick={() => openDetail({ kind: "workout", day: d.toLocaleDateString("en-GB", { weekday: "long" }), date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }), type: s.session_type, miles: s.distance_km ? `${s.distance_km} km` : `${s.duration_min ?? 0} min`, pace: s.description ?? "—" })} className={`flex w-full items-stretch overflow-hidden rounded-2xl border text-left ${s.completed ? "border-[#EEFF41]/30 bg-[#EEFF41]/5" : "border-white/5 bg-card/80"}`}>
               <div className="w-1.5 shrink-0" style={{ background: color }} />
               <div className="flex flex-1 items-center gap-3 p-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2"><span className="font-bold">{s.day}</span><span className="text-xs text-muted-foreground">{s.date}</span></div>
+                  <div className="flex items-center gap-2"><span className="font-bold">{d.toLocaleDateString("en-GB", { weekday: "long" })}</span><span className="text-xs text-muted-foreground">{d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span></div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
-                    <span className="font-semibold" style={{ color }}>{s.type}</span>
+                    <span className="font-semibold" style={{ color }}>{s.session_type}</span>
                     <span className="text-muted-foreground">·</span>
-                    <span>{s.dist}</span>
-                    <span className="rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] text-muted-foreground">{s.zone}</span>
+                    <span>{s.distance_km ? `${s.distance_km} km` : `${s.duration_min ?? 0} min`}</span>
+                    {s.zone && <span className="rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] text-muted-foreground">{s.zone}</span>}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground truncate">{s.detail}</p>
+                  {s.description && <p className="mt-1 text-xs text-muted-foreground truncate">{s.description}</p>}
                 </div>
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${s.done ? "bg-[#EEFF41]" : "border border-white/15"}`}>
-                  {s.done && <Check size={16} className="text-white" />}
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${s.completed ? "bg-[#EEFF41]" : "border border-white/15"}`}>
+                  {s.completed && <Check size={16} className="text-white" />}
                 </div>
               </div>
             </button>
           );
         })}
+        {!loading && total === 0 && (
+          <EmptyState
+            title="No sessions this week"
+            sub="Once your coach approves an AI-generated plan, your weekly sessions show up here."
+            action="Message your coach"
+            onAction={() => openDetail({ kind: "find-coach" })}
+          />
+        )}
       </div>
-
-      {/* Legend */}
-      <Card className="p-4">
-        <div className="text-xs font-semibold text-muted-foreground mb-3">Session Types</div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {Object.entries(SESSION_COLORS).map(([name, c]) => (
-            <div key={name} className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
-              <span>{name}</span>
-            </div>
-          ))}
-          <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/50" /><span className="text-muted-foreground">Rest</span></div>
-        </div>
-      </Card>
     </>
   );
 }
