@@ -1732,7 +1732,37 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
   const [type, setType] = useState("Easy");
   const [feel, setFeel] = useState(2);
   const [linkPlan, setLinkPlan] = useState(false);
+  const [when, setWhen] = useState("");
+  const [dist, setDist] = useState("");
+  const [dur, setDur] = useState("");
+  const [hr, setHr] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const types = ["Easy","Tempo","Long Run","Intervals","Strength","Other"];
+
+  async function save() {
+    setError("");
+    const km = parseFloat(dist);
+    const parts = dur.split(":").map((p) => parseInt(p, 10) || 0);
+    const sec = parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts.length === 2 ? parts[0] * 60 + parts[1] : 0;
+    if (!km || !sec) { setError("Enter distance and duration (HH:MM:SS)."); return; }
+    setSaving(true);
+    const res = await logActivity({
+      title: type,
+      source: "Manual",
+      started_at: when ? new Date(when).toISOString() : new Date().toISOString(),
+      distance_km: km,
+      duration_sec: sec,
+      avg_hr: hr ? parseInt(hr, 10) : null,
+      feel: FEELS[feel],
+      notes: notes || null,
+    });
+    setSaving(false);
+    if (!res.ok) { setError(res.error || "Could not save. Please sign in again."); return; }
+    onSave();
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -1741,7 +1771,7 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
         <span className="w-5" />
       </div>
       <FormField label="Date & Start Time">
-        <input type="datetime-local" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
+        <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" />
       </FormField>
       <FormField label="Activity Type">
         <div className="flex flex-wrap gap-2">
@@ -1751,10 +1781,10 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
         </div>
       </FormField>
       <div className="grid grid-cols-2 gap-3">
-        <FormField label="Distance (km)"><input type="number" step="0.01" placeholder="0.00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
-        <FormField label="Duration (HH:MM:SS)"><input type="text" placeholder="00:00:00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+        <FormField label="Distance (km)"><input value={dist} onChange={(e) => setDist(e.target.value)} type="number" step="0.01" placeholder="0.00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+        <FormField label="Duration (HH:MM:SS)"><input value={dur} onChange={(e) => setDur(e.target.value)} type="text" placeholder="00:00:00" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       </div>
-      <FormField label="Avg HR (optional)"><input type="number" placeholder="bpm" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      <FormField label="Avg HR (optional)"><input value={hr} onChange={(e) => setHr(e.target.value)} type="number" placeholder="bpm" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       <FormField label="Feel">
         <div className="flex justify-between">
           {FEELS.map((f, i) => (
@@ -1762,14 +1792,15 @@ function ManualInputBody({ onCancel, onSave }: { onCancel: () => void; onSave: (
           ))}
         </div>
       </FormField>
-      <FormField label="Notes"><textarea rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
+      <FormField label="Notes"><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Optional notes" className="w-full resize-none rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none" /></FormField>
       <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
         <span className="text-xs">Match with today's planned session</span>
         <input type="checkbox" checked={linkPlan} onChange={(e) => setLinkPlan(e.target.checked)} className="h-5 w-5 accent-[#00D4C8]" />
       </label>
+      {error && <p className="text-xs text-[#FF6B4A]">{error}</p>}
       <div className="grid grid-cols-2 gap-3 pt-1">
         <button onClick={onCancel} className="rounded-2xl border border-white/10 py-3.5 text-sm font-semibold text-muted-foreground">Cancel</button>
-        <button onClick={onSave} className="rounded-2xl bg-gradient-brand py-3.5 text-sm font-bold text-white shadow-brand">Save Activity</button>
+        <button disabled={saving} onClick={save} className="rounded-2xl bg-gradient-brand py-3.5 text-sm font-bold text-white shadow-brand disabled:opacity-60">{saving ? "Saving…" : "Save Activity"}</button>
       </div>
     </div>
   );
