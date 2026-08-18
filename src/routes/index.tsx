@@ -997,110 +997,50 @@ function ThisWeekView({ openDetail }: { openDetail: (d: Detail) => void }) {
 }
 
 function ProgramView() {
-  const phases = [
-    { name: "Base", weeks: "Week 1–8", focus: "Aerobic foundation", status: "done" as const },
-    { name: "Build", weeks: "Week 9–16", focus: "Threshold + volume", status: "active" as const },
-    { name: "Peak", weeks: "Week 17–20", focus: "Race-specific intensity", status: "locked" as const },
-    { name: "Taper", weeks: "Week 21–23", focus: "Recover & sharpen", status: "locked" as const },
-    { name: "Race", weeks: "Week 24", focus: "Race day", status: "locked" as const },
-  ];
-  const overallPct = 45;
-  const volumes = [30, 35, 40, 38, 45, 50, 48, 55, 60, 62, 65, 60, 70, 72, 68, 75, 80, 78, 70, 65, 55, 45, 30, 42];
+  const { profile } = useProfile();
+  const { activities, loading } = useAthleteData();
+
+  const totalKm = activities.reduce((n, a) => n + (Number(a.distance_km) || 0), 0);
+  const totalSec = activities.reduce((n, a) => n + (a.duration_sec || 0), 0);
+  const longest = activities.reduce((n, a) => Math.max(n, Number(a.distance_km) || 0), 0);
+
+  if (!profile.goal && !profile.race_distance) {
+    return (
+      <EmptyState
+        title="No program yet"
+        sub="Set your goal and race distance in your running profile to start a program."
+      />
+    );
+  }
 
   return (
     <>
-      {/* Program Overview */}
       <Card className="p-5">
-        <div className="text-xs font-semibold uppercase tracking-wider text-[#00D4C8]">Marathon Program</div>
-        <h3 className="mt-1 text-xl font-bold">Sub-3:30 Marathon Program</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Jakarta Marathon · October 26, 2026</p>
-        <div className="mt-4 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Overall progress</span>
-          <span className="font-bold">{overallPct}%</span>
-        </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="h-full rounded-full bg-gradient-brand" style={{ width: `${overallPct}%` }} />
-        </div>
-        <div className="mt-4">
-          <div className="text-[11px] text-muted-foreground mb-2">Current phase: <span className="text-white font-semibold">Build</span></div>
-          <div className="flex h-2 gap-1 overflow-hidden rounded-full">
-            <div className="flex-[8] rounded-l-full bg-[#EEFF41]/60" />
-            <div className="flex-[8] bg-[#00D4C8]" />
-            <div className="flex-[4] bg-white/10" />
-            <div className="flex-[3] bg-white/10" />
-            <div className="flex-[1] rounded-r-full bg-white/10" />
-          </div>
-          <div className="mt-1 flex justify-between text-[9px] text-muted-foreground">
-            <span>Base</span><span>Build</span><span>Peak</span><span>Taper</span><span>Race</span>
-          </div>
-        </div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-[#00D4C8]">Your Program</div>
+        <h3 className="mt-1 text-xl font-bold">{profile.goal || "Running goal"}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {profile.race_distance ? `${profile.race_distance}` : "Distance not set"}
+          {profile.runs_per_week ? ` · ${profile.runs_per_week} runs/week` : ""}
+          {profile.weekly_distance_km ? ` · ${profile.weekly_distance_km} km/week target` : ""}
+        </p>
       </Card>
 
-      {/* Program Stats */}
       <Card className="p-5">
-        <div className="text-sm font-bold mb-4">Program Stats</div>
-        <div className="grid grid-cols-2 gap-4">
-          <StatBox label="Total KM" value="428" />
-          <StatBox label="Sessions Completed" value="52" />
-          <StatBox label="Avg Pace" value="5:12/km" />
-          <StatBox label="Longest Run" value="28 km" />
-          <div className="col-span-2">
-            <StatBox label="Adherence Rate" value="92%" />
+        <div className="text-sm font-bold mb-4">Program Stats (last 30 days)</div>
+        {loading ? (
+          <div className="text-xs text-muted-foreground">Loading…</div>
+        ) : activities.length === 0 ? (
+          <div className="text-xs text-muted-foreground">No runs logged yet — record a run or sync a device.</div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            <StatBox label="Total KM" value={totalKm.toFixed(1)} />
+            <StatBox label="Runs Logged" value={String(activities.length)} />
+            <StatBox label="Avg Pace" value={paceOf(totalKm, totalSec)} />
+            <StatBox label="Longest Run" value={`${longest.toFixed(1)} km`} />
           </div>
-        </div>
+        )}
       </Card>
 
-      {/* Phase Breakdown */}
-      <Card className="p-5">
-        <div className="text-sm font-bold mb-3">Phase Breakdown</div>
-        <div className="space-y-2">
-          {phases.map((p) => (
-            <div key={p.name} className={`rounded-xl border p-3 ${p.status === "active" ? "border-[#00D4C8]/50 bg-[#00D4C8]/10" : p.status === "done" ? "border-white/5 bg-white/[0.02] opacity-60" : "border-white/5 bg-white/[0.02]"}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">{p.name}</span>
-                  {p.status === "done" && <Check size={14} className="text-[#EEFF41]" />}
-                  {p.status === "active" && <span className="rounded-full bg-[#00D4C8] px-2 py-0.5 text-[9px] font-bold text-white">ACTIVE</span>}
-                  {p.status === "locked" && <span className="text-xs text-muted-foreground">🔒</span>}
-                </div>
-                <span className="text-xs text-muted-foreground">{p.weeks}</span>
-              </div>
-              {p.status === "active" && <div className="mt-1 text-xs text-muted-foreground">{p.focus}</div>}
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Weekly Volume Chart */}
-      <Card className="p-5">
-        <div className="text-sm font-bold mb-1">Weekly Volume</div>
-        <div className="text-xs text-muted-foreground mb-4">24-week taper visualisation (km)</div>
-        <div className="-mx-1 overflow-x-auto scrollbar-hide">
-          <div className="flex items-end gap-1 px-1" style={{ minWidth: 24 * 14 }}>
-            {volumes.map((v, i) => {
-              const isActive = i === 10;
-              let color = "#10B981";
-              if (i >= 8 && i < 16) color = "#3B82F6";
-              else if (i >= 16 && i < 20) color = "#F97316";
-              else if (i >= 20 && i < 23) color = "#EAB308";
-              else if (i >= 23) color = "#EF4444";
-              return (
-                <div key={i} className="flex flex-col items-center gap-1" style={{ width: 12 }}>
-                  <div className="w-full rounded-t" style={{ height: v * 1.2, background: color, opacity: isActive ? 1 : 0.7, outline: isActive ? "1px solid white" : "none" }} />
-                  <div className="text-[8px] text-muted-foreground">{i + 1}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3 text-[10px]">
-          <LegendDot color="#10B981" label="Base" />
-          <LegendDot color="#3B82F6" label="Build" />
-          <LegendDot color="#F97316" label="Peak" />
-          <LegendDot color="#EAB308" label="Taper" />
-          <LegendDot color="#EF4444" label="Race" />
-        </div>
-      </Card>
     </>
   );
 }
