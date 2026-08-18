@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { fetchProfile, upsertProfile, setLocalProfile, listWallets, addWallet, removeWallet, type ProfileRow, type WalletRow } from "@/lib/profile";
 import { useProfile } from "@/hooks/use-profile";
+import { useAthleteData, fmtDuration, paceOf, logActivity, startOfWeek, type ActivityRow, type SessionRow } from "@/lib/athlete";
 import { supabase } from "@/integrations/supabase/client";
 import disclaimerMd from "@/content/legal/disclaimer.md?raw";
 import privacyMd from "@/content/legal/privacy.md?raw";
