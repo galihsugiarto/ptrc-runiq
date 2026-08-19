@@ -2062,9 +2062,9 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
 
           <div className="my-5 h-px bg-white/5" />
           <div className="grid grid-cols-3 divide-x divide-white/5">
-            <div><div className="text-2xl font-bold">247</div><div className="text-xs text-muted-foreground">Total KM</div></div>
-            <div><div className="text-2xl font-bold">42</div><div className="text-xs text-muted-foreground">Total Runs</div></div>
-            <div><div className="text-2xl font-bold">8</div><div className="text-xs text-muted-foreground">Active Weeks</div></div>
+            <div><div className="text-2xl font-bold">{totalKm.toFixed(0)}</div><div className="text-xs text-muted-foreground">Total KM</div></div>
+            <div><div className="text-2xl font-bold">{activities.length}</div><div className="text-xs text-muted-foreground">Total Runs</div></div>
+            <div><div className="text-2xl font-bold">{totalSec ? fmtDuration(totalSec).split(":")[0] : 0}</div><div className="text-xs text-muted-foreground">Total Hours</div></div>
           </div>
           <button
             onClick={() => openDetail({ kind: "onboarding-adjust" })}
