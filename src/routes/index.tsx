@@ -1497,7 +1497,23 @@ function RecordFlow({ goWeek }: { goWeek: () => void }) {
   const km = (seconds / 300).toFixed(2);
 
   if (phase === "manual") return <ManualInputScreen onCancel={() => setPhase("pre")} onSave={goWeek} />;
-  if (phase === "post") return <PostRunSummary duration={fmt(seconds)} distance={km} onDiscard={() => { setPhase("pre"); setSeconds(0); }} onSave={goWeek} />;
+  if (phase === "post") return (
+    <PostRunSummary
+      duration={fmt(seconds)}
+      distance={km}
+      onDiscard={() => { setPhase("pre"); setSeconds(0); }}
+      onSave={async () => {
+        await logActivity({
+          title: "Recorded Run",
+          source: "RUNIQ Record",
+          started_at: new Date(Date.now() - seconds * 1000).toISOString(),
+          distance_km: Number(km),
+          duration_sec: seconds,
+        });
+        goWeek();
+      }}
+    />
+  );
   if (phase === "active") {
     if (mapFull) {
       return (
