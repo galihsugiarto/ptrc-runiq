@@ -2135,17 +2135,13 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-bold">Jakarta Marathon 2026</div>
-                <div className="text-xs text-muted-foreground">Target: 15 Nov 2026 · Week 8 of 16</div>
+                <div className="font-bold">{profile.goal || "No goal set"}</div>
+                <div className="text-xs text-muted-foreground">
+                  {profile.race_distance ? `${profile.race_distance}` : "Set your race distance"}
+                  {profile.weekly_distance_km ? ` · ${profile.weekly_distance_km} km/week target` : ""}
+                </div>
               </div>
               <ChevronRight size={20} className="text-muted-foreground" />
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
-              <div className="h-full rounded-full bg-gradient-brand" style={{ width: "50%" }} />
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">50% complete</span>
-              <span className="font-semibold text-[#00D4C8]">See calendar →</span>
             </div>
             <ProgressGridMini />
           </Card>
@@ -2155,23 +2151,34 @@ function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; ope
       {/* DAILY READINESS metrics */}
       <section>
         <h3 className="mb-3 font-bold">Daily Readiness</h3>
-        <div className="grid grid-cols-3 gap-3">
-          <MetricCard icon={<Heart size={14} />} label="HRV" value="68" unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
-          <MetricCard icon={<Moon size={14} />} label="SLEEP" value="7.2" unit="hrs" bar="linear-gradient(90deg,#00D4C8,#00D4C8)" />
-          <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value="45" unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
-        </div>
-        <button onClick={() => openDetail({ kind: "trend-28d" })} className="mt-3 w-full text-left">
-          <Card className="p-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold">7-Day Trend</h3>
-              <TrendingUp size={18} className="text-green-400" />
+        {latest ? (
+          <>
+            <div className="grid grid-cols-3 gap-3">
+              <MetricCard icon={<Heart size={14} />} label="HRV" value={String(latest.hrv_ms ?? "—")} unit="ms" bar="linear-gradient(90deg,#ef4444,#ec4899)" />
+              <MetricCard icon={<Moon size={14} />} label="SLEEP" value={String(latest.sleep_hours ?? "—")} unit="hrs" bar="linear-gradient(90deg,#00D4C8,#00D4C8)" />
+              <MetricCard icon={<Dumbbell size={14} />} label="LOAD" value={String(latest.training_load ?? "—")} unit="" bar="linear-gradient(90deg,#f59e0b,#fbbf24)" />
             </div>
-            <Sparkline />
-            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-              {["M","T","W","T","F","S","S"].map((d,i)=><span key={i}>{d}</span>)}
-            </div>
-          </Card>
-        </button>
+            {trend.length > 1 && (
+              <button onClick={() => openDetail({ kind: "trend-28d" })} className="mt-3 w-full text-left">
+                <Card className="p-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold">7-Day Trend</h3>
+                    <TrendingUp size={18} className="text-green-400" />
+                  </div>
+                  <div className="mt-4 flex h-20 items-end gap-1.5">
+                    {trend.map((m, i) => (
+                      <div key={i} className="flex-1">
+                        <div className="w-full rounded-t" style={{ height: `${((m.readiness_score ?? 0) / 100) * 80}px`, background: i === trend.length - 1 ? "#22d3ee" : "rgba(0,212,200,0.5)" }} />
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </button>
+            )}
+          </>
+        ) : (
+          <EmptyState title="No health data yet" sub="Connect Garmin, Strava, Apple Health or Whoop to sync HRV, sleep and training load." action="Connect apps" onAction={() => openDetail({ kind: "connect-apps" })} />
+        )}
       </section>
     </div>
   );
