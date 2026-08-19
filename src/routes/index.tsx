@@ -2000,6 +2000,11 @@ function OnboardingAdjustView() {
 
 function ProfileScreen({ onSettings, openDetail }: { onSettings: () => void; openDetail: (d: Detail) => void }) {
   const { displayName, profile } = useProfile();
+  const { activities, metrics } = useAthleteData();
+  const totalKm = activities.reduce((n, a) => n + (Number(a.distance_km) || 0), 0);
+  const totalSec = activities.reduce((n, a) => n + (a.duration_sec || 0), 0);
+  const latest = metrics[0];
+  const trend = metrics.slice(0, 7).reverse();
 
   const photoInput = useRef<HTMLInputElement>(null);
   const bgInput = useRef<HTMLInputElement>(null);
